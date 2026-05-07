@@ -13,14 +13,20 @@ import com.alba.core.motion.MotionDetectorState
 import com.alba.core.motion.MotionEvent
 import com.alba.core.motion.MotionEventType
 import com.alba.core.motion.MotionType
+import com.alba.core.network.BuildConfig
+import com.alba.core.network.AlbaSupabase
+import com.alba.core.network.SupabaseAuth
+import com.alba.core.network.SupabaseData
+import com.alba.core.network.GameRow
+import com.alba.core.network.GameVersionRow
+import com.alba.core.network.GameLevelRow
+import com.alba.core.network.GameMotionRuleRow
+import com.alba.core.network.WorkoutSessionRow
+import com.alba.core.network.GameSessionRow
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import com.alba.core.motion.SquatDetectorV1
-import com.alba.core.network.ActiveGamesResponse
-import com.alba.core.network.AlbaApiFactory
-import com.alba.core.network.AlbaApiService
-import com.alba.core.network.CreateGameSessionRequest
-import com.alba.core.network.CreateWorkoutSessionRequest
-import com.alba.core.network.UpdateGameSessionRequest
-import com.alba.core.network.UpdateWorkoutSessionRequest
+
 import com.alba.core.pose.MediaPipePoseEstimator
 import com.alba.core.pose.PoseEstimationResult
 import com.alba.core.pose.PoseEstimator
@@ -84,13 +90,10 @@ class AlbaMotionController(
         MotionType.JUMP_ROPE to JumpRopeDetectorV1()
     )
 
-    private var apiBaseUrl: String = debugStore.readBackendBaseUrlOverride() ?: debugConfig.defaultBackendBaseUrl
-    private var api: AlbaApiService = AlbaApiFactory.create(apiBaseUrl)
     private var timerJob: Job? = null
     private var workoutRemoteId: String? = null
     private var gameRemoteId: String? = null
-    private var currentWorkoutCreateRequest: CreateWorkoutSessionRequest? = null
-    private var currentGameCreateRequest: CreateGameSessionRequest? = null
+    private var currentProfileId: String? = null
     private var gameRuntime: GameRuntime? = null
     private var lastFrameTimestampMs: Long = 0L
     private var gameResultSynced = false
@@ -102,18 +105,18 @@ class AlbaMotionController(
             appVersion = debugConfig.appVersion,
             buildType = debugConfig.buildType,
             detectorVersion = detectors.getValue(MotionType.SQUAT).version,
-            backendBaseUrlOverride = debugStore.readBackendBaseUrlOverride(),
-            effectiveBackendBaseUrl = apiBaseUrl
+            backendBaseUrlOverride = null,
+            effectiveBackendBaseUrl = BuildConfig.SUPABASE_URL
         )
     )
     val uiState: StateFlow<MotionUiState> = _uiState.asStateFlow()
 
     init {
+        AlbaSupabase.init(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
         scope.launch {
             frameSource.frames.collect { processFrame(it) }
         }
         scope.launch {
-            retryPendingSyncs()
             refreshActiveGames()
         }
         timerJob = scope.launch {
@@ -157,12 +160,6 @@ class AlbaMotionController(
         val motionType = _uiState.value.selectedMotionType
         val sessionKey = "workout-${UUID.randomUUID()}"
         val startedAtMs = System.currentTimeMillis()
-        val startedAtIso = Instant.ofEpochMilli(startedAtMs).toString()
-        currentWorkoutCreateRequest = CreateWorkoutSessionRequest(
-            clientSessionKey = sessionKey,
-            motionType = motionType.name,
-            startedAt = startedAtIso
-        )
         workoutRemoteId = null
         workoutEngine.start(sessionKey, motionType, startedAtMs)
         _uiState.value = _uiState.value.copy(
@@ -176,7 +173,7 @@ class AlbaMotionController(
             backendStatus = "Preparing AlbaGo workout session"
         )
         scope.launch {
-            createWorkoutSessionRemote(currentWorkoutCreateRequest!!)
+            createWorkoutSessionRemote(sessionKey, motionType, startedAtMs)
             for (remaining in 3 downTo 1) {
                 _uiState.value = _uiState.value.copy(
                     workout = _uiState.value.workout.copy(
@@ -247,16 +244,6 @@ class AlbaMotionController(
             detectors[motionType]?.reset()
         }
         val sessionKey = "game-${UUID.randomUUID()}"
-        val createRequest = CreateGameSessionRequest(
-            clientSessionKey = sessionKey,
-            gameDefinitionId = definition.gameId,
-            workoutSessionId = workoutRemoteId
-                ?: _uiState.value.workout.remoteSessionId
-                ?: _uiState.value.workout.sessionId
-                ?: "local-workout",
-            startedAt = Instant.now().toString()
-        )
-        currentGameCreateRequest = createRequest
         gameRemoteId = null
         gameResultSynced = false
         gameMotionCounts.clear()
@@ -288,7 +275,7 @@ class AlbaMotionController(
             backendStatus = "Starting ${definition.title}"
         )
         scope.launch {
-            createGameSessionRemote(createRequest)
+            createGameSessionRemote(sessionKey, definition.gameId)
         }
     }
 
@@ -319,42 +306,9 @@ class AlbaMotionController(
         }
     }
 
-    fun saveBackendBaseUrlOverride(rawValue: String) {
-        val normalized = rawValue.trim()
-        if (normalized.isBlank()) {
-            resetBackendBaseUrlOverride()
-            return
-        }
-        debugStore.saveBackendBaseUrlOverride(normalized)
-        recreateApiClient(normalized)
-        _uiState.value = _uiState.value.copy(
-            backendBaseUrlOverride = normalized,
-            effectiveBackendBaseUrl = normalized,
-            backendStatus = "Backend override saved"
-        )
-        scope.launch {
-            retryPendingSyncs()
-            refreshActiveGames()
-        }
-    }
-
-    fun resetBackendBaseUrlOverride() {
-        debugStore.saveBackendBaseUrlOverride(null)
-        recreateApiClient(debugConfig.defaultBackendBaseUrl)
-        _uiState.value = _uiState.value.copy(
-            backendBaseUrlOverride = null,
-            effectiveBackendBaseUrl = debugConfig.defaultBackendBaseUrl,
-            backendStatus = "Backend override reset"
-        )
-        scope.launch {
-            retryPendingSyncs()
-            refreshActiveGames()
-        }
-    }
-
     fun retryPendingSync() {
         scope.launch {
-            retryPendingSyncs()
+            refreshActiveGames()
         }
     }
 
@@ -673,47 +627,35 @@ class AlbaMotionController(
         return dx * dx + dy * dy
     }
 
-    private suspend fun retryPendingSyncs() {
-        debugStore.readPendingWorkoutSyncs().forEach { item ->
-            if (syncWorkoutItem(item)) {
-                debugStore.removePendingWorkoutSync(item.clientSessionKey)
-            }
-        }
-        debugStore.readPendingGameSyncs().forEach { item ->
-            if (syncGameItem(item)) {
-                debugStore.removePendingGameSync(item.clientSessionKey)
-            }
-        }
-    }
 
     private suspend fun refreshActiveGames() {
         _uiState.value = _uiState.value.copy(backendStatus = "Oyunlar yükleniyor")
-        val response = runCatching { api.getActiveGames(appVersion = debugConfig.appVersion) }
-        val parseErrors = mutableListOf<String>()
-        val remoteGames = response.getOrNull()?.items
-            ?.mapNotNull { dto ->
-                dto.toDomainGameDefinitionOrNull()
+        var hasError = false
+        val gameIds = mutableListOf<String>()
+        val definitions = try {
+            val games = SupabaseData.getActiveGames()
+            games.mapNotNull { game ->
+                gameIds.add(game.id)
+                val version = SupabaseData.getGameWithVersions(game.id).second.firstOrNull() ?: return@mapNotNull null
+                supabaseGameToDefinition(game, version)
                     ?.takeIf { it.isPlayablePublicGame() }
-                    ?: run {
-                        parseErrors += dto.id
-                        null
-                    }
+            }.sortedBy { publicTemplates.indexOf(it.template) }
+        } catch (e: Exception) {
+            hasError = true
+            val cachedGames = debugStore.readCachedAvailableGames()
+                .filter { it.isPlayablePublicGame() }
+                .sortedBy { publicTemplates.indexOf(it.template) }
+            when {
+                cachedGames.isNotEmpty() -> cachedGames
+                debugConfig.isDebugBuild -> fallbackDemoGames()
+                else -> emptyList()
             }
-            ?.sortedBy { publicTemplates.indexOf(it.template) }
-            .orEmpty()
-        val cachedGames = debugStore.readCachedAvailableGames()
-            .filter { it.isPlayablePublicGame() }
-            .sortedBy { publicTemplates.indexOf(it.template) }
-        val definitions = when {
-            remoteGames.isNotEmpty() -> {
-                debugStore.cacheAvailableGames(remoteGames)
-                remoteGames
-            }
-
-            cachedGames.isNotEmpty() -> cachedGames
-            debugConfig.isDebugBuild -> fallbackDemoGames()
-            else -> emptyList()
         }
+
+        if (definitions.isNotEmpty() && !hasError) {
+            debugStore.cacheAvailableGames(definitions)
+        }
+
         val currentSelectionId = _uiState.value.activeGameId
         val selectedDefinition = definitions.firstOrNull { it.gameId == currentSelectionId && it.isPlayablePublicGame() }
             ?: definitions.firstOrNull { it.isPlayablePublicGame() }
@@ -725,28 +667,130 @@ class AlbaMotionController(
             activeGameTemplate = selectedDefinition?.template,
             activeGameVersion = selectedDefinition?.version,
             backendStatus = when {
-                response.isSuccess && remoteGames.isNotEmpty() -> "Bağlı"
-                cachedGames.isNotEmpty() -> "Önbellekten yüklendi"
-                definitions.isNotEmpty() -> "Yerel demo oyunlar açıldı"
+                !hasError && definitions.isNotEmpty() -> "Bağlı"
+                definitions.isNotEmpty() -> "Önbellekten yüklendi"
+                debugConfig.isDebugBuild -> "Yerel demo oyunlar açıldı"
                 else -> "Oyun kataloğu yüklenemedi"
             },
-            lastError = response.exceptionOrNull()?.message
-                ?: parseErrors.takeIf { it.isNotEmpty() }?.joinToString(
-                    prefix = "Geçersiz oyun tanımları atlandı: "
-                )
+            lastError = if (hasError) "Supabase bağlantısı başarısız, önbellek kullanılıyor" else null
         )
     }
 
-    private suspend fun createWorkoutSessionRemote(request: CreateWorkoutSessionRequest) {
+    private suspend fun supabaseGameToDefinition(
+        game: GameRow,
+        version: GameVersionRow
+    ): GameDefinition? {
+        val parsedTemplate = enumValueOrNull<GameTemplate>(game.config?.get("template")?.jsonPrimitive?.content ?: game.gameKey) ?: return null
+        val parsedStatus = enumValueOrNull<PublishStatus>(version.status) ?: return null
+        val parsedCategory = enumValueOrNull<GameCategory>(game.category) ?: GameCategory.FUN
+        val parsedOrientation = enumValueOrNull<GameOrientation>(game.orientation) ?: GameOrientation.PORTRAIT
+        val parsedMotions = version.supportedMotions?.mapNotNull { enumValueOrNull<MotionType>(it) } ?: emptyList()
+        if (parsedMotions.isEmpty()) return null
+
+        val levels = try {
+            val levelRows = SupabaseData.getGameLevels(version.id)
+            levelRows.mapNotNull { level ->
+                supabaseLevelToDefinition(level)
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+        if (levels.isEmpty()) return null
+
+        val assets = AssetManifest(
+            background = "local://${game.gameKey}/background",
+            character = "local://${game.gameKey}/hero"
+        )
+
+        return GameDefinition(
+            gameId = game.id,
+            version = version.version.toIntOrNull() ?: 1,
+            template = parsedTemplate,
+            title = game.title,
+            description = game.description ?: "",
+            status = parsedStatus,
+            minAppVersion = version.minAppVersion ?: game.minAppVersion ?: "0.1.0",
+            category = parsedCategory,
+            tags = game.tags ?: emptyList(),
+            orientation = parsedOrientation,
+            cameraRequirement = if (game.requiresCamera) CameraRequirement.FULL_BODY else CameraRequirement.HAND_TARGET,
+            supportedMotions = parsedMotions,
+            levels = levels,
+            assets = assets
+        )
+    }
+
+    private suspend fun supabaseLevelToDefinition(level: GameLevelRow): GameLevelDefinition? {
+        val motionRules = try {
+            SupabaseData.getGameMotionRules(level.gameVersionId).mapNotNull { rule ->
+                val motion = enumValueOrNull<MotionType>(rule.motion) ?: return@mapNotNull null
+                val event = enumValueOrNull<MotionEventType>(rule.config?.get("event")?.jsonPrimitive?.content ?: "REP_COUNTED") ?: MotionEventType.REP_COUNTED
+                MotionRule(motion, event, (rule.scoring?.get("points")?.jsonPrimitive?.int ?: 0), rule.cooldownMs)
+            }
+        } catch (e: Exception) { emptyList() }
+
+        if (motionRules.isEmpty()) return null
+
+        val rewards = try {
+            SupabaseData.getGameRewardRules(level.gameVersionId).map { reward ->
+                RewardRule(reward.rewardType, reward.amount, (reward.conditions?.get("minimumScore")?.jsonPrimitive?.int ?: 0))
+            }
+        } catch (e: Exception) { emptyList() }
+
+        val programSteps = try {
+            SupabaseData.getGameProgramSteps(level.id).mapNotNull { step ->
+                val type = enumValueOrNull<ProgramStepType>(step.stepType) ?: return@mapNotNull null
+                ProgramStepDefinition(
+                    stepId = step.stepKey,
+                    type = type,
+                    title = step.title,
+                    motion = enumValueOrNull<MotionType>(step.motion),
+                    targetCount = step.targetCount,
+                    holdSec = step.holdSec,
+                    durationSec = step.durationSec,
+                    successMessage = step.successMessage,
+                    nextOnComplete = step.isRequired
+                )
+            }
+        } catch (e: Exception) { emptyList() }
+
+        return GameLevelDefinition(
+            levelId = level.levelKey,
+            durationSec = level.durationSec,
+            targetScore = level.targetScore,
+            difficulty = level.difficulty,
+            motionRules = motionRules,
+            rewards = rewards,
+            config = emptyMap(),
+            sceneConfig = emptyMap(),
+            programSteps = programSteps
+        )
+    }
+
+    private suspend fun createWorkoutSessionRemote(sessionKey: String, motionType: MotionType, startedAtMs: Long) {
+        val profileId = currentProfileId
+        if (profileId == null) {
+            _uiState.value = _uiState.value.copy(backendStatus = "Profile not initialized, running offline")
+            return
+        }
         runCatching {
-            api.createWorkoutSession(request)
-        }.onSuccess {
-            workoutRemoteId = it.id
-            _uiState.value = _uiState.value.copy(
-                workout = _uiState.value.workout.copy(remoteSessionId = it.id),
-                backendStatus = "Workout session created",
-                lastError = null
+            SupabaseData.createWorkoutSession(
+                WorkoutSessionRow(
+                    profileId = profileId,
+                    status = "active",
+                    startedAt = Instant.ofEpochMilli(startedAtMs).toString(),
+                    score = 0
+                )
             )
+        }.onSuccess {
+            if (it != null) {
+                workoutRemoteId = it.id
+                _uiState.value = _uiState.value.copy(
+                    workout = _uiState.value.workout.copy(remoteSessionId = it.id),
+                    backendStatus = "Workout session created",
+                    lastError = null
+                )
+            }
         }.onFailure {
             _uiState.value = _uiState.value.copy(
                 backendStatus = "Workout running in offline mode",
@@ -756,77 +800,48 @@ class AlbaMotionController(
     }
 
     private suspend fun syncFinishedWorkout(summary: WorkoutSessionSummary) {
-        val createRequest = currentWorkoutCreateRequest ?: return
-        val pendingItem = PendingWorkoutSyncItem(
-            clientSessionKey = createRequest.clientSessionKey,
-            createRequest = createRequest,
-            updateRequest = UpdateWorkoutSessionRequest(
-                endedAt = Instant.now().toString(),
-                durationSec = (summary.elapsedMs / 1000).toInt(),
-                totalScore = summary.totalScore,
-                status = "FINISHED",
-                motionSummary = mapOf(
-                    "clientSessionKey" to createRequest.clientSessionKey,
+        if (workoutRemoteId == null) return
+        try {
+            SupabaseData.updateWorkoutSession(workoutRemoteId!!, mapOf(
+                "ended_at" to Instant.now().toString(),
+                "duration_sec" to (summary.elapsedMs / 1000).toInt(),
+                "score" to summary.totalScore,
+                "status" to "completed",
+                "motion_summary" to mapOf(
                     "reps" to summary.totalReps,
                     "averageQuality" to summary.averageQuality,
-                    "motionType" to summary.motionType.name,
-                    "detectorVersion" to detectors.getValue(summary.motionType).version,
-                    "motionCounts" to summary.motionCounts.mapKeys { it.key.name }
+                    "motionType" to summary.motionType.name
                 )
-            )
-        )
-        if (!syncWorkoutItem(pendingItem)) {
-            debugStore.enqueuePendingWorkoutSync(pendingItem)
-            _uiState.value = _uiState.value.copy(backendStatus = "Queued workout sync for retry")
-        } else {
-            debugStore.removePendingWorkoutSync(createRequest.clientSessionKey)
+            ))
+            _uiState.value = _uiState.value.copy(backendStatus = "Workout synced", lastError = null)
+        } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(backendStatus = "Workout sync failed", lastError = e.message)
         }
     }
 
-    private suspend fun syncWorkoutItem(item: PendingWorkoutSyncItem): Boolean {
-        return runCatching {
-            val remoteSession = if (workoutRemoteId != null) {
-                null
-            } else {
-                api.createWorkoutSession(item.createRequest)
-            }
-            val remoteId = workoutRemoteId ?: remoteSession?.id
-            if (remoteId == null) {
-                false
-            } else {
-                workoutRemoteId = remoteId
-                _uiState.value = _uiState.value.copy(
-                    workout = _uiState.value.workout.copy(remoteSessionId = remoteId)
+    private suspend fun createGameSessionRemote(sessionKey: String, gameId: String) {
+        val profileId = currentProfileId ?: return
+        val version = _uiState.value.activeGameVersion ?: 1
+        runCatching {
+            SupabaseData.createGameSession(
+                GameSessionRow(
+                    profileId = profileId,
+                    gameId = gameId,
+                    gameVersionId = "v$version",
+                    status = "active",
+                    startedAt = Instant.now().toString(),
+                    score = 0
                 )
-                api.updateWorkoutSession(remoteId, item.updateRequest)
+            )
+        }.onSuccess {
+            if (it != null) {
+                gameRemoteId = it.id
                 _uiState.value = _uiState.value.copy(
-                    backendStatus = "Workout synced",
+                    game = _uiState.value.game.copy(remoteSessionId = it.id, syncMessage = "Game session created"),
+                    backendStatus = "Game session created",
                     lastError = null
                 )
-                true
             }
-        }.getOrElse {
-            _uiState.value = _uiState.value.copy(
-                backendStatus = "Workout sync failed",
-                lastError = it.message
-            )
-            false
-        }
-    }
-
-    private suspend fun createGameSessionRemote(request: CreateGameSessionRequest) {
-        runCatching {
-            api.createGameSession(request)
-        }.onSuccess {
-            gameRemoteId = it.id
-            _uiState.value = _uiState.value.copy(
-                game = _uiState.value.game.copy(
-                    remoteSessionId = it.id,
-                    syncMessage = "Game session created"
-                ),
-                backendStatus = "Game session created",
-                lastError = null
-            )
         }.onFailure {
             _uiState.value = _uiState.value.copy(
                 game = _uiState.value.game.copy(syncMessage = "Game offline mode"),
@@ -839,114 +854,54 @@ class AlbaMotionController(
     private fun maybeSyncFinishedGame(force: Boolean) {
         if (gameResultSynced) return
         val runtime = gameRuntime ?: return
-        val createRequest = currentGameCreateRequest ?: return
         val result = runtime.buildResult(
-            clientSessionKey = createRequest.clientSessionKey,
+            clientSessionKey = _uiState.value.game.clientSessionKey ?: "game-local",
             motionCounts = gameMotionCounts.toMap(),
             endedAtMs = System.currentTimeMillis()
         )
         if (!force && _uiState.value.game.status != GameSessionStatus.FINISHED) {
             _uiState.value = _uiState.value.copy(
-                game = _uiState.value.game.copy(
-                    status = GameSessionStatus.FINISHED,
-                    completed = true
-                )
+                game = _uiState.value.game.copy(status = GameSessionStatus.FINISHED, completed = true)
             )
         }
-        scope.launch {
-            syncFinishedGame(result)
-        }
+        scope.launch { syncFinishedGame(result) }
     }
 
     private suspend fun syncFinishedGame(result: GameSessionResult) {
-        val createRequest = currentGameCreateRequest ?: return
-        val pendingItem = PendingGameSyncItem(
-            clientSessionKey = createRequest.clientSessionKey,
-            createRequest = createRequest.copy(
-                workoutSessionId = workoutRemoteId ?: createRequest.workoutSessionId
-            ),
-            updateRequest = UpdateGameSessionRequest(
-                endedAt = Instant.ofEpochMilli(result.endedAtMs).toString(),
-                score = result.score,
-                result = if (result.score > 0) "COMPLETED" else "ENDED",
-                gameVersion = result.gameVersion,
-                clientIntegrityHash = "debug-${Random.nextInt(1000, 9999)}",
-                resultPayload = mapOf(
+        if (gameRemoteId == null) return
+        try {
+            SupabaseData.updateGameSession(gameRemoteId!!, mapOf(
+                "ended_at" to Instant.ofEpochMilli(result.endedAtMs).toString(),
+                "score" to result.score,
+                "status" to "completed",
+                "duration_sec" to result.durationSec,
+                "result_payload" to mapOf(
                     "gameId" to result.gameId,
                     "gameVersion" to result.gameVersion,
                     "score" to result.score,
-                    "durationSec" to result.durationSec,
-                    "motionCounts" to result.motionCounts.mapKeys { it.key.name },
                     "comboMax" to result.comboMax,
                     "accuracy" to result.accuracy,
-                    "startedAt" to Instant.ofEpochMilli(result.startedAtMs).toString(),
-                    "endedAt" to Instant.ofEpochMilli(result.endedAtMs).toString(),
-                    "clientSessionKey" to result.clientSessionKey
+                    "motionCounts" to result.motionCounts.mapKeys { it.key.name }
                 )
-            )
-        )
-        if (!syncGameItem(pendingItem)) {
-            debugStore.enqueuePendingGameSync(pendingItem)
-            _uiState.value = _uiState.value.copy(
-                game = _uiState.value.game.copy(syncMessage = "Queued game sync"),
-                backendStatus = "Queued game sync for retry"
-            )
-        } else {
-            debugStore.removePendingGameSync(createRequest.clientSessionKey)
+            ))
             _uiState.value = _uiState.value.copy(
                 game = _uiState.value.game.copy(
                     elapsedMs = result.durationSec * 1000L,
                     motionCounts = result.motionCounts,
                     comboMax = result.comboMax,
                     accuracy = result.accuracy
-                )
+                ),
+                backendStatus = "Game synced",
+                lastError = null
             )
-        }
-        gameResultSynced = true
-    }
-
-    private suspend fun syncGameItem(item: PendingGameSyncItem): Boolean {
-        return runCatching {
-            val remoteSession = if (gameRemoteId != null) {
-                null
-            } else {
-                api.createGameSession(
-                    item.createRequest.copy(
-                        workoutSessionId = workoutRemoteId ?: item.createRequest.workoutSessionId
-                    )
-                )
-            }
-            val remoteId = gameRemoteId ?: remoteSession?.id
-            if (remoteId == null) {
-                false
-            } else {
-                gameRemoteId = remoteId
-                _uiState.value = _uiState.value.copy(
-                    game = _uiState.value.game.copy(
-                        remoteSessionId = remoteId,
-                        syncMessage = "Game synced"
-                    )
-                )
-                api.updateGameSession(remoteId, item.updateRequest)
-                _uiState.value = _uiState.value.copy(
-                    backendStatus = "Game synced",
-                    lastError = null
-                )
-                true
-            }
-        }.getOrElse {
+            gameResultSynced = true
+        } catch (e: Exception) {
             _uiState.value = _uiState.value.copy(
                 game = _uiState.value.game.copy(syncMessage = "Game sync failed"),
                 backendStatus = "Game sync failed",
-                lastError = it.message
+                lastError = e.message
             )
-            false
         }
-    }
-
-    private fun recreateApiClient(baseUrl: String) {
-        apiBaseUrl = baseUrl
-        api = AlbaApiFactory.create(baseUrl)
     }
 
     override fun close() {
@@ -991,123 +946,6 @@ class AlbaMotionController(
             completed = runtimeState.completed,
             lastEffect = runtimeState.lastEffect,
             sceneState = runtimeState.sceneState
-        )
-    }
-
-    private fun ActiveGamesResponse.GameDefinitionDto.toDomainGameDefinitionOrNull(): GameDefinition? {
-        val parsedTemplate = enumValueOrNull<GameTemplate>(template) ?: return null
-        val parsedStatus = enumValueOrNull<PublishStatus>(status) ?: return null
-        val parsedCategory = enumValueOrNull<GameCategory>(category) ?: GameCategory.FUN
-        val parsedOrientation = enumValueOrNull<GameOrientation>(orientation) ?: GameOrientation.PORTRAIT
-        val parsedCameraRequirement = enumValueOrNull<CameraRequirement>(cameraRequirement) ?: CameraRequirement.FULL_BODY
-        val parsedMotions = supportedMotions.mapNotNull { enumValueOrNull<MotionType>(it) }
-        if (parsedMotions.isEmpty()) return null
-        val parsedLevels = levels.mapNotNull { level ->
-            val parsedRules = level.motionRules.mapNotNull rules@{ rule ->
-                val motion = enumValueOrNull<MotionType>(rule.motion) ?: return@rules null
-                val event = enumValueOrNull<MotionEventType>(rule.event) ?: return@rules null
-                MotionRule(
-                    motion = motion,
-                    event = event,
-                    points = rule.points,
-                    cooldownMs = rule.cooldownMs
-                )
-            }
-            val parsedTasks = level.tasks?.mapNotNull tasks@{ task ->
-                val motion = enumValueOrNull<MotionType>(task.motion) ?: return@tasks null
-                GameTaskDefinition(
-                    motion = motion,
-                    targetCount = task.targetCount,
-                    pointsPerRep = task.pointsPerRep
-                )
-            }.orEmpty()
-            val parsedProgramSteps = level.programSteps?.mapNotNull steps@{ step ->
-                val type = enumValueOrNull<ProgramStepType>(step.type) ?: return@steps null
-                ProgramStepDefinition(
-                    stepId = step.stepId,
-                    type = type,
-                    title = step.title,
-                    description = step.description,
-                    motion = enumValueOrNull<MotionType>(step.motion),
-                    targetCount = step.targetCount,
-                    holdSec = step.holdSec,
-                    durationSec = step.durationSec,
-                    successMessage = step.successMessage,
-                    nextOnComplete = step.nextOnComplete ?: true
-                )
-            }.orEmpty()
-            val parsedInteractions = level.interactionRules?.mapNotNull interactions@{ rule ->
-                val action = enumValueOrNull<RuleActionType>(rule.action) ?: return@interactions null
-                InteractionRule(
-                    input = rule.input,
-                    event = enumValueOrNull<MotionEventType>(rule.event),
-                    motion = enumValueOrNull<MotionType>(rule.motion),
-                    targetObjectType = rule.targetObjectType,
-                    keypoints = rule.keypoints.orEmpty(),
-                    action = action,
-                    points = rule.points ?: 0,
-                    cooldownMs = rule.cooldownMs ?: 0L
-                )
-            }.orEmpty()
-            if (parsedRules.isEmpty()) {
-                null
-            } else {
-                GameLevelDefinition(
-                    levelId = level.levelId,
-                    durationSec = level.durationSec,
-                    targetScore = level.targetScore,
-                    difficulty = level.difficulty,
-                    motionRules = parsedRules,
-                    rewards = level.rewardRules.map { reward ->
-                        RewardRule(
-                            rewardType = reward.rewardType,
-                            amount = reward.amount,
-                            minimumScore = reward.minimumScore
-                        )
-                    },
-                    config = level.config ?: emptyMap(),
-                    sceneConfig = level.sceneConfig ?: emptyMap(),
-                    interactionRules = parsedInteractions,
-                    tasks = parsedTasks,
-                    programSteps = parsedProgramSteps
-                )
-            }
-        }
-        if (parsedLevels.isEmpty()) return null
-        return GameDefinition(
-            gameId = id,
-            version = version,
-            template = parsedTemplate,
-            title = title,
-            description = description,
-            status = parsedStatus,
-            minAppVersion = minAppVersion,
-            category = parsedCategory,
-            tags = tags.orEmpty(),
-            orientation = parsedOrientation,
-            cameraRequirement = parsedCameraRequirement,
-            supportedMotions = parsedMotions,
-            levels = parsedLevels,
-            assets = AssetManifest(
-                background = assets.background,
-                character = assets.character,
-                soundtrack = assets.soundtrack,
-                items = assets.items?.map { item ->
-                    GameAsset(
-                        id = item.id,
-                        key = item.key,
-                        kind = item.kind,
-                        format = item.format,
-                        uri = item.uri,
-                        mimeType = item.mimeType,
-                        width = item.width,
-                        height = item.height,
-                        sha256 = item.sha256,
-                        bytes = item.bytes,
-                        createdAt = item.createdAt
-                    )
-                }.orEmpty()
-            )
         )
     }
 

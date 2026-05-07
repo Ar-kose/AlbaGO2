@@ -30,19 +30,19 @@ val AlbaTypography = Typography(
         fontFamily = SpaceGroteskFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 56.sp,
-        letterSpacing = (-2).sp
+        letterSpacing = 0.sp
     ),
     headlineLarge = TextStyle(
         fontFamily = SpaceGroteskFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 32.sp,
-        letterSpacing = (-1).sp
+        letterSpacing = 0.sp
     ),
     headlineMedium = TextStyle(
         fontFamily = SpaceGroteskFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 28.sp,
-        letterSpacing = (-0.5).sp
+        letterSpacing = 0.sp
     ),
     headlineSmall = TextStyle(
         fontFamily = SpaceGroteskFamily,

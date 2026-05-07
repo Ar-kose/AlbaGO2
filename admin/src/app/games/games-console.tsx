@@ -142,7 +142,7 @@ export function GamesConsole() {
   async function saveDraft() {
     setIsBusy(true);
     try {
-      const payload = { ...draft, actorId: 'admin@local', status: 'DRAFT' as const };
+      const payload = { ...draft, actorId: 'admin@local', status: 'draft' as const };
       const saved = selectedId
         ? await updateGameDefinition(selectedId, payload)
         : await createGameDefinition(payload);
@@ -220,7 +220,7 @@ export function GamesConsole() {
         </div>
 
         <div className="category-tabs" role="tablist" aria-label="Oyun kategorileri">
-          {(['ALL', 'SPORT', 'FUN', 'EDUCATION'] as const).map((category) => (
+          {(['ALL', 'sport', 'entertainment', 'education'] as const).map((category) => (
             <button
               key={category}
               className={`category-tab${categoryFilter === category ? ' category-tab-active' : ''}`}
@@ -256,7 +256,7 @@ export function GamesConsole() {
             <p className="eyebrow">Template Editor</p>
             <h2>{selectedGame?.title ?? templateLabel(draft.template)}</h2>
           </div>
-          <span className="badge">{selectedGame?.status ?? 'DRAFT'}</span>
+          <span className="badge">{selectedGame?.status ?? 'draft'}</span>
         </div>
 
         <p className="muted">{message}</p>
@@ -1247,7 +1247,7 @@ function mapGameToDraft(game: GameDefinitionDto): GameDefinitionDraft {
     title: game.title,
     description: game.description,
     minAppVersion: game.minAppVersion,
-    category: game.category ?? 'FUN',
+    category: game.category ?? 'entertainment',
     tags: game.tags ?? [],
     orientation: game.orientation,
     cameraRequirement: game.cameraRequirement,
@@ -1277,9 +1277,10 @@ function mapGameToDraft(game: GameDefinitionDto): GameDefinitionDraft {
 function categoryLabel(category: 'ALL' | GameDefinitionDraft['category']): string {
   return {
     ALL: 'Tum kategoriler',
-    SPORT: 'Spor',
-    FUN: 'Eglence',
-    EDUCATION: 'Egitim'
+    sport: 'Spor',
+    entertainment: 'Eglence',
+    education: 'Egitim',
+    demo: 'Demo'
   }[category];
 }
 

@@ -78,6 +78,15 @@ import com.alba.core.runtime.FruitSlashSceneState
 import com.alba.core.runtime.GameSceneState
 import com.alba.core.runtime.GameSessionStatus
 import com.alba.core.runtime.GameOrientation
+import com.alba.app.ui.showcase.CameraPermissionShowcaseScreen
+import com.alba.app.ui.showcase.DemoCatalogShowcaseScreen
+import com.alba.app.ui.showcase.EducationModeShowcaseScreen
+import com.alba.app.ui.showcase.EntertainmentModeShowcaseScreen
+import com.alba.app.ui.showcase.HomeShowcaseScreen
+import com.alba.app.ui.showcase.OnboardingBodyTrackingScreen
+import com.alba.app.ui.showcase.OnboardingCameraWorldScreen
+import com.alba.app.ui.showcase.OnboardingModesScreen
+import com.alba.app.ui.showcase.SportModeShowcaseScreen
 import com.alba.feature.games.GamesHomeScreen
 import com.alba.app.ui.splash.SplashScreen
 import com.alba.app.ui.theme.AlbaTheme
@@ -104,7 +113,15 @@ class MainActivity : ComponentActivity() {
 
 private enum class AlbaDestination {
     SPLASH,
+    ONBOARDING_BODY,
+    ONBOARDING_MODES,
+    ONBOARDING_CAMERA,
+    CAMERA_PERMISSION,
     HOME,
+    SPORT_MODE,
+    EDUCATION_MODE,
+    ENTERTAINMENT_MODE,
+    DEMO_CATALOG,
     MOTION_LAB,
     WORKOUT,
     GAMES
@@ -175,16 +192,67 @@ private fun AlbaRoot(
     ) { padding ->
         when (destination) {
             AlbaDestination.SPLASH -> SplashScreen(
+                onFinished = { destination = AlbaDestination.ONBOARDING_BODY }
+            )
+
+            AlbaDestination.ONBOARDING_BODY -> OnboardingBodyTrackingScreen(
+                onNext = { destination = AlbaDestination.ONBOARDING_MODES }
+            )
+
+            AlbaDestination.ONBOARDING_MODES -> OnboardingModesScreen(
+                onNext = { destination = AlbaDestination.ONBOARDING_CAMERA },
+                onSport = { destination = AlbaDestination.SPORT_MODE },
+                onEducation = { destination = AlbaDestination.EDUCATION_MODE },
+                onEntertainment = { destination = AlbaDestination.ENTERTAINMENT_MODE }
+            )
+
+            AlbaDestination.ONBOARDING_CAMERA -> OnboardingCameraWorldScreen(
+                onNext = { destination = AlbaDestination.CAMERA_PERMISSION }
+            )
+
+            AlbaDestination.CAMERA_PERMISSION -> CameraPermissionShowcaseScreen(
                 onFinished = { destination = AlbaDestination.HOME }
             )
 
-            AlbaDestination.HOME -> HomeScreen(
-                contentPadding = padding,
+            AlbaDestination.HOME -> HomeShowcaseScreen(
                 uiState = uiState,
-                debugEnabled = BuildConfig.DEBUG,
-                onOpenMotionLab = { destination = AlbaDestination.MOTION_LAB },
-                onOpenWorkout = { destination = AlbaDestination.WORKOUT },
-                onOpenGames = { destination = AlbaDestination.GAMES }
+                onOpenSport = { destination = AlbaDestination.SPORT_MODE },
+                onOpenEducation = { destination = AlbaDestination.EDUCATION_MODE },
+                onOpenEntertainment = { destination = AlbaDestination.ENTERTAINMENT_MODE },
+                onOpenDemos = { destination = AlbaDestination.DEMO_CATALOG },
+                onCenterAction = { destination = AlbaDestination.MOTION_LAB }
+            )
+
+            AlbaDestination.SPORT_MODE -> SportModeShowcaseScreen(
+                onHome = { destination = AlbaDestination.HOME },
+                onEducation = { destination = AlbaDestination.EDUCATION_MODE },
+                onEntertainment = { destination = AlbaDestination.ENTERTAINMENT_MODE },
+                onDemos = { destination = AlbaDestination.DEMO_CATALOG },
+                onCenterAction = { destination = AlbaDestination.MOTION_LAB }
+            )
+
+            AlbaDestination.EDUCATION_MODE -> EducationModeShowcaseScreen(
+                onHome = { destination = AlbaDestination.HOME },
+                onSport = { destination = AlbaDestination.SPORT_MODE },
+                onEntertainment = { destination = AlbaDestination.ENTERTAINMENT_MODE },
+                onDemos = { destination = AlbaDestination.DEMO_CATALOG },
+                onCenterAction = { destination = AlbaDestination.MOTION_LAB }
+            )
+
+            AlbaDestination.ENTERTAINMENT_MODE -> EntertainmentModeShowcaseScreen(
+                onHome = { destination = AlbaDestination.HOME },
+                onSport = { destination = AlbaDestination.SPORT_MODE },
+                onEducation = { destination = AlbaDestination.EDUCATION_MODE },
+                onDemos = { destination = AlbaDestination.DEMO_CATALOG },
+                onCenterAction = { destination = AlbaDestination.MOTION_LAB }
+            )
+
+            AlbaDestination.DEMO_CATALOG -> DemoCatalogShowcaseScreen(
+                onHome = { destination = AlbaDestination.HOME },
+                onSport = { destination = AlbaDestination.SPORT_MODE },
+                onEducation = { destination = AlbaDestination.EDUCATION_MODE },
+                onEntertainment = { destination = AlbaDestination.ENTERTAINMENT_MODE },
+                onCenterAction = { destination = AlbaDestination.GAMES }
             )
 
             AlbaDestination.MOTION_LAB -> MotionScreenShell(

@@ -1,0 +1,464 @@
+[
+  {
+    "file": "banners/banner_neon_rush.png",
+    "width": 1400,
+    "height": 640,
+    "mode": "RGBA",
+    "bytes": 1093324
+  },
+  {
+    "file": "banners/entertainment_banner_neon_arena.png",
+    "width": 1400,
+    "height": 640,
+    "mode": "RGBA",
+    "bytes": 1118724
+  },
+  {
+    "file": "banners/sport_hero_runner_woman.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1224581
+  },
+  {
+    "file": "banners/weekly_event_gift_box.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1427280
+  },
+  {
+    "file": "game_covers/banner_neon_arena.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1472330
+  },
+  {
+    "file": "game_covers/demo_dodge_run.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1303615
+  },
+  {
+    "file": "game_covers/demo_fit_challenge.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1436750
+  },
+  {
+    "file": "game_covers/demo_fruit_slash.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1447415
+  },
+  {
+    "file": "game_covers/game_bilim_kasifleri.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1299877
+  },
+  {
+    "file": "game_covers/game_dans_savasi.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1522800
+  },
+  {
+    "file": "game_covers/game_esneklik_ustasi.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1210162
+  },
+  {
+    "file": "game_covers/game_kelime_avcisi.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1450589
+  },
+  {
+    "file": "game_covers/game_matematik_macerasi.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1192636
+  },
+  {
+    "file": "game_covers/game_neon_kosu.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1526271
+  },
+  {
+    "file": "game_covers/game_neon_rush.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1353217
+  },
+  {
+    "file": "game_covers/game_ritim_boksu.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1336492
+  },
+  {
+    "file": "game_covers/game_ritmik_vurus.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1378145
+  },
+  {
+    "file": "game_covers/game_ziplama_sampiyonasi.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1180020
+  },
+  {
+    "file": "game_covers/room_neon_party.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1545314
+  },
+  {
+    "file": "game_covers/room_ritim_turnuvasi.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1397232
+  },
+  {
+    "file": "game_covers/thumb_dodge_run.png",
+    "width": 256,
+    "height": 256,
+    "mode": "RGBA",
+    "bytes": 146536
+  },
+  {
+    "file": "game_covers/thumb_fit_challenge.png",
+    "width": 256,
+    "height": 256,
+    "mode": "RGBA",
+    "bytes": 155756
+  },
+  {
+    "file": "game_covers/thumb_fruit_slash.png",
+    "width": 256,
+    "height": 256,
+    "mode": "RGBA",
+    "bytes": 154840
+  },
+  {
+    "file": "game_covers/thumb_kelime_avcisi.png",
+    "width": 256,
+    "height": 256,
+    "mode": "RGBA",
+    "bytes": 156969
+  },
+  {
+    "file": "game_covers/thumb_matematik_macerasi.png",
+    "width": 256,
+    "height": 256,
+    "mode": "RGBA",
+    "bytes": 138934
+  },
+  {
+    "file": "icons/icon_admin_monitor.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 164367
+  },
+  {
+    "file": "icons/icon_ai_star.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 194489
+  },
+  {
+    "file": "icons/icon_area_control.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 200185
+  },
+  {
+    "file": "icons/icon_body_detect.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 183240
+  },
+  {
+    "file": "icons/icon_camera.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 197432
+  },
+  {
+    "file": "icons/icon_center_action_a.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 363445
+  },
+  {
+    "file": "icons/icon_demo_gamepad.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 198236
+  },
+  {
+    "file": "icons/icon_discover_compass.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 216904
+  },
+  {
+    "file": "icons/icon_education_cap.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 187956
+  },
+  {
+    "file": "icons/icon_events_calendar.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 191331
+  },
+  {
+    "file": "icons/icon_friends_group.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 185190
+  },
+  {
+    "file": "icons/icon_fun_gamepad.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 193305
+  },
+  {
+    "file": "icons/icon_home.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 188875
+  },
+  {
+    "file": "icons/icon_lightning.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 175458
+  },
+  {
+    "file": "icons/icon_lock_shield.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 197965
+  },
+  {
+    "file": "icons/icon_notification_bell.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 197320
+  },
+  {
+    "file": "icons/icon_phone_stabilize.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 156946
+  },
+  {
+    "file": "icons/icon_privacy_shield.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 197965
+  },
+  {
+    "file": "icons/icon_profile_user.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 183240
+  },
+  {
+    "file": "icons/icon_progress_chart.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 182175
+  },
+  {
+    "file": "icons/icon_security_shield.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 197965
+  },
+  {
+    "file": "icons/icon_sport_runner.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 193963
+  },
+  {
+    "file": "icons/icon_store_bag.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 189742
+  },
+  {
+    "file": "icons/icon_tasks_target.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 200185
+  },
+  {
+    "file": "icons/icon_trophy.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 200730
+  },
+  {
+    "file": "onboarding/camera_rec_frame.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 41246
+  },
+  {
+    "file": "onboarding/onboarding_body_tracking.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 980271
+  },
+  {
+    "file": "onboarding/onboarding_camera_world_connect.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 915570
+  },
+  {
+    "file": "onboarding/onboarding_skeleton_overlay.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 168892
+  },
+  {
+    "file": "onboarding/permission_camera_neon.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 925013
+  },
+  {
+    "file": "ui/app_icon_a_neon.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1060793
+  },
+  {
+    "file": "ui/avatar_user_efe.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 415231
+  },
+  {
+    "file": "ui/background_neon_grid.png",
+    "width": 1080,
+    "height": 1920,
+    "mode": "RGBA",
+    "bytes": 1233971
+  },
+  {
+    "file": "ui/background_neon_grid_square.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1026996
+  },
+  {
+    "file": "ui/background_neon_streaks.png",
+    "width": 1080,
+    "height": 1920,
+    "mode": "RGBA",
+    "bytes": 2092757
+  },
+  {
+    "file": "ui/background_neon_streaks_square.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1491906
+  },
+  {
+    "file": "ui/google_play_badge.png",
+    "width": 720,
+    "height": 216,
+    "mode": "RGBA",
+    "bytes": 12098
+  },
+  {
+    "file": "ui/instagram_icon.png",
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "bytes": 43078
+  },
+  {
+    "file": "ui/loading_progress_bar_asset.png",
+    "width": 1024,
+    "height": 180,
+    "mode": "RGBA",
+    "bytes": 8074
+  },
+  {
+    "file": "ui/logo_albago.png",
+    "width": 788,
+    "height": 222,
+    "mode": "RGBA",
+    "bytes": 107487
+  },
+  {
+    "file": "ui/splash_neon_a_logo.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "bytes": 1520323
+  }
+]
