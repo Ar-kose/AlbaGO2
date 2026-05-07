@@ -1,0 +1,16 @@
+node_modules/
+.next/
+dist/
+coverage/
+.turbo/
+.gradle/
+build/
+local.properties
+*.iml
+.idea/
+.DS_Store
+Thumbs.db
+android/.cxx/
+android/captures/
+backend/.env
+admin/.env.local

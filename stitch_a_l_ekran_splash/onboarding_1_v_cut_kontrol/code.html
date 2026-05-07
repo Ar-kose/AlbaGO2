@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f20db9",
+                        "background-light": "#f8f5f8",
+                        "background-dark": "#22101e",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
+<!-- Header / Top Bar -->
+<div class="flex items-center p-4 pb-2 justify-end">
+<button class="flex items-center justify-end px-4 py-2 hover:bg-primary/10 rounded-lg transition-colors">
+<p class="text-primary text-base font-bold leading-normal tracking-[0.015em] shrink-0">Geç</p>
+</button>
+</div>
+<!-- Illustration Section -->
+<div class="flex w-full grow @container p-4">
+<div class="w-full gap-1 overflow-hidden bg-primary/5 @[480px]:gap-2 aspect-[4/5] rounded-xl flex items-center justify-center relative">
+<!-- Abstract UI Representation of Camera Tracking -->
+<div class="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-primary/10"></div>
+<div class="relative w-full h-full flex items-center justify-center overflow-hidden">
+<div class="w-full h-full bg-center bg-no-repeat bg-cover flex-1" data-alt="Person moving dynamically in front of a smartphone camera" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC6Ps3hVk7nig-0bMVYMhV54r9Pp6aReI6d1BmAz3cKLSLNzr20zsYkhiPSG4jHO1n1t578IgYW0PCezzOvQri6bkp9yBclEa_HcxjH5_R7PhinEHw5S1egwx5J0gG5CBKESAVP-co9qfo9fnkkszY-AAnhIL-Ee_AqXvmbtNZAJY1G-7DeZd8YhP2EvmXllfBNq_o3v4M6qvYg06tf9nMeOzf0F0yOrkmVcjN0W1oTzct0Q5GzcQESC9W5z2gy_JMpFsCt6DX-mitQ");'>
+</div>
+<!-- Motion Tracking UI Overlay -->
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="border-2 border-primary w-48 h-48 rounded-full animate-pulse flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-6xl">accessibility_new</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Content Section -->
+<div class="px-6 flex flex-col items-center">
+<h1 class="text-slate-900 dark:text-slate-100 tracking-tight text-[32px] font-bold leading-tight text-center pb-3 pt-6">
+                Vücudun Senin Kumandan
+            </h1>
+<p class="text-slate-600 dark:text-slate-400 text-base font-normal leading-relaxed pb-3 pt-1 text-center max-w-sm">
+                Ön kamerayı kullanarak hareketlerinle oyunun kontrolünü ele al.
+            </p>
+</div>
+<!-- Pagination Indicators -->
+<div class="flex w-full flex-row items-center justify-center gap-3 py-8">
+<div class="h-2 w-6 rounded-full bg-primary"></div>
+<div class="h-2 w-2 rounded-full bg-primary/30"></div>
+<div class="h-2 w-2 rounded-full bg-primary/30"></div>
+</div>
+<!-- Action Section -->
+<div class="px-6 pb-12 w-full max-w-md mx-auto">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/25 flex items-center justify-center gap-2 group">
+                Sonraki
+                <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<!-- Bottom Spacer -->
+<div class="h-2"></div>
+</div>
+</body></html>

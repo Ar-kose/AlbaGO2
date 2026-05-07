@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f20db9",
+                        "background-light": "#f8f5f8",
+                        "background-dark": "#22101e",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+<div class="relative flex h-screen w-full flex-col overflow-x-hidden">
+<!-- Top Navigation -->
+<div class="flex items-center p-6 justify-end">
+<button class="text-slate-500 dark:text-slate-400 text-base font-bold leading-normal tracking-wide hover:text-primary transition-colors">
+                Geç
+            </button>
+</div>
+<!-- Main Content Area -->
+<div class="flex w-full grow flex-col @container px-6 justify-center">
+<!-- Illustration Container -->
+<div class="relative w-full aspect-square max-w-md mx-auto mb-10 flex items-center justify-center">
+<!-- Decorative Glows -->
+<div class="absolute inset-0 bg-primary/20 blur-[80px] rounded-full"></div>
+<!-- Illustration Content -->
+<div class="relative z-10 w-full h-full bg-primary/10 rounded-xl border border-primary/20 flex flex-col items-center justify-center gap-6 overflow-hidden">
+<div class="flex gap-4">
+<div class="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/40">
+<span class="material-symbols-outlined text-white text-4xl">sports_basketball</span>
+</div>
+<div class="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+<span class="material-symbols-outlined text-primary text-4xl">menu_book</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+<span class="material-symbols-outlined text-primary text-4xl">music_note</span>
+</div>
+<div class="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/40">
+<span class="material-symbols-outlined text-white text-4xl">fitness_center</span>
+</div>
+</div>
+<!-- Abstract Background Pattern -->
+<div class="absolute inset-0 -z-10 opacity-20" data-alt="Abstract pink dots pattern background" style="background-image: radial-gradient(circle at 2px 2px, #f20db9 1px, transparent 0); background-size: 24px 24px;"></div>
+</div>
+</div>
+<!-- Text Content -->
+<div class="text-center space-y-4 max-w-sm mx-auto">
+<h2 class="text-slate-900 dark:text-white tracking-tight text-3xl font-bold leading-tight">
+                    Hareket Et, Öğren ve Eğlen
+                </h2>
+<p class="text-slate-600 dark:text-slate-400 text-lg font-normal leading-relaxed">
+                    Spor, Eğitim ve Eğlence modlarıyla her an aktif kal.
+                </p>
+</div>
+</div>
+<!-- Bottom Controls -->
+<div class="p-8 space-y-8">
+<!-- Pagination Dots -->
+<div class="flex flex-row items-center justify-center gap-3">
+<div class="h-2 w-2 rounded-full bg-primary/30"></div>
+<div class="h-2 w-8 rounded-full bg-primary"></div>
+<div class="h-2 w-2 rounded-full bg-primary/30"></div>
+</div>
+<!-- CTA Buttons -->
+<div class="flex flex-col gap-4 max-w-md mx-auto">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-primary/25">
+                    Sonraki
+                </button>
+</div>
+</div>
+<!-- Background Accent -->
+<div class="fixed -bottom-24 -left-24 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
+</div>
+</body></html>

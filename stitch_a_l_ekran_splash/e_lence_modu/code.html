@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f20db9",
+                        "background-light": "#f8f5f8",
+                        "background-dark": "#22101e",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<header class="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10">
+<div class="flex items-center p-4 justify-between max-w-2xl mx-auto w-full">
+<div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/20 text-primary">
+<span class="material-symbols-outlined">sports_esports</span>
+</div>
+<h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight flex-1 text-center font-display">AlbaGO Eğlence</h2>
+<div class="flex w-10 items-center justify-end">
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-primary/10 text-primary">
+<span class="material-symbols-outlined">search</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-1 max-w-2xl mx-auto w-full pb-24">
+<div class="p-4 @container">
+<div class="relative overflow-hidden rounded-xl min-h-[320px] flex flex-col justify-end bg-slate-800" data-alt="Modern neon lit gaming setup with magenta highlights" style="background-image: linear-gradient(to top, rgba(34, 16, 30, 0.9) 0%, rgba(34, 16, 30, 0.2) 60%, rgba(242, 13, 185, 0.1) 100%), url('https://lh3.googleusercontent.com/aida-public/AB6AXuANyfnJRzUQqTwOtBBUQJQY6nNC8DXZcWo2UtHtkfYOFX1aYaySbBPTNEioONSnGUC9uUeAeuht5mXQKYOrReSu3Shcqq5pqAJnaN6M-yXIt79y8LbAEdFnESguswYD1hRThqTWDoes871lIcZFGZUg7nU6u6RNqNIxLDGLlSSG4HgOT0ljP_vMdAOp6IRs6chyXQsuaYaG7Cu_gu8iu0ygOHPQo72KfEs_A5FH1HIyDqWwXG7c7YMQjxjEjw2cRyYEXOfgj8KMGUpD'); background-size: cover; background-position: center;">
+<div class="p-6 relative z-10">
+<span class="inline-block px-3 py-1 rounded-full bg-primary text-white text-xs font-bold mb-3 uppercase tracking-widest">Yeni Sezon</span>
+<h1 class="text-white text-3xl font-bold leading-tight font-display mb-2">Sınırları Zorla, Eğlenceye Katıl!</h1>
+<p class="text-slate-200 text-sm max-w-[280px]">En popüler parti ve ritim oyunları AlbaGO farkıyla şimdi yayında.</p>
+</div>
+</div>
+</div>
+<div class="flex gap-3 px-4 py-2 overflow-x-auto no-scrollbar">
+<div class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-primary px-5 shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-white text-sm">auto_awesome</span>
+<p class="text-white text-sm font-semibold">Tümü</p>
+</div>
+<div class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-primary/10 border border-primary/20 px-5">
+<span class="material-symbols-outlined text-primary text-sm">groups</span>
+<p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Parti</p>
+</div>
+<div class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-primary/10 border border-primary/20 px-5">
+<span class="material-symbols-outlined text-primary text-sm">music_note</span>
+<p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Ritim</p>
+</div>
+<div class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-primary/10 border border-primary/20 px-5">
+<span class="material-symbols-outlined text-primary text-sm">bolt</span>
+<p class="text-slate-900 dark:text-slate-100 text-sm font-medium">Hızlı</p>
+</div>
+</div>
+<section class="mt-6">
+<div class="flex items-center justify-between px-4 mb-4">
+<h2 class="text-slate-900 dark:text-slate-100 text-xl font-bold font-display">Öne Çıkanlar</h2>
+<a class="text-primary text-sm font-semibold" href="#">Hepsini Gör</a>
+</div>
+<div class="grid grid-cols-2 gap-4 px-4">
+<div class="group relative flex flex-col gap-2">
+<div class="aspect-[4/5] rounded-xl overflow-hidden relative">
+<img alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Abstract colorful neon light patterns for rhythm game" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuvj0CMn_2UJD1Lv1ZTg9nE2Z2iRod2yBeUI4lIB2M0AJyZkOMvRMjpM5zGf7mBX0YaeWNE5-_kYIBCiphZS1-wo1Ln_ieXl5HsdoayJhtQf5kTHY8VoJktatKq95s3AuwehB84gFR_7qYZgjm-EiewUkbG888tEd-xtXuzCDlOeS9-hthOiZZFPKueB_svWJt2EsTx7PqJoghcL9uW7baiupC9cyAuhlOt4ygghhEzmW1My9JjZCLgc9kHOUap1u0IK4MEuckdeXu"/>
+<div class="absolute top-2 right-2 px-2 py-1 rounded bg-black/50 backdrop-blur-sm text-[10px] font-bold text-white flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] fill-current text-primary">group</span> 4P
+                        </div>
+</div>
+<div>
+<h3 class="font-bold text-sm">Neon Ritmi</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400">Ritim &amp; Refleks</p>
+</div>
+</div>
+<div class="group relative flex flex-col gap-2">
+<div class="aspect-[4/5] rounded-xl overflow-hidden relative">
+<img alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Vibrant retro gaming controllers on pink surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvYDNrYFM0kBrUIVDg58AlrupLppIunaJS82AAGe5xgDr0FdOXqtf-XSmbbHlE3JQePrgpWAX39zTzKV699mj6lqWAFhL3RUdyMYt8Dv9skjegwGJ2AXeIh9Dr7GyEc4-vZY1BACGMd01b0DHdRR4RfK8AFCkUeN7IGkERerwDqVniTGKRZs5Ygyd2DxGOObjptefFwXEESs8jMzfW0OQcnlKZ7AYMKbkPBODYH2Zc6oVTA0UzMV2GZY54LVB7XCTuyKAhrVusuO4R"/>
+<div class="absolute top-2 right-2 px-2 py-1 rounded bg-primary text-[10px] font-bold text-white uppercase tracking-tighter">Popüler</div>
+</div>
+<div>
+<h3 class="font-bold text-sm">Parti Kaosu</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400">Çok Oyunculu Eğlence</p>
+</div>
+</div>
+</div>
+</section>
+<section class="mt-8 bg-primary/5 py-6">
+<div class="px-4 mb-4">
+<h2 class="text-slate-900 dark:text-slate-100 text-xl font-bold font-display">Canlı Odalar</h2>
+<p class="text-xs text-slate-500">Şimdi arkadaşlarınla katıl</p>
+</div>
+<div class="flex flex-col gap-3 px-4">
+<div class="flex items-center gap-4 p-3 bg-white dark:bg-background-dark/50 rounded-xl border border-primary/10 shadow-sm">
+<div class="size-14 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white shrink-0">
+<span class="material-symbols-outlined text-2xl">celebration</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-sm">Gece Kuşları Partisi</h4>
+<p class="text-[11px] text-slate-500">12/20 Oyuncu • 5 dk önce başladı</p>
+</div>
+<button class="px-4 py-2 bg-primary/20 text-primary text-xs font-bold rounded-lg">Katıl</button>
+</div>
+<div class="flex items-center gap-4 p-3 bg-white dark:bg-background-dark/50 rounded-xl border border-primary/10 shadow-sm">
+<div class="size-14 rounded-lg bg-gradient-to-br from-blue-500 to-primary flex items-center justify-center text-white shrink-0">
+<span class="material-symbols-outlined text-2xl">keyboard_double_arrow_right</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-sm">Hızlı Turnuva #234</h4>
+<p class="text-[11px] text-slate-500">4/8 Oyuncu • Bekleniyor</p>
+</div>
+<button class="px-4 py-2 bg-primary/20 text-primary text-xs font-bold rounded-lg">Göz At</button>
+</div>
+</div>
+</section>
+<section class="mt-8 px-4">
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-slate-900 dark:text-slate-100 text-xl font-bold font-display">Özel Etkinlikler</h2>
+</div>
+<div class="w-full bg-slate-900 rounded-2xl p-6 relative overflow-hidden border border-primary/30">
+<div class="relative z-10">
+<h3 class="text-primary font-bold text-lg mb-1">Haftalık Ritim Mücadelesi</h3>
+<p class="text-slate-300 text-sm mb-4">İlk 3'e girenlere 500 AlbaCoin hediye!</p>
+<button class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg font-bold text-sm transition-colors">Şimdi Oyna</button>
+</div>
+<div class="absolute -right-10 -bottom-10 opacity-20">
+<span class="material-symbols-outlined text-[160px] text-primary">trophy</span>
+</div>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 z-50 max-w-2xl mx-auto w-full border-t border-primary/10 bg-background-light dark:bg-background-dark px-4 pb-6 pt-2">
+<div class="flex justify-between items-center">
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">home</span>
+<p class="text-[10px] font-medium leading-normal tracking-wide">Ana Sayfa</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">videogame_asset</span>
+<p class="text-[10px] font-medium leading-normal tracking-wide">Oyunlar</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-primary" href="#">
+<div class="bg-primary/20 p-2 rounded-xl mb-1">
+<span class="material-symbols-outlined fill-current">celebration</span>
+</div>
+<p class="text-[10px] font-bold leading-normal tracking-wide">Eğlence</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">groups</span>
+<p class="text-[10px] font-medium leading-normal tracking-wide">Sosyal</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<p class="text-[10px] font-medium leading-normal tracking-wide">Profil</p>
+</a>
+</div>
+</nav>
+</body></html>

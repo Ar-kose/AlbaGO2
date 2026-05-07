@@ -1,0 +1,7 @@
+ALTER TABLE "GameDefinition"
+ADD COLUMN "orientation" TEXT NOT NULL DEFAULT 'PORTRAIT',
+ADD COLUMN "cameraRequirement" TEXT NOT NULL DEFAULT 'FULL_BODY';
+
+ALTER TABLE "GameLevel"
+ADD COLUMN "sceneConfig" JSONB,
+ADD COLUMN "interactionRules" JSONB;

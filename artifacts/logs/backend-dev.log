@@ -1,0 +1,49 @@
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +19ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPersistenceModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMotionsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUsersModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuditLogsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAssetsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDevicesConsentsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mWorkoutsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mGameSessionsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRewardsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mLeaderboardsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mGamesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mContentPublishModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/v1/guest-sessions}:[39m[38;5;3m +31ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/guest-sessions, POST} route[39m[38;5;3m +3ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDevicesController {/v1/devices/register}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/devices/register, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMotionsController {/v1/motions}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/motions, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWorkoutsController {/v1/workout-sessions}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/workout-sessions, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/workout-sessions/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mGamesController {/v1/game-definitions}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/game-definitions/active, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInternalGamesController {/v1/internal/game-definitions}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/internal/game-definitions, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/internal/game-definitions/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/internal/game-definitions/:id/validation, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/internal/game-definitions, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/internal/game-definitions/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mGameSessionsController {/v1/game-sessions}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/game-sessions, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/game-sessions/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mRewardsController {/v1/reward-claims}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/reward-claims, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mLeaderboardsController {/v1/leaderboards}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/leaderboards, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mContentPublishController {/v1/internal/game-definitions}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/internal/game-definitions/:gameId/publish, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/internal/game-definitions/:gameId/rollback, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInternalAssetsController {/v1/internal/assets}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/internal/assets, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPublicAssetsController {/v1/assets}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/assets/:assetId, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuditLogsController {/v1/internal/audit-logs}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/v1/internal/audit-logs, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 3128  - [39m05.05.2026 22:09:20 [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +3ms[39m

@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id
+  guestToken  String   @unique
+  displayName String
+  status      String
+  createdAt   DateTime
+  devices     Device[]
+}
+
+model Device {
+  id             String   @id
+  userId         String
+  installId      String
+  platform       String
+  appVersion     String
+  pushToken      String?
+  consentVersion String
+  createdAt      DateTime
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model GameDefinition {
+  id              String      @id
+  gameKey         String
+  version         Int
+  templateKey     String
+  title           String
+  description     String
+  status          String
+  minAppVersion   String
+  orientation     String      @default("PORTRAIT")
+  cameraRequirement String    @default("FULL_BODY")
+  segmentRuleJson Json
+  supportedMotions Json
+  assets          Json
+  publishedAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  levels          GameLevel[]
+
+  @@index([gameKey])
+  @@index([status])
+}
+
+model GameLevel {
+  id               String   @id
+  gameDefinitionId String
+  levelId          String
+  durationSec      Int
+  targetScore      Int
+  difficulty       String
+  motionRules      Json
+  rewardRules      Json
+  configJson       Json
+  sceneConfig      Json?
+  interactionRules Json?
+  taskRulesJson    Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  gameDefinition   GameDefinition @relation(fields: [gameDefinitionId], references: [id], onDelete: Cascade)
+
+  @@index([gameDefinitionId])
+}
+
+model WorkoutSession {
+  id               String   @id
+  clientSessionKey String?  @unique
+  userId           String?
+  motionType       String
+  source           String
+  startedAt        DateTime
+  endedAt          DateTime?
+  durationSec      Int?
+  totalScore       Int?
+  status           String
+  motionSummary    Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model GameSession {
+  id               String   @id
+  clientSessionKey String?  @unique
+  userId           String?
+  gameDefinitionId String
+  workoutSessionId String
+  startedAt        DateTime
+  endedAt          DateTime?
+  score            Int?
+  gameVersion      Int?
+  result           String?
+  clientIntegrityHash String?
+  resultPayload    Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model RewardGrant {
+  id             String   @id
+  userId         String
+  sourceType     String
+  sourceId       String
+  rewardType     String
+  amount         Int
+  idempotencyKey String   @unique
+  createdAt      DateTime
+}
+
+model AuditLog {
+  id         String   @id
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  beforeJson Json?
+  afterJson  Json?
+  createdAt  DateTime
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}

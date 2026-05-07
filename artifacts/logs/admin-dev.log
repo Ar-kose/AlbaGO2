@@ -1,0 +1,17 @@
+
+> admin@0.1.0 dev
+> next dev -p 3001
+
+  ▲ Next.js 14.2.16
+  - Local:        http://localhost:3001
+
+ ✓ Starting...
+ ✓ Ready in 2.6s
+ ○ Compiling /games ...
+ ✓ Compiled /games in 5.2s (462 modules)
+ GET /games 200 in 5616ms
+ GET /games 200 in 75ms
+ GET /games 200 in 248ms
+ ○ Compiling / ...
+ ✓ Compiled / in 881ms (496 modules)
+ GET / 200 in 1074ms

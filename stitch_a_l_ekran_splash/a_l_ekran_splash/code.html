@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f20db9",
+                        "background-light": "#f8f5f8",
+                        "background-dark": "#22101e",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<title>AlbaGO - Splash</title>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased overflow-hidden">
+<!-- Main Splash Container -->
+<div class="relative flex h-screen w-full flex-col items-center justify-between bg-background-light dark:bg-background-dark p-8">
+<!-- Background Gradient Effects -->
+<div class="absolute inset-0 overflow-hidden pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]"></div>
+<div class="absolute bottom-[-5%] right-[-5%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[100px]"></div>
+</div>
+<!-- Top Spacer for Android Status Bar feel -->
+<div class="h-12 w-full"></div>
+<!-- Logo Section -->
+<div class="flex flex-col items-center justify-center flex-grow w-full max-w-md">
+<!-- Animated Motion Circle Backdrop -->
+<div class="relative flex items-center justify-center mb-8">
+<div class="absolute w-32 h-32 border-2 border-primary/30 rounded-full"></div>
+<div class="absolute w-40 h-40 border border-primary/10 rounded-full"></div>
+<!-- Hero Image / Icon Container -->
+<div class="relative w-24 h-24 bg-gradient-to-tr from-primary to-primary/60 rounded-xl flex items-center justify-center shadow-[0_0_40px_rgba(242,13,185,0.4)] overflow-hidden">
+<div class="w-full h-full bg-center bg-cover opacity-80" data-alt="Energetic person jumping in a neon light tunnel" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC8SAQ7NjVo8Xb7plL7ATeCGNKdopPbH-MVnlDd1y9e0ytnUtCgnL969yt2A3RsUfTnMksvXESUlMmc4lXM98k1aTVTsrKohj7pRPeaNxF9FVigLdcqUs13xCVABnEEIi73XycXxbatsz_plMmvsLq1YGYjaOrKY0MFpNGUx_qbWIH8GUJWQrWLf0sF88IV_YGIv1dUaUKUFEJyb8tAwhg4THV9p9JDqE6TsEH561cC7UFjgixYVeRAX9ruiHEZ7IZzUSbAQU918wz8");'>
+</div>
+<span class="material-symbols-outlined absolute text-5xl text-white font-bold">bolt</span>
+</div>
+</div>
+<!-- Brand Name -->
+<h1 class="text-slate-900 dark:text-slate-100 tracking-tighter text-[56px] font-bold leading-none mb-2">
+                Alba<span class="text-primary">GO</span>
+</h1>
+<!-- Tagline -->
+<div class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+<p class="text-primary text-sm font-medium tracking-widest uppercase">
+                    Hareket Et • Oyna • Keşfet
+                </p>
+</div>
+</div>
+<!-- Loading & Footer Section -->
+<div class="w-full max-w-xs flex flex-col items-center gap-8 pb-12">
+<!-- Progress Container -->
+<div class="w-full space-y-4">
+<div class="flex justify-between items-end">
+<span class="text-slate-500 dark:text-slate-400 text-xs font-semibold tracking-widest uppercase">Hazırlanıyor</span>
+<span class="text-primary text-xs font-bold">30%</span>
+</div>
+<!-- Progress Bar -->
+<div class="h-1.5 w-full bg-slate-200 dark:bg-primary/10 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[30%] rounded-full shadow-[0_0_10px_rgba(242,13,185,0.6)]"></div>
+</div>
+</div>
+<!-- Footer Text -->
+<div class="flex flex-col items-center gap-1 opacity-50">
+<p class="text-slate-900 dark:text-slate-100 text-[10px] font-medium tracking-widest uppercase">
+                    Premium Motion Experience
+                </p>
+<div class="h-1 w-1 rounded-full bg-primary"></div>
+</div>
+</div>
+<!-- Android Navigation Bar Indicator (Visual Only) -->
+<div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-slate-300 dark:bg-white/10 rounded-full"></div>
+</div>
+</body></html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f20db9",
+                        "accent-cyan": "#06b6d4",
+                        "accent-blue": "#3b82f6",
+                        "background-light": "#f8f5f8",
+                        "background-dark": "#22101e",
+                        "card-dark": "#2d1627",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #f20db9;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Header -->
+<header class="sticky top-0 z-50 flex items-center bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md p-4 justify-between border-b border-primary/10">
+<div class="text-primary flex size-10 shrink-0 items-center justify-center bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined">menu</span>
+</div>
+<h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight flex-1 text-center font-display">Eğitim Dünyası</h2>
+<div class="flex w-10 items-center justify-end">
+<button class="flex size-10 cursor-pointer items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors hover:bg-primary/20">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto pb-24">
+<!-- Hero Section -->
+<div class="@container px-4 py-6">
+<div class="relative flex flex-col gap-6 overflow-hidden rounded-xl bg-gradient-to-br from-primary/20 via-background-dark to-accent-blue/20 p-6 border border-primary/20 @[864px]:flex-row @[864px]:items-center">
+<div class="z-10 flex flex-col gap-4 @[864px]:w-1/2">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-cyan/20 text-accent-cyan text-xs font-bold uppercase tracking-wider w-fit">
+<span class="material-symbols-outlined text-sm">auto_awesome</span>
+                        Yeni Nesil Öğrenme
+                    </div>
+<h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-tight @[480px]:text-5xl font-display">
+                        Öğrenirken <span class="text-primary">Hareket Et!</span>
+</h1>
+<p class="text-slate-600 dark:text-slate-300 text-base leading-relaxed max-w-md">
+                        AlbaGO ile dersler artık çok daha eğlenceli ve hareketli. Yapay zeka destekli oyunlarla keşfet.
+                    </p>
+<button class="flex min-w-[140px] max-w-fit cursor-pointer items-center justify-center gap-2 rounded-xl h-12 px-6 bg-primary text-white text-base font-bold transition-transform active:scale-95 shadow-lg shadow-primary/25">
+<span class="truncate">Hemen Başla</span>
+<span class="material-symbols-outlined">play_circle</span>
+</button>
+</div>
+<div class="relative @[864px]:w-1/2 flex justify-center">
+<div class="w-full aspect-video rounded-xl bg-slate-800/50 border border-white/10 flex items-center justify-center overflow-hidden" data-alt="Children playing interactive educational game happily" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDxBqcCMlVBm_Cxh0fy-ly-6gxXSXkV-d3JiO8KLZfuEgPLkjMXu5qwwO0D9lYTsaaPeXY7BbkIRJJZZpdqkSyNUr4Xwpp-ME1V0hdlLCLJV-V1rGaJtXFRYI2aWaOKrdzFh-c-EnEdo9lFSqUMbJtCN3A2N9tOYqcN6CUufnjnnGkE1na-JU4yW70RMSnNugNFE5Y_HOKa-iRo5Ww9RFF8GDsluUGUWGSMeenS7uEd_mgsEShrUITal7ya1bOp3n3IgmFEg1Yfob6i"); background-size: cover; background-position: center;'>
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Category Tabs -->
+<div class="sticky top-[73px] z-40 bg-background-light dark:bg-background-dark border-b border-primary/5">
+<div class="flex px-4 gap-6 overflow-x-auto custom-scrollbar no-scrollbar">
+<a class="flex flex-col items-center justify-center border-b-2 border-primary text-primary pb-3 pt-4 shrink-0" href="#">
+<p class="text-sm font-bold">Tümü</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 hover:text-primary pb-3 pt-4 shrink-0 transition-colors" href="#">
+<p class="text-sm font-bold">Matematik</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 hover:text-primary pb-3 pt-4 shrink-0 transition-colors" href="#">
+<p class="text-sm font-bold">Dil Bilgisi</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 hover:text-primary pb-3 pt-4 shrink-0 transition-colors" href="#">
+<p class="text-sm font-bold">Mantık</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 hover:text-primary pb-3 pt-4 shrink-0 transition-colors" href="#">
+<p class="text-sm font-bold">Fen Bilimleri</p>
+</a>
+</div>
+</div>
+<!-- Content Grid -->
+<div class="px-4 py-6 flex flex-col gap-8">
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-slate-900 dark:text-white text-xl font-bold font-display">Eğitici Oyunlar</h2>
+<a class="text-primary text-sm font-medium hover:underline" href="#">Tümünü Gör</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<!-- Card 1: Math -->
+<div class="group bg-white dark:bg-card-dark rounded-xl p-4 border border-primary/5 hover:border-primary/30 transition-all flex flex-col gap-3 shadow-sm">
+<div class="relative w-full aspect-video rounded-lg overflow-hidden bg-accent-blue/10">
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-accent-blue text-5xl opacity-40">calculate</span>
+</div>
+<div class="absolute top-2 left-2 px-2 py-1 rounded bg-accent-blue/90 text-white text-[10px] font-bold">MATEMATİK</div>
+<div class="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium">15 DK</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Sayı Avcıları</h3>
+<span class="text-xs font-bold text-accent-cyan bg-accent-cyan/10 px-2 py-0.5 rounded-full">6-8 Yaş</span>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400">Dört işlem becerilerini hareket ederek geliştir.</p>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<div class="flex -space-x-2">
+<div class="size-6 rounded-full border-2 border-card-dark bg-primary/20 flex items-center justify-center text-[8px] font-bold text-primary">A1</div>
+<div class="size-6 rounded-full border-2 border-card-dark bg-accent-blue/20 flex items-center justify-center text-[8px] font-bold text-accent-blue">B2</div>
+</div>
+<span class="text-[10px] text-slate-400 font-medium">+1.2k öğrenci oynadı</span>
+</div>
+</div>
+<!-- Card 2: Language -->
+<div class="group bg-white dark:bg-card-dark rounded-xl p-4 border border-primary/5 hover:border-primary/30 transition-all flex flex-col gap-3 shadow-sm">
+<div class="relative w-full aspect-video rounded-lg overflow-hidden bg-primary/10">
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-5xl opacity-40">spellcheck</span>
+</div>
+<div class="absolute top-2 left-2 px-2 py-1 rounded bg-primary text-white text-[10px] font-bold">DİL BİLGİSİ</div>
+<div class="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium">10 DK</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Kelime Koşusu</h3>
+<span class="text-xs font-bold text-accent-cyan bg-accent-cyan/10 px-2 py-0.5 rounded-full">7-10 Yaş</span>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400">Doğru kelimeyi bulmak için zıpla ve yakala!</p>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<div class="flex -space-x-2">
+<div class="size-6 rounded-full border-2 border-card-dark bg-accent-cyan/20 flex items-center justify-center text-[8px] font-bold text-accent-cyan">C1</div>
+<div class="size-6 rounded-full border-2 border-card-dark bg-accent-blue/20 flex items-center justify-center text-[8px] font-bold text-accent-blue">D4</div>
+</div>
+<span class="text-[10px] text-slate-400 font-medium">+800 öğrenci oynadı</span>
+</div>
+</div>
+<!-- Card 3: Logic -->
+<div class="group bg-white dark:bg-card-dark rounded-xl p-4 border border-primary/5 hover:border-primary/30 transition-all flex flex-col gap-3 shadow-sm">
+<div class="relative w-full aspect-video rounded-lg overflow-hidden bg-accent-cyan/10">
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-accent-cyan text-5xl opacity-40">extension</span>
+</div>
+<div class="absolute top-2 left-2 px-2 py-1 rounded bg-accent-cyan text-white text-[10px] font-bold">MANTIK</div>
+<div class="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium">20 DK</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Labirent Ustası</h3>
+<span class="text-xs font-bold text-accent-cyan bg-accent-cyan/10 px-2 py-0.5 rounded-full">9-12 Yaş</span>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400">Karmaşık problemleri çözmek için rotanı çiz.</p>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<div class="flex -space-x-2">
+<div class="size-6 rounded-full border-2 border-card-dark bg-primary/20 flex items-center justify-center text-[8px] font-bold text-primary">X2</div>
+<div class="size-6 rounded-full border-2 border-card-dark bg-slate-500/20 flex items-center justify-center text-[8px] font-bold text-slate-400">Y1</div>
+</div>
+<span class="text-[10px] text-slate-400 font-medium">+2.5k öğrenci oynadı</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Rewards Banner -->
+<section class="bg-gradient-to-r from-accent-blue/80 to-accent-cyan/80 rounded-2xl p-6 text-white flex flex-col md:flex-row items-center gap-6 overflow-hidden relative">
+<div class="absolute top-0 right-0 opacity-10 translate-x-1/4 -translate-y-1/4">
+<span class="material-symbols-outlined text-[160px]">emoji_events</span>
+</div>
+<div class="flex-1 z-10">
+<h3 class="text-2xl font-black mb-2 font-display">Haftalık Görevler!</h3>
+<p class="text-blue-50/90 text-sm mb-4 max-w-sm">Her gün 3 oyun tamamla, 500 AlbaCoin ve özel rozetler kazan.</p>
+<div class="flex items-center gap-4">
+<div class="flex-1 bg-white/20 h-2 rounded-full overflow-hidden">
+<div class="bg-white h-full w-[60%]"></div>
+</div>
+<span class="text-xs font-bold">2/3 Oyun</span>
+</div>
+</div>
+<button class="bg-white text-accent-blue px-6 py-2 rounded-xl font-bold text-sm shadow-xl z-10 transition-transform active:scale-95">
+                    Görevleri Gör
+                </button>
+</section>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 flex border-t border-primary/10 bg-white/90 dark:bg-card-dark/95 backdrop-blur-xl px-4 pb-6 pt-3 safe-area-inset-bottom">
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 transition-colors" href="#">
+<span class="material-symbols-outlined">home</span>
+<p class="text-[10px] font-medium leading-normal">Ana Sayfa</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-primary transition-colors" href="#">
+<span class="material-symbols-outlined fill-1">school</span>
+<p class="text-[10px] font-bold leading-normal">Eğitim</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<p class="text-[10px] font-medium leading-normal">Profil</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-[10px] font-medium leading-normal">Ayarlar</p>
+</a>
+</nav>
+</body></html>

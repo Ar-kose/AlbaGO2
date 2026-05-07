@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f20db9",
+                        "background-light": "#f8f5f8",
+                        "background-dark": "#22101e",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Top Navigation -->
+<div class="flex items-center justify-end p-6">
+<button class="text-primary font-bold text-base tracking-wide hover:opacity-80 transition-opacity">
+            Geç
+        </button>
+</div>
+<!-- Main Content -->
+<div class="flex flex-col grow items-center px-6">
+<!-- Illustration Container -->
+<div class="w-full max-w-sm aspect-[4/5] relative rounded-xl overflow-hidden bg-primary/10 border border-primary/20 flex items-center justify-center">
+<div class="absolute inset-0 bg-gradient-to-b from-primary/20 to-transparent"></div>
+<!-- Mock Illustration Placeholder -->
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-48 h-48 rounded-full bg-primary/20 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary text-8xl" style="font-variation-settings: 'FILL' 1">
+                        videocam
+                    </span>
+</div>
+<div class="flex gap-4 items-end">
+<!-- Phone on stand icon -->
+<span class="material-symbols-outlined text-slate-100 text-6xl">
+                        stay_primary_portrait
+                    </span>
+<span class="material-symbols-outlined text-primary text-4xl mb-2">
+                        person_celebrate
+                    </span>
+</div>
+</div>
+<!-- Background Decorative Image -->
+<div class="absolute inset-0 z-0 opacity-30 mix-blend-overlay bg-center bg-cover" data-alt="Abstract neon digital technology pattern background" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCo-N9vWyv1l-hp4Nw4TilBAy9Cm43RUI2x-5bXKjKtGg7TCy-Yv1h-pedRkyHqtVHXwKuWpV3k8bLUg_WH090XavcK9nmqOeKBmXNL0UnIPUIUquyqLmYlJYm2JbOhlYj-OnOFmbx01Z37mNPipAhDjSEKKlOfTZAfnLft2edFAWi0-5YOaqkH91KmsoYt9CYA7g1r28ArEYRgfDbtXIP1dDdje39XuBigz9Lr2RkOhU2BM6D0nZFyIOzA_L5rWvD-ROnEtkD9Uin2");'>
+</div>
+</div>
+<!-- Text Content -->
+<div class="mt-10 text-center max-w-md">
+<h1 class="text-slate-100 text-3xl font-bold leading-tight tracking-tight px-2">
+                Kameranla Dünyaya Bağlan
+            </h1>
+<p class="text-slate-400 text-lg font-normal leading-relaxed mt-4 px-4">
+                En iyi deneyim için telefonunu sabit bir yere koy ve oynamaya başla!
+            </p>
+</div>
+<!-- Pagination Indicators -->
+<div class="flex flex-row items-center justify-center gap-3 mt-8">
+<div class="h-2 w-2 rounded-full bg-primary/30"></div>
+<div class="h-2 w-2 rounded-full bg-primary/30"></div>
+<div class="h-2 w-6 rounded-full bg-primary"></div>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="p-6 pb-10 flex flex-col items-center w-full max-w-md mx-auto">
+<button class="w-full bg-primary text-white font-bold py-4 rounded-xl text-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+            Hadi Başlayalım
+        </button>
+</div>
+</body></html>

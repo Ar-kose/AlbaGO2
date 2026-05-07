@@ -1,0 +1,19 @@
+{
+  "name": "alba-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "backend",
+    "admin"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "dev:backend": "npm run start:dev --workspace backend",
+    "dev:admin": "npm run dev --workspace admin",
+    "build:backend": "npm run build --workspace backend",
+    "build:admin": "npm run build --workspace admin"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

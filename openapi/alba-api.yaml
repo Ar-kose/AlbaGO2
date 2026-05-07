@@ -1,0 +1,930 @@
+openapi: 3.1.0
+info:
+  title: AlbaGo MVP API
+  version: 0.3.0
+  description: |
+    Sprint 4 contract for the AlbaGo Android arcade sport demo slice with
+    MotionEvent-driven Fruit Slash, Dodge Run and Fit Challenge templates.
+servers:
+  - url: http://localhost:3000
+    description: Local development
+paths:
+  /v1/guest-sessions:
+    post:
+      summary: Create a guest session
+      operationId: createGuestSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGuestSessionRequest'
+      responses:
+        '201':
+          description: Guest session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestSessionResponse'
+  /v1/devices/register:
+    post:
+      summary: Register device and consent state
+      operationId: registerDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDeviceRequest'
+      responses:
+        '201':
+          description: Device registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceResponse'
+  /v1/motions:
+    get:
+      summary: List supported motions
+      operationId: listMotions
+      responses:
+        '200':
+          description: Supported motions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MotionDefinition'
+  /v1/workout-sessions:
+    post:
+      summary: Create workout session
+      operationId: createWorkoutSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkoutSessionRequest'
+      responses:
+        '201':
+          description: Workout session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutSession'
+  /v1/workout-sessions/{workoutSessionId}:
+    patch:
+      summary: Update workout session
+      operationId: updateWorkoutSession
+      parameters:
+        - in: path
+          name: workoutSessionId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkoutSessionRequest'
+      responses:
+        '200':
+          description: Workout session updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutSession'
+  /v1/game-sessions:
+    post:
+      summary: Create game session
+      operationId: createGameSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGameSessionRequest'
+      responses:
+        '201':
+          description: Game session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameSession'
+  /v1/game-sessions/{gameSessionId}:
+    patch:
+      summary: Update game session
+      operationId: updateGameSession
+      parameters:
+        - in: path
+          name: gameSessionId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGameSessionRequest'
+      responses:
+        '200':
+          description: Game session updated
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/GameSession'
+                  - $ref: '#/components/schemas/ErrorResponse'
+  /v1/game-definitions/active:
+    get:
+      summary: Fetch published game definitions
+      operationId: getActiveGameDefinitions
+      parameters:
+        - in: query
+          name: appVersion
+          schema:
+            type: string
+        - in: query
+          name: platform
+          schema:
+            type: string
+            enum: [ANDROID]
+      responses:
+        '200':
+          description: Published game definitions filtered by app version
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GameDefinition'
+  /v1/daily-goals:
+    get:
+      summary: Fetch daily goals
+      operationId: getDailyGoals
+      responses:
+        '200':
+          description: Daily goals payload
+  /v1/leaderboards:
+    get:
+      summary: Fetch leaderboard
+      operationId: getLeaderboard
+      parameters:
+        - in: query
+          name: scope
+          schema:
+            type: string
+            enum: [GLOBAL, FRIENDS]
+        - in: query
+          name: period
+          schema:
+            type: string
+            enum: [DAILY, WEEKLY]
+      responses:
+        '200':
+          description: Leaderboard payload
+  /v1/reward-claims:
+    post:
+      summary: Claim reward grant
+      operationId: claimReward
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RewardClaimRequest'
+      responses:
+        '201':
+          description: Reward processed
+  /v1/internal/assets:
+    post:
+      summary: Upload a game asset for admin-managed definitions
+      operationId: uploadGameAsset
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Uploaded asset manifest item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameAsset'
+  /v1/assets/{assetId}:
+    get:
+      summary: Serve an uploaded game asset
+      operationId: getGameAsset
+      parameters:
+        - in: path
+          name: assetId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: PNG, WebP or sanitized SVG asset bytes
+  /v1/internal/game-definitions:
+    get:
+      summary: List game definitions for admin
+      operationId: listGameDefinitions
+      responses:
+        '200':
+          description: Admin game definition list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GameDefinition'
+    post:
+      summary: Create admin draft game definition
+      operationId: createGameDefinition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertGameDefinitionRequest'
+      responses:
+        '201':
+          description: Game definition created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameDefinition'
+  /v1/internal/game-definitions/{gameId}:
+    get:
+      summary: Get admin game definition detail
+      operationId: getGameDefinition
+      parameters:
+        - in: path
+          name: gameId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Game definition detail
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/GameDefinition'
+                  - $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      summary: Update admin game definition
+      operationId: updateGameDefinition
+      parameters:
+        - in: path
+          name: gameId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertGameDefinitionRequest'
+      responses:
+        '200':
+          description: Game definition updated
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/GameDefinition'
+                  - $ref: '#/components/schemas/ErrorResponse'
+  /v1/internal/game-definitions/{gameId}/validation:
+    get:
+      summary: Validate draft before publish
+      operationId: validateGameDefinition
+      parameters:
+        - in: path
+          name: gameId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameValidationResponse'
+  /v1/internal/game-definitions/{gameId}/publish:
+    post:
+      summary: Publish game definition
+      operationId: publishGameDefinition
+      parameters:
+        - in: path
+          name: gameId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishActionRequest'
+      responses:
+        '200':
+          description: Game definition published
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/GameDefinition'
+                  - $ref: '#/components/schemas/PublishValidationErrorResponse'
+  /v1/internal/game-definitions/{gameId}/rollback:
+    post:
+      summary: Roll back published game definition to review
+      operationId: rollbackGameDefinition
+      parameters:
+        - in: path
+          name: gameId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishActionRequest'
+      responses:
+        '200':
+          description: Game definition rolled back
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/GameDefinition'
+                  - $ref: '#/components/schemas/ErrorResponse'
+  /v1/internal/audit-logs:
+    get:
+      summary: List recent audit log entries
+      operationId: listAuditLogs
+      responses:
+        '200':
+          description: Audit log entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLogEntry'
+components:
+  schemas:
+    CreateGuestSessionRequest:
+      type: object
+      required: [installId, platform, appVersion]
+      properties:
+        installId:
+          type: string
+        platform:
+          type: string
+          enum: [ANDROID]
+        appVersion:
+          type: string
+    GuestSessionResponse:
+      type: object
+      properties:
+        guestToken:
+          type: string
+        userId:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+    RegisterDeviceRequest:
+      type: object
+      required: [userId, installId, platform, appVersion, consentVersion]
+      properties:
+        userId:
+          type: string
+        installId:
+          type: string
+        platform:
+          type: string
+          enum: [ANDROID]
+        appVersion:
+          type: string
+        pushToken:
+          type: string
+        consentVersion:
+          type: string
+    DeviceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        installId:
+          type: string
+        platform:
+          type: string
+        appVersion:
+          type: string
+        pushToken:
+          type: string
+        consentVersion:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    MotionDefinition:
+      type: object
+      properties:
+        motionType:
+          type: string
+        title:
+          type: string
+        detectorKey:
+          type: string
+        detectorMinVersion:
+          type: string
+        supportedGameTemplates:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+    CreateWorkoutSessionRequest:
+      type: object
+      required: [clientSessionKey, motionType, source, startedAt]
+      properties:
+        clientSessionKey:
+          type: string
+        motionType:
+          type: string
+          enum: [SQUAT, JUMPING_JACK, JUMP_ROPE]
+        source:
+          type: string
+          enum: [CAMERA]
+        startedAt:
+          type: string
+          format: date-time
+    UpdateWorkoutSessionRequest:
+      type: object
+      properties:
+        endedAt:
+          type: string
+          format: date-time
+        durationSec:
+          type: integer
+        totalScore:
+          type: integer
+        status:
+          type: string
+          enum: [ACTIVE, PAUSED, FINISHED]
+        motionSummary:
+          type: object
+          additionalProperties: true
+    WorkoutSession:
+      type: object
+      properties:
+        id:
+          type: string
+        motionType:
+          type: string
+        source:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+        durationSec:
+          type: integer
+        totalScore:
+          type: integer
+        status:
+          type: string
+        motionSummary:
+          type: object
+          additionalProperties: true
+    CreateGameSessionRequest:
+      type: object
+      required: [clientSessionKey, gameDefinitionId, workoutSessionId, startedAt]
+      properties:
+        clientSessionKey:
+          type: string
+        gameDefinitionId:
+          type: string
+        workoutSessionId:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+    UpdateGameSessionRequest:
+      type: object
+      properties:
+        endedAt:
+          type: string
+          format: date-time
+        score:
+          type: integer
+        result:
+          type: string
+        gameVersion:
+          type: integer
+        clientIntegrityHash:
+          type: string
+        resultPayload:
+          $ref: '#/components/schemas/GameSessionResultPayload'
+    GameSession:
+      type: object
+      properties:
+        id:
+          type: string
+        gameDefinitionId:
+          type: string
+        workoutSessionId:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+        score:
+          type: integer
+        result:
+          type: string
+        clientIntegrityHash:
+          type: string
+        resultPayload:
+          $ref: '#/components/schemas/GameSessionResultPayload'
+    RewardClaimRequest:
+      type: object
+      required: [userId, sourceType, sourceId, rewardType, amount, idempotencyKey]
+      properties:
+        userId:
+          type: string
+        sourceType:
+          type: string
+        sourceId:
+          type: string
+        rewardType:
+          type: string
+        amount:
+          type: integer
+        idempotencyKey:
+          type: string
+    UpsertGameDefinitionRequest:
+      type: object
+      required: [gameKey, template, title, description, minAppVersion, orientation, cameraRequirement, supportedMotions, levels, assets]
+      properties:
+        gameKey:
+          type: string
+        template:
+          type: string
+          enum: [TARGET_HIT, ENDLESS_RUNNER, FRUIT_SLASH, DODGE_RUN, FIT_CHALLENGE, SCENE_PLAY]
+        title:
+          type: string
+        description:
+          type: string
+        minAppVersion:
+          type: string
+        category:
+          type: string
+          enum: [SPORT, FUN, EDUCATION]
+        tags:
+          type: array
+          items:
+            type: string
+        orientation:
+          type: string
+          enum: [PORTRAIT, LANDSCAPE]
+        cameraRequirement:
+          type: string
+          enum: [FULL_BODY, UPPER_BODY, HAND_TARGET]
+        supportedMotions:
+          type: array
+          items:
+            type: string
+            enum: [SQUAT, JUMPING_JACK, JUMP_ROPE]
+        levels:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameLevel'
+        assets:
+          $ref: '#/components/schemas/AssetManifest'
+        status:
+          type: string
+          enum: [DRAFT, REVIEW, SCHEDULED, PUBLISHED, ARCHIVED]
+        segmentRuleJson:
+          type: object
+          additionalProperties: true
+        actorId:
+          type: string
+    GameDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+        gameKey:
+          type: string
+        version:
+          type: integer
+        template:
+          type: string
+          enum: [TARGET_HIT, ENDLESS_RUNNER, FRUIT_SLASH, DODGE_RUN, FIT_CHALLENGE, SCENE_PLAY]
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, REVIEW, SCHEDULED, PUBLISHED, ARCHIVED]
+        minAppVersion:
+          type: string
+        category:
+          type: string
+          enum: [SPORT, FUN, EDUCATION]
+        tags:
+          type: array
+          items:
+            type: string
+        orientation:
+          type: string
+          enum: [PORTRAIT, LANDSCAPE]
+        cameraRequirement:
+          type: string
+          enum: [FULL_BODY, UPPER_BODY, HAND_TARGET]
+        supportedMotions:
+          type: array
+          items:
+            type: string
+            enum: [SQUAT, JUMPING_JACK, JUMP_ROPE]
+        levels:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameLevel'
+        assets:
+          $ref: '#/components/schemas/AssetManifest'
+        publishedAt:
+          type: string
+          format: date-time
+    GameLevel:
+      type: object
+      properties:
+        levelId:
+          type: string
+        durationSec:
+          type: integer
+        targetScore:
+          type: integer
+        difficulty:
+          type: string
+        motionRules:
+          type: array
+          items:
+            $ref: '#/components/schemas/MotionRule'
+        rewardRules:
+          type: array
+          items:
+            $ref: '#/components/schemas/RewardRule'
+        config:
+          type: object
+          additionalProperties: true
+        sceneConfig:
+          type: object
+          additionalProperties: true
+        interactionRules:
+          type: array
+          items:
+            $ref: '#/components/schemas/InteractionRule'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskRule'
+        programSteps:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProgramStep'
+    MotionRule:
+      type: object
+      properties:
+        motion:
+          type: string
+          enum: [SQUAT, JUMPING_JACK, JUMP_ROPE]
+        event:
+          type: string
+          enum: [REP_COUNTED, BAD_FORM, USER_OUT_OF_FRAME, PAUSED, RESUMED]
+        points:
+          type: integer
+        cooldownMs:
+          type: integer
+    RewardRule:
+      type: object
+      properties:
+        rewardType:
+          type: string
+        amount:
+          type: integer
+        minimumScore:
+          type: integer
+    TaskRule:
+      type: object
+      properties:
+        motion:
+          type: string
+          enum: [SQUAT, JUMPING_JACK, JUMP_ROPE]
+        targetCount:
+          type: integer
+        pointsPerRep:
+          type: integer
+    ProgramStep:
+      type: object
+      properties:
+        stepId:
+          type: string
+        type:
+          type: string
+          enum: [PLAY_GAME, MOTION_REPS, HOLD_POSE, REST, INSTRUCTION]
+        title:
+          type: string
+        description:
+          type: string
+        motion:
+          type: string
+          enum: [SQUAT, JUMPING_JACK, JUMP_ROPE]
+        targetCount:
+          type: integer
+        holdSec:
+          type: integer
+        durationSec:
+          type: integer
+        successMessage:
+          type: string
+        nextOnComplete:
+          type: boolean
+    AssetManifest:
+      type: object
+      properties:
+        background:
+          type: string
+        character:
+          type: string
+        soundtrack:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameAsset'
+    GameAsset:
+      type: object
+      properties:
+        id:
+          type: string
+        key:
+          type: string
+        kind:
+          type: string
+          enum: [IMAGE, AUDIO]
+        format:
+          type: string
+          enum: [PNG, WEBP, SVG, MP3]
+        uri:
+          type: string
+        mimeType:
+          type: string
+        width:
+          type: integer
+        height:
+          type: integer
+        sha256:
+          type: string
+        bytes:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+    InteractionRule:
+      type: object
+      properties:
+        input:
+          type: string
+          enum: [MOTION_EVENT, POSE_CONTACT]
+        event:
+          type: string
+          enum: [REP_COUNTED, BAD_FORM, USER_OUT_OF_FRAME, PAUSED, RESUMED]
+        motion:
+          type: string
+          enum: [SQUAT, JUMPING_JACK, JUMP_ROPE]
+        targetObjectType:
+          type: string
+        keypoints:
+          type: array
+          items:
+            type: string
+        action:
+          type: string
+          enum: [ADD_SCORE, REMOVE_OBJECT, RESET_COMBO, DECREASE_LIFE, PROGRESS_TASK, PAUSE_GAME, SHOW_EFFECT, COMPLETE_LEVEL]
+        points:
+          type: integer
+        cooldownMs:
+          type: integer
+    GameSessionResultPayload:
+      type: object
+      properties:
+        gameId:
+          type: string
+        gameVersion:
+          type: integer
+        score:
+          type: integer
+        durationSec:
+          type: integer
+        motionCounts:
+          type: object
+          additionalProperties:
+            type: integer
+        comboMax:
+          type: integer
+        accuracy:
+          type: number
+          format: float
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+        clientSessionKey:
+          type: string
+    PublishActionRequest:
+      type: object
+      required: [actorId]
+      properties:
+        actorId:
+          type: string
+        note:
+          type: string
+    GameValidationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+    AuditLogEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        actorId:
+          type: string
+        action:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+    PublishValidationErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f20db9",
+                        "background-light": "#f8f5f8",
+                        "background-dark": "#181116",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<header class="sticky top-0 z-50 flex items-center bg-background-light dark:bg-background-dark/95 backdrop-blur-md p-4 border-b border-slate-200 dark:border-primary/20 justify-between">
+<div class="flex items-center gap-3">
+<div class="text-primary flex size-10 items-center justify-center bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined text-2xl">sports_gymnastics</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">AlbaGO <span class="text-primary">Spor</span></h2>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<main class="flex-grow">
+<div class="@container">
+<div class="p-4">
+<div class="relative flex min-h-[420px] flex-col gap-6 overflow-hidden rounded-xl items-center justify-center p-6 text-center shadow-2xl" data-alt="Person performing energetic fitness workout in dark gym" style='background-image: linear-gradient(to bottom, rgba(24, 17, 22, 0.4), rgba(24, 17, 22, 0.9)), url("https://lh3.googleusercontent.com/aida-public/AB6AXuAYzcIAELCMCACdJ6YfN6mq6NN9vEVw-mlJEqpJl0zIATXhYR6sZ9L_lI6-En-Wo93zut0OzAc3_S265Pg5XLT7z7P9rQd691tXu0pSYcWw1W70Jk5kEyPKwyyi9tyoqNv8kJhfVCA3OEtVmQkrNNlXMVz-xV4f-tLQjk29i_Zerp6MHhP9G1MVHN7giJA_DvyRCaTFoODEbkaGPSO4Tj5FpNBQ95ZHwvd6fSz0wBeDBORvWJoirGozhkfSmFTRXempwWFaUDCYpFfb"); background-size: cover; background-position: center;'>
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent opacity-60"></div>
+<div class="relative z-10 flex flex-col gap-4">
+<span class="inline-block self-center px-3 py-1 bg-primary text-white text-xs font-bold uppercase tracking-widest rounded-full">Yeni Sezon</span>
+<h1 class="text-white text-4xl @[480px]:text-6xl font-black leading-tight tracking-tighter">
+                            Hareket et, terle, eğlen!
+                        </h1>
+<p class="text-slate-200 text-base @[480px]:text-xl font-medium max-w-xl mx-auto">
+                            AlbaGO Sports Mode ile oyunun bir parçası ol. Kameranı aç, puanları topla, şampiyon ol!
+                        </p>
+<div class="mt-4">
+<button class="flex mx-auto min-w-[160px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-8 bg-primary text-white text-lg font-bold hover:scale-105 transition-transform shadow-[0_0_20px_rgba(242,13,185,0.4)]">
+<span>Hemen Oyna</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<section class="px-4 py-8">
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight">Önerilen Oyunlar</h2>
+<a class="text-primary font-bold text-sm flex items-center gap-1 hover:underline" href="#">Tümünü Gör <span class="material-symbols-outlined text-sm">arrow_forward</span></a>
+</div>
+<div class="grid grid-cols-1 @[640px]:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Game Card 1 -->
+<div class="group flex flex-col overflow-hidden rounded-xl bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 shadow-lg hover:border-primary/40 transition-all duration-300">
+<div class="relative aspect-video bg-cover bg-center" data-alt="Dynamic fitness jumping jumping game interface" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDhZISQEgnPICLGvzRRpO4V17uqXnhEHqoU_CZAIbg1RFoC2t0pttddSDDFCPcFnX_LauKoO628k2nMcBzte_IWykIC3MAByTvwvS3YY0Sxg3ngxJOSRlfvHIIaKFPd2Ai6Izg0f9_hZB7SBCrtphCDzaGNV_NUU7xndkrIcH0ujKZv3wdH-03z5ufJklI4lae91L7xjaDIcpif2S3jceOPbKLiXSlr0tV8XbjFSqdjpyWn_Hv893nHIZ3zGqaZy3GOV7pbqSWIvfQZ");'>
+<div class="absolute top-3 left-3 flex gap-2">
+<span class="px-2 py-1 bg-background-dark/80 backdrop-blur-md text-white text-[10px] font-bold rounded-md">ORTA</span>
+<span class="px-2 py-1 bg-primary text-white text-[10px] font-bold rounded-md">ZIPLAMA</span>
+</div>
+</div>
+<div class="p-5 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-white text-xl font-bold">Zıplama Şampiyonası</h3>
+<div class="flex items-center text-primary">
+<span class="material-symbols-outlined text-sm fill-1">star</span>
+<span class="text-xs font-bold ml-1">4.9</span>
+</div>
+</div>
+<p class="text-slate-400 text-sm mb-6 flex-1">Engellerden kaçmak için doğru zamanda zıpla ve yüksek skorlara ulaş.</p>
+<button class="w-full flex items-center justify-center gap-2 rounded-xl h-11 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors">
+                            Hemen Oyna <span class="material-symbols-outlined text-sm">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Game Card 2 -->
+<div class="group flex flex-col overflow-hidden rounded-xl bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 shadow-lg hover:border-primary/40 transition-all duration-300">
+<div class="relative aspect-video bg-cover bg-center" data-alt="Yoga and full body tracking game environment" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAlEFnq_2wLGtX5ju_vhep6aCUByQeqHxuHBhyVNkNpOTyPVttFlxHbsIzI7IlBi3cSzvw85C2E3t1zHWfJZdvdhgl-wXMWIi1dUa7msFAc3ttSF08_iPvnH0HspXE_HHD2EL6piKGfcTmlT3t5yY0X5uz-NnziSAYzJ8jyWuLenyb8l7cipoKhTKf_kTvPVidFpdXUuZQ_ndWKKluboG-oRtjj8JbjDgBCk3DqlUo6FzU8BJSoi_uwzGQ6iQWWetIp5dMRRwgb467e");'>
+<div class="absolute top-3 left-3 flex gap-2">
+<span class="px-2 py-1 bg-background-dark/80 backdrop-blur-md text-white text-[10px] font-bold rounded-md uppercase">Kolay</span>
+<span class="px-2 py-1 bg-primary text-white text-[10px] font-bold rounded-md uppercase">Tüm Vücut</span>
+</div>
+</div>
+<div class="p-5 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-white text-xl font-bold">Esneklik Ustası</h3>
+<div class="flex items-center text-primary">
+<span class="material-symbols-outlined text-sm fill-1">star</span>
+<span class="text-xs font-bold ml-1">4.7</span>
+</div>
+</div>
+<p class="text-slate-400 text-sm mb-6 flex-1">Vücudunu belirtilen formlara sokarak esnekliğini test et ve geliştir.</p>
+<button class="w-full flex items-center justify-center gap-2 rounded-xl h-11 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors">
+                            Hemen Oyna <span class="material-symbols-outlined text-sm">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Game Card 3 -->
+<div class="group flex flex-col overflow-hidden rounded-xl bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 shadow-lg hover:border-primary/40 transition-all duration-300">
+<div class="relative aspect-video bg-cover bg-center" data-alt="High intensity boxing workout tracker" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCpCCHX2qGhgtKgpVcSvocSIIKhEmw-NslmsdgDz59NjIhiwuOJmhmu5vnUhX8bxtUUOesAMI4G5Fzw0ISRdQsL_545bnDXqmiYEwyO6QHizoBbhTj0lvbuFTZKRv3YmNcGI207jaTl8y5EfBG51cMDKaMxZcA1FlI-Wbh2t7gaYUn0ArvTJTAb4ipRYLCvn1JuBZXAuC63bmd5RaEYUTnGB8AE7WCi2KTU02oOQB3WFVBubA_S9gEbGUm4O1tz57S9Wd0H8UVvutbN");'>
+<div class="absolute top-3 left-3 flex gap-2">
+<span class="px-2 py-1 bg-background-dark/80 backdrop-blur-md text-white text-[10px] font-bold rounded-md uppercase">Zor</span>
+<span class="px-2 py-1 bg-primary text-white text-[10px] font-bold rounded-md uppercase">Tüm Vücut</span>
+</div>
+</div>
+<div class="p-5 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-white text-xl font-bold">Ritim Boksu</h3>
+<div class="flex items-center text-primary">
+<span class="material-symbols-outlined text-sm fill-1">star</span>
+<span class="text-xs font-bold ml-1">5.0</span>
+</div>
+</div>
+<p class="text-slate-400 text-sm mb-6 flex-1">Müzik eşliğinde gelen hedefleri doğru vuruşlarla patlat, kalori yak.</p>
+<button class="w-full flex items-center justify-center gap-2 rounded-xl h-11 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors">
+                            Hemen Oyna <span class="material-symbols-outlined text-sm">play_arrow</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<section class="px-4 py-6">
+<div class="bg-primary/10 rounded-2xl p-6 flex items-center justify-between">
+<div class="flex flex-col">
+<p class="text-primary font-bold text-xs uppercase tracking-widest mb-1">Günün Hedefi</p>
+<h4 class="text-slate-900 dark:text-white font-bold text-lg leading-tight">30 Dakika Aktif Kal</h4>
+<div class="flex items-center gap-2 mt-2">
+<div class="h-2 w-32 bg-slate-300 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[65%]"></div>
+</div>
+<span class="text-xs font-bold text-slate-500 dark:text-slate-400">20/30 Dak</span>
+</div>
+</div>
+<div class="flex items-center justify-center size-14 bg-primary text-white rounded-xl">
+<span class="material-symbols-outlined text-3xl">timer</span>
+</div>
+</div>
+</section>
+</main>
+<nav class="sticky bottom-0 z-50 flex gap-2 border-t border-slate-200 dark:border-primary/20 bg-background-light dark:bg-background-dark/95 backdrop-blur-md px-4 pb-6 pt-3">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">home</span>
+<p class="text-[10px] font-bold uppercase">Ana Sayfa</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary" href="#">
+<span class="material-symbols-outlined fill-1">fitness_center</span>
+<p class="text-[10px] font-bold uppercase">Spor</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+<p class="text-[10px] font-bold uppercase">Liderlik</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<p class="text-[10px] font-bold uppercase">Profil</p>
+</a>
+</nav>
+</body></html>
