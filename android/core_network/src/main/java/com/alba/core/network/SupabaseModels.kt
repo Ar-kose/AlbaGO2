@@ -159,7 +159,7 @@ data class DeviceRow(
 
 @Serializable
 data class WorkoutSessionRow(
-    val id: String,
+    val id: String = "",
     @SerialName("profile_id") val profileId: String,
     @SerialName("mode_id") val modeId: String? = null,
     @SerialName("device_id") val deviceId: String? = null,
@@ -176,7 +176,7 @@ data class WorkoutSessionRow(
 
 @Serializable
 data class GameSessionRow(
-    val id: String,
+    val id: String = "",
     @SerialName("profile_id") val profileId: String,
     @SerialName("game_id") val gameId: String,
     @SerialName("game_version_id") val gameVersionId: String,
@@ -196,7 +196,7 @@ data class GameSessionRow(
 
 @Serializable
 data class WorkoutEventRow(
-    val id: String,
+    val id: String = "",
     @SerialName("workout_session_id") val workoutSessionId: String,
     @SerialName("event_type") val eventType: String,
     val motion: String? = null,
@@ -215,6 +215,31 @@ data class GameSessionMotionCountRow(
     @SerialName("max_confidence") val maxConfidence: Double? = null,
     @SerialName("duration_sec") val durationSec: Int? = null,
     @SerialName("created_at") val createdAt: String? = null
+)
+
+@Serializable
+data class GameSessionSubmitRequest(
+    val clientSessionId: String,
+    val gameKey: String,
+    val gameDefinitionId: String? = null,
+    val gameDefinitionVersion: Int? = null,
+    val deviceId: String? = null,
+    val startedAt: String? = null,
+    val endedAt: String? = null,
+    val durationSec: Int? = null,
+    val score: Int,
+    val combo: Int? = null,
+    val accuracy: Double? = null,
+    val calories: Double? = null,
+    val resultPayload: JsonObject
+)
+
+@Serializable
+data class GameSessionSubmitResponse(
+    val id: String,
+    val clientSessionId: String,
+    val status: String,
+    val createdAt: String? = null
 )
 
 // ─── Daily Goals & Leaderboards ───
@@ -256,7 +281,7 @@ data class LeaderboardEntryRow(
 
 @Serializable
 data class RewardGrantRow(
-    val id: String,
+    val id: String = "",
     @SerialName("profile_id") val profileId: String,
     @SerialName("source_type") val sourceType: String,
     @SerialName("source_id") val sourceId: String,

@@ -15,6 +15,7 @@ import {
   PublicDemoTemplate,
   rollbackGameDefinition,
   templateLabel,
+  toGameDefinitionV3,
   updateGameDefinition,
   uploadGameAsset
 } from '../../lib/alba-api';
@@ -142,7 +143,7 @@ export function GamesConsole() {
   async function saveDraft() {
     setIsBusy(true);
     try {
-      const payload = { ...draft, actorId: 'admin@local', status: 'draft' as const };
+      const payload = { ...draft, actorId: 'admin@local', status: 'DRAFT' as const };
       const saved = selectedId
         ? await updateGameDefinition(selectedId, payload)
         : await createGameDefinition(payload);
@@ -220,7 +221,7 @@ export function GamesConsole() {
         </div>
 
         <div className="category-tabs" role="tablist" aria-label="Oyun kategorileri">
-          {(['ALL', 'sport', 'entertainment', 'education'] as const).map((category) => (
+          {(['ALL', 'SPORT', 'FUN', 'EDUCATION'] as const).map((category) => (
             <button
               key={category}
               className={`category-tab${categoryFilter === category ? ' category-tab-active' : ''}`}
@@ -256,7 +257,7 @@ export function GamesConsole() {
             <p className="eyebrow">Template Editor</p>
             <h2>{selectedGame?.title ?? templateLabel(draft.template)}</h2>
           </div>
-          <span className="badge">{selectedGame?.status ?? 'draft'}</span>
+          <span className="badge">{selectedGame?.status ?? 'DRAFT'}</span>
         </div>
 
         <p className="muted">{message}</p>
@@ -543,8 +544,8 @@ export function GamesConsole() {
         </div>
 
         <div className="panel inset-panel">
-          <p className="eyebrow">Mobile Preview Payload</p>
-          <pre className="payload-preview">{JSON.stringify(draft, null, 2)}</pre>
+          <p className="eyebrow">GameDefinition v3 Preview Payload</p>
+          <pre className="payload-preview">{JSON.stringify(toGameDefinitionV3(draft), null, 2)}</pre>
         </div>
       </article>
 
@@ -1247,7 +1248,7 @@ function mapGameToDraft(game: GameDefinitionDto): GameDefinitionDraft {
     title: game.title,
     description: game.description,
     minAppVersion: game.minAppVersion,
-    category: game.category ?? 'entertainment',
+    category: game.category ?? 'FUN',
     tags: game.tags ?? [],
     orientation: game.orientation,
     cameraRequirement: game.cameraRequirement,
@@ -1277,10 +1278,9 @@ function mapGameToDraft(game: GameDefinitionDto): GameDefinitionDraft {
 function categoryLabel(category: 'ALL' | GameDefinitionDraft['category']): string {
   return {
     ALL: 'Tum kategoriler',
-    sport: 'Spor',
-    entertainment: 'Eglence',
-    education: 'Egitim',
-    demo: 'Demo'
+    SPORT: 'Spor',
+    FUN: 'Eglence',
+    EDUCATION: 'Egitim'
   }[category];
 }
 

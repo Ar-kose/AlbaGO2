@@ -49,6 +49,32 @@ enum class ProgramStepType {
     INSTRUCTION
 }
 
+enum class ProgramStepStatus {
+    NOT_STARTED,
+    ACTIVE,
+    COMPLETED,
+    BLOCKED
+}
+
+data class ProgramRuntimeStepState(
+    val stepId: String,
+    val type: ProgramStepType,
+    val title: String,
+    val status: ProgramStepStatus = ProgramStepStatus.NOT_STARTED,
+    val progressCount: Int = 0,
+    val targetCount: Int? = null,
+    val startedAtMs: Long? = null,
+    val remainingMs: Long? = null,
+    val completedAtMs: Long? = null,
+    val message: String? = null
+)
+
+data class ProgramRuntimeState(
+    val activeIndex: Int = 0,
+    val steps: List<ProgramRuntimeStepState> = emptyList(),
+    val completed: Boolean = false
+)
+
 enum class RuleActionType {
     ADD_SCORE,
     REMOVE_OBJECT,
@@ -276,7 +302,8 @@ data class GameRuntimeState(
     val lastEffect: String? = null,
     val validMotionCount: Int = 0,
     val invalidMotionCount: Int = 0,
-    val sceneState: GameSceneState = IdleSceneState
+    val sceneState: GameSceneState = IdleSceneState,
+    val program: ProgramRuntimeState = ProgramRuntimeState()
 )
 
 data class GameSessionResult(
@@ -387,15 +414,37 @@ class GameRuntime(
         startedAtMs = nowMs
         pausedAtMs = null
         accumulatedPausedMs = 0L
+        val program = initProgram(nowMs)
         state = GameRuntimeState(
             template = definition.template,
             title = definition.title,
             description = definition.description,
             remainingMs = level.durationSec * 1000L,
             status = GameSessionStatus.ACTIVE,
-            sceneState = initialSceneState(nowMs)
+            sceneState = initialSceneState(nowMs),
+            program = program
         )
         return state
+    }
+
+    private fun initProgram(nowMs: Long): ProgramRuntimeState {
+        val steps = level.programSteps
+        if (steps.isEmpty()) return ProgramRuntimeState()
+        val runtimeSteps = steps.mapIndexed { index, step ->
+            ProgramRuntimeStepState(
+                stepId = step.stepId,
+                type = step.type,
+                title = step.title,
+                status = if (index == 0) ProgramStepStatus.ACTIVE else ProgramStepStatus.NOT_STARTED,
+                targetCount = step.targetCount,
+                startedAtMs = if (index == 0) nowMs else null
+            )
+        }
+        return ProgramRuntimeState(
+            activeIndex = 0,
+            steps = runtimeSteps,
+            completed = false
+        )
     }
 
     fun snapshot(): GameRuntimeState = state
@@ -435,13 +484,18 @@ class GameRuntime(
         )
 
         if (state.status == GameSessionStatus.ACTIVE) {
-            nextState = when (definition.template) {
-                GameTemplate.FRUIT_SLASH -> tickFruitSlash(nextState, nowMs)
-                GameTemplate.DODGE_RUN -> tickDodgeRun(nextState, nowMs)
-                GameTemplate.FIT_CHALLENGE -> nextState
-                GameTemplate.SCENE_PLAY -> tickScenePlay(nextState, nowMs)
-                GameTemplate.TARGET_HIT,
-                GameTemplate.ENDLESS_RUNNER -> nextState
+            nextState = tickProgram(nextState, nowMs)
+            val activeStep = getActiveProgramStep(nextState.program)
+            val shouldTickTemplate = activeStep == null || activeStep.type == ProgramStepType.PLAY_GAME
+            if (shouldTickTemplate) {
+                nextState = when (definition.template) {
+                    GameTemplate.FRUIT_SLASH -> tickFruitSlash(nextState, nowMs)
+                    GameTemplate.DODGE_RUN -> tickDodgeRun(nextState, nowMs)
+                    GameTemplate.FIT_CHALLENGE -> nextState
+                    GameTemplate.SCENE_PLAY -> tickScenePlay(nextState, nowMs)
+                    GameTemplate.TARGET_HIT,
+                    GameTemplate.ENDLESS_RUNNER -> nextState
+                }
             }
         }
 
@@ -450,6 +504,110 @@ class GameRuntime(
             finish(nowMs)
         }
         return state
+    }
+
+    private fun tickProgram(currentState: GameRuntimeState, nowMs: Long): GameRuntimeState {
+        val program = currentState.program
+        if (program.steps.isEmpty() || program.completed) return currentState
+
+        val activeStep = program.steps.getOrNull(program.activeIndex) ?: return currentState
+        if (activeStep.status != ProgramStepStatus.ACTIVE) return currentState
+
+        val stepElapsed = activeStep.startedAtMs?.let { nowMs - it } ?: 0L
+
+        val stepCompleted = when (activeStep.type) {
+            ProgramStepType.REST -> {
+                val durationMs = (level.programSteps.getOrNull(program.activeIndex)?.durationSec ?: 0) * 1000L
+                stepElapsed >= durationMs
+            }
+            ProgramStepType.INSTRUCTION -> {
+                val durationSec = level.programSteps.getOrNull(program.activeIndex)?.durationSec ?: 3
+                stepElapsed >= durationSec * 1000L
+            }
+            ProgramStepType.HOLD_POSE -> {
+                val holdMs = (level.programSteps.getOrNull(program.activeIndex)?.holdSec ?: 0) * 1000L
+                stepElapsed >= holdMs
+            }
+            ProgramStepType.PLAY_GAME -> {
+                val durationSec = level.programSteps.getOrNull(program.activeIndex)?.durationSec
+                if (durationSec != null) stepElapsed >= durationSec * 1000L
+                else currentState.completed // no duration -> wait for game completion or level end
+            }
+            ProgramStepType.MOTION_REPS -> false // completed via onMotionEvent
+        }
+
+        if (stepCompleted) {
+            return advanceProgramStep(currentState, nowMs)
+        }
+
+        val remainingMs = when (activeStep.type) {
+            ProgramStepType.REST -> {
+                val dur = (level.programSteps.getOrNull(program.activeIndex)?.durationSec ?: 0) * 1000L
+                (dur - stepElapsed).coerceAtLeast(0L)
+            }
+            ProgramStepType.HOLD_POSE -> {
+                val hold = (level.programSteps.getOrNull(program.activeIndex)?.holdSec ?: 0) * 1000L
+                (hold - stepElapsed).coerceAtLeast(0L)
+            }
+            ProgramStepType.INSTRUCTION -> {
+                val dur = (level.programSteps.getOrNull(program.activeIndex)?.durationSec ?: 3) * 1000L
+                (dur - stepElapsed).coerceAtLeast(0L)
+            }
+            else -> null
+        }
+
+        val updatedStep = activeStep.copy(remainingMs = remainingMs)
+        val updatedSteps = program.steps.toMutableList()
+        updatedSteps[program.activeIndex] = updatedStep
+        return currentState.copy(program = program.copy(steps = updatedSteps))
+    }
+
+    private fun advanceProgramStep(currentState: GameRuntimeState, nowMs: Long): GameRuntimeState {
+        val program = currentState.program
+        val activeStep = program.steps.getOrNull(program.activeIndex) ?: return currentState
+
+        val completedStep = activeStep.copy(
+            status = ProgramStepStatus.COMPLETED,
+            completedAtMs = nowMs
+        )
+        val updatedSteps = program.steps.toMutableList()
+        updatedSteps[program.activeIndex] = completedStep
+
+        val stepDef = level.programSteps.getOrNull(program.activeIndex)
+        val nextOnComplete = stepDef?.nextOnComplete ?: true
+        val isLastStep = program.activeIndex >= program.steps.lastIndex
+
+        if (isLastStep || !nextOnComplete) {
+            val nextProgram = program.copy(
+                steps = updatedSteps,
+                completed = true
+            )
+            val nextState = currentState.copy(
+                program = nextProgram,
+                lastEffect = stepDef?.successMessage ?: completedStep.title + " tamamlandi"
+            )
+            return if (isLastStep) nextState.copy(completed = true) else nextState
+        }
+
+        val nextIndex = program.activeIndex + 1
+        val nextStep = updatedSteps[nextIndex].copy(
+            status = ProgramStepStatus.ACTIVE,
+            startedAtMs = nowMs
+        )
+        updatedSteps[nextIndex] = nextStep
+
+        val nextProgram = program.copy(
+            activeIndex = nextIndex,
+            steps = updatedSteps
+        )
+        return currentState.copy(
+            program = nextProgram,
+            lastEffect = stepDef?.successMessage ?: completedStep.title + " tamamlandi"
+        )
+    }
+
+    private fun getActiveProgramStep(program: ProgramRuntimeState): ProgramRuntimeStepState? {
+        return program.steps.getOrNull(program.activeIndex)
     }
 
     fun finish(nowMs: Long): GameRuntimeState {
@@ -467,11 +625,23 @@ class GameRuntime(
 
     fun onMotionEvent(event: MotionEvent): GameRuntimeState {
         if (event.type == MotionEventType.USER_OUT_OF_FRAME) {
+            val activeStep = getActiveProgramStep(state.program)
+            if (activeStep?.type == ProgramStepType.HOLD_POSE) {
+                return pause(event.timestampMs, "Pozisyon beklemede")
+            }
             return pause(event.timestampMs, "Kadraja geri don")
         }
         if (state.status != GameSessionStatus.ACTIVE) {
             return state
         }
+
+        // Program runner gets first chance for MOTION_REPS
+        val activeStep = getActiveProgramStep(state.program)
+        if (activeStep != null && activeStep.type == ProgramStepType.MOTION_REPS) {
+            state = handleProgramMotionReps(event, activeStep)
+            return state
+        }
+
         state = when (definition.template) {
             GameTemplate.FRUIT_SLASH -> handleFruitSlashEvent(event)
             GameTemplate.DODGE_RUN -> handleDodgeRunEvent(event)
@@ -480,6 +650,46 @@ class GameRuntime(
             GameTemplate.TARGET_HIT,
             GameTemplate.ENDLESS_RUNNER -> handleLegacyEvent(event)
         }
+        return state
+    }
+
+    private fun handleProgramMotionReps(event: MotionEvent, activeStep: ProgramRuntimeStepState): GameRuntimeState {
+        if (event.type != MotionEventType.REP_COUNTED) {
+            if (event.type == MotionEventType.BAD_FORM) {
+                return invalidate("Bad form", penalty = pointsFor(event.motionType, MotionEventType.BAD_FORM), currentState = state)
+            }
+            return state.copy(lastEffect = "Hareket sayilamiyor")
+        }
+
+        val stepDef = level.programSteps.getOrNull(state.program.activeIndex) ?: return state
+        if (stepDef.motion != event.motionType) {
+            return state.copy(lastEffect = "Aktif hareket: ${stepDef.motion?.name?.replace("_", " ") ?: "bekleniyor"}")
+        }
+
+        val newCount = activeStep.progressCount + 1
+        val targetCount = stepDef.targetCount ?: 1
+        val completed = newCount >= targetCount
+
+        val motionPoints = pointsFor(event.motionType, MotionEventType.REP_COUNTED)
+        val points = motionPoints.takeIf { it > 0 } ?: 0
+
+        val updatedStep = activeStep.copy(
+            progressCount = newCount,
+            message = if (completed) stepDef.successMessage ?: "${stepDef.title} tamamlandi" else null
+        )
+        val updatedSteps = state.program.steps.toMutableList()
+        updatedSteps[state.program.activeIndex] = updatedStep
+        var nextState = scoreRep(
+            points = points,
+            effect = if (completed) stepDef.successMessage ?: "${stepDef.title} tamamlandi" else "Tekrar: $newCount/$targetCount",
+            currentState = state.copy(program = state.program.copy(steps = updatedSteps))
+        )
+
+        if (completed) {
+            nextState = advanceProgramStep(nextState, event.timestampMs)
+        }
+
+        state = nextState
         return state
     }
 

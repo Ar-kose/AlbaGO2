@@ -10,6 +10,13 @@ import com.alba.core.runtime.GameSessionStatus
 import com.alba.core.runtime.GameTemplate
 import com.alba.core.runtime.IdleSceneState
 
+enum class SyncStatus {
+    IDLE,
+    SYNCING,
+    SYNCED,
+    FAILED
+}
+
 data class WorkoutUiState(
     val sessionId: String? = null,
     val clientSessionKey: String? = null,
@@ -40,7 +47,10 @@ data class GameUiState(
     val completed: Boolean = false,
     val lastEffect: String? = null,
     val sceneState: GameSceneState = IdleSceneState,
-    val syncMessage: String = "Idle"
+    val syncMessage: String = "Idle",
+    val syncStatus: SyncStatus = SyncStatus.IDLE,
+    val syncError: String? = null,
+    val serverSessionId: String? = null
 )
 
 data class MotionUiState(

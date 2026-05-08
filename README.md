@@ -10,7 +10,16 @@ Android-first, AI-assisted and gamified exercise MVP monorepo.
 - `docs/`: product, architecture, ADR and sprint documentation
 - `openapi/`: API contract sources
 - `infra/`: local infrastructure bootstrap
-- `artifacts/`: local device screenshots and demo evidence files
+- `artifacts/`: local device screenshots, demo evidence files, verification logs and release artifacts
+
+Validated on 2026-05-08:
+
+- Platform v2 RC package created.
+- P0/P1/P2/P3/P4 verification evidence indexed.
+- Debug/internal RC APK copied to `artifacts/release/albago-platform-v2-rc-20260508-170015/`.
+- APK SHA256 checksum generated.
+- RC physical smoke test passed on device cffbc068.
+- Final backend/admin/Android verification passed.
 
 ## Sprint 4 status
 
@@ -31,6 +40,95 @@ Sprint 4 moves AlbaGo from a technical prototype toward a presentation-quality d
 - Sport-style games can define program/playlist steps such as rep targets, plank/hold steps, rest blocks and automatic next-step guidance.
 
 ## Latest local verification
+
+Validated on `2026-05-08` on this machine:
+
+**P0 Platform Verification** - `scripts/verify-platform-v2.ps1` completed successfully.
+- `npm.cmd install`, Prisma generate, backend build/test, admin build, Android compile/test/assemble all passed.
+
+**P1 Physical Device Acceptance** - PASS on physical device `cffbc068` (`M2007J3SI`, Android 12).
+- Debug APK installed, `adb reverse tcp:3000 tcp:3000` succeeded.
+- Fruit Slash, Dodge Run, Fit Challenge demo videos and crash logs captured.
+
+**P2 Session Persistence & Result Sync** - PASS.
+- Backend `POST /v1/game-sessions` accepts completed game results.
+- Android async result sync with local preservation on failure.
+
+**P3 Admin Publish QA & Remote Scene Play** - PASS.
+- A new SCENE_PLAY game (`p3_scene_play_deve_cuce_20260508-163452`) was created/published through backend/admin APIs.
+- Backend validation, publish, and active endpoint confirmation all passed.
+- Backend tests: 32/32 pass.
+- Android pipeline fixed to parse `sceneConfig` and `interactionRules` from remote definitions.
+- Android compilation, unit tests, and debug APK assembly passed.
+- Physical device video and crash logs captured for the remotely published game.
+- Cold launch completed without fatal crash.
+- Fruit Slash, Dodge Run and Fit Challenge physical demo videos were captured.
+- Crash logs were scanned and passed with no fatal signatures.
+- P1 acceptance summary: `artifacts/verification/p1-device-acceptance-summary-20260508-150858.md`
+- P1 evidence index: `artifacts/verification/p1-evidence-index-20260508-151309.md`
+- Android SDK path detection is normalized in scripts: existing `ANDROID_SDK_ROOT`, existing `ANDROID_HOME`, `%LOCALAPPDATA%\Android\Sdk`, then `C:\Android\Sdk`.
+- P1 readiness scripts are available:
+  - `powershell -ExecutionPolicy Bypass -File scripts/preflight-physical-device.ps1`
+  - `powershell -ExecutionPolicy Bypass -File scripts/accept-device-demo.ps1 -Build`
+  - `powershell -ExecutionPolicy Bypass -File scripts/check-android-crash-log.ps1 <log>`
+- P0 platform verification is green. P1 physical device acceptance is now green on a real Android device.
+- Phone-connected resume runbook: `docs/07-release/p1-phone-connected-runbook.md`
+- **P2 Session Persistence & Android Result Sync** - PASS.
+- Backend now accepts idempotent completed-game result submissions through `POST /v1/game-sessions` using `clientSessionId`.
+- Game session results are persisted through a Prisma-backed repository when Prisma is enabled, with in-memory fallback for dev/test.
+- Android now submits completed game results asynchronously from the local finish flow, preserves the result screen on network failure and exposes sync state (`IDLE`, `SYNCING`, `SYNCED`, `FAILED`).
+- Duplicate local finish attempts reuse the same client session id; duplicate backend submissions return the existing server session instead of creating a second row.
+- P2 verification passed:
+  - `npm.cmd install`
+  - `npm.cmd run prisma:generate --workspace backend`
+  - `npm.cmd run build --workspace backend`
+  - `npm.cmd run test --workspace backend` (21/21 tests pass)
+  - `npm.cmd run build --workspace admin`
+  - `.\gradlew.bat :core_runtime:compileDebugKotlin :core_data:compileDebugKotlin :core_network:compileDebugKotlin --no-daemon`
+  - `.\gradlew.bat testDebugUnitTest --no-daemon`
+  - `.\gradlew.bat :app:assembleDebug --no-daemon`
+- P2 evidence:
+  - `artifacts/verification/p2-session-inventory-20260508-152120.md`
+  - `artifacts/verification/p2-backend-admin-verification-20260508-153739.log`
+  - `artifacts/verification/p2-android-verification-20260508-153813.log`
+  - `artifacts/verification/p2-session-persistence-summary-20260508-153911.md`
+- P3/P4 expansion was intentionally not started in this P2 run.
+
+Validated on `2026-05-07` on this machine:
+
+- **Platform v2 Program Runner Stabilization** — Android program runner v1 implemented with full step progression state machine (`PLAY_GAME`, `MOTION_REPS`, `REST`, `INSTRUCTION`, `HOLD_POSE`).
+- Backend GameDefinition v3 validation tightened for program steps (REST duration required, MOTION_REPS motion required, INSTRUCTION durationSec warning).
+- Android `V3ProgramStepDefinition` now preserves `successMessage` end-to-end.
+- Camera readiness guidance composable added for `FULL_BODY`, `UPPER_BODY`, `HAND_TARGET`.
+- Verification passed:
+  - `npm.cmd run build --workspace backend`
+  - `npm.cmd run test --workspace backend` (16/16 tests pass)
+  - `npm.cmd run build --workspace admin`
+  - `.\gradlew.bat :core_runtime:compileDebugKotlin :core_runtime:compileDebugUnitTestKotlin`
+  - `.\gradlew.bat :app:assembleDebug`
+- **Known environment issue**: Gradle test worker fails on this machine due to `ö` in default `GRADLE_USER_HOME`. Use `$env:GRADLE_USER_HOME = "C:\gradle-cache"` before running Gradle commands. See `docs/07-release/known-issues.md`.
+
+### Supported local verification setup
+
+```powershell
+$env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'
+$env:ANDROID_SDK_ROOT="$env:LOCALAPPDATA\Android\Sdk"
+$env:ANDROID_HOME="$env:ANDROID_SDK_ROOT"
+$env:GRADLE_USER_HOME='C:\gradle-cache'  # Required: avoids non-ASCII path issue
+$env:PATH="$env:JAVA_HOME\bin;$env:ANDROID_SDK_ROOT\platform-tools;$env:PATH"
+```
+
+- Java 21 (Android Studio JBR) — supported
+- Java 26 — rejected (incompatible with current Gradle/Kotlin/AGP)
+- SDK 34 / AGP 8.4.2 — retained
+- `androidx.browser` kept at `1.8.0`
+
+Run the automated verification script:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/verify-platform-v2.ps1
+powershell -ExecutionPolicy Bypass -File scripts/preflight-physical-device.ps1
+```
 
 Validated on `2026-05-06` on this machine:
 
@@ -96,10 +194,10 @@ Validated on `2026-04-26` on this machine:
 
 Still pending:
 
-- human-driven full motion walkthrough
-- 3 separate on-device demo video captures
-- Android `testDebugUnitTest` fix for the Gradle worker environment issue
-- final manual catalog button tap validation through Android Studio Device Mirroring, scrcpy or physical touch because ADB input injection is blocked on the connected device
+- human-driven full catalog/manual tap walkthrough through Android Studio Device Mirroring, scrcpy or physical touch if required
+- optional physical smoke that confirms a completed game result reaches the backend over USB reverse
+- workout session persistence remains separate future scope
+- P3 admin publish/refresh QA and P4 release packaging
 
 ## Local setup
 
@@ -270,5 +368,5 @@ Uploaded assets are referenced in `assets.items[]` and can be reused by Android 
 - Android builds on this Windows path require `android.overridePathCheck=true` because the workspace path contains non-ASCII characters.
 - The MediaPipe model asset is stored under `android/core_pose/src/main/assets/`.
 - Debug builds expose a QA panel with backend URL override, overlay toggle, config refresh, sync retry and motion log controls.
-- Prisma persistence is currently the Sprint 4 source of truth for game definitions, levels and audit logs.
+- Prisma persistence is currently the source of truth for game definitions, levels, audit logs and completed game session result submissions.
 - Admin can add or update games inside the templates already shipped in Android (`FRUIT_SLASH`, `DODGE_RUN`, `FIT_CHALLENGE`) without an app update. A completely new mechanic still needs a new native template unless a future generic scene/action interpreter is added.

@@ -195,6 +195,9 @@ abstract class BaseDetector(
     }
 
     protected fun cooledDown(timestampMs: Long, cooldownMs: Long): Boolean {
+        if (lastRepTimestampMs == Long.MIN_VALUE) {
+            return true
+        }
         return timestampMs - lastRepTimestampMs >= cooldownMs
     }
 

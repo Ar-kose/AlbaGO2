@@ -1,5 +1,47 @@
 # Changelog
 
+## 2026-05-08 P4 Release Candidate Packaging
+
+- Packaged Platform v2 debug/internal release candidate with final evidence index and checksum.
+- RC APK: `albago-platform-v2-rc-debug.apk` (SHA256: `7B2AE2ABA4DF0DD3E53509854D4EA29604A3A4C178D24695DE3B438BA709A712`).
+- RC physical smoke test passed on device cffbc068 (M2007J3SI, Android 12).
+- Final verification: backend build/tests (32/32), admin build, Android unit tests, Android APK build — all PASS.
+- npm audit triaged: 5 findings classified as accepted non-blocking.
+- Working tree reviewed; unrelated .agent/ files excluded from auto-commit.
+- Evidence index created linking all P0-P4 verification artifacts.
+- Documentation finalized: README, release-checklist, known-issues, changelog.
+
+## 2026-05-08 P3 Admin Publish QA & Remote Scene Play
+
+- Verified admin/backend remote Scene Play publish path to Android runtime without app rebuild.
+- Created `scripts/p3-publish-scene-play.ps1` for repeatable end-to-end publish QA.
+- Fixed Android legacy pipeline to parse `sceneConfig` and `interactionRules` from remote definitions.
+- Added backend tests for SCENE_PLAY publish validation (minimal valid, missing objects, empty objects).
+- Added Android tests for V3 parser scene object fields, successMessage, malformed input, and fallback game playability.
+- Published game `p3_scene_play_deve_cuce_20260508-163452` verified in active definitions and Android runtime.
+- Backend tests: 32/32 pass. Android compilation, unit tests, and APK assembly pass.
+
+## 2026-05-08 platform v2 demo-acceptance gate
+
+- P0 deterministic verification was re-run through `scripts/verify-platform-v2.ps1`.
+- Backend Prisma generate, backend build, backend tests, admin production build, Android `:core_runtime:testDebugUnitTest`, Android `:app:testDebugUnitTest` and Android `:app:assembleDebug` all passed.
+- The verification script now seeds the Gradle wrapper distribution into `C:\gradle-cache` from the existing user Gradle cache when available, preserving the deterministic Gradle worker path.
+- P1 physical-device acceptance initially blocked because `adb devices` returned no attached device on 2026-05-08, then passed after device `cffbc068` became visible through ADB.
+- Sprint 5 log was created with P0 evidence and P1 blocker status.
+- P1.1 device recovery was re-run on branch `platform-v2`; `adb devices -l` stayed empty after ADB server restart and optional `adb.exe` task restart, so a blocked acceptance summary was generated.
+- Added P1 physical-device preflight and acceptance readiness tooling.
+- Added Android crash log scanner for acceptance logs.
+- Documented Android SDK path normalization: existing `ANDROID_SDK_ROOT`, existing `ANDROID_HOME`, `%LOCALAPPDATA%\Android\Sdk`, then `C:\Android\Sdk`.
+- Kept P1 gated until a physical Android device became visible through ADB.
+- Added the P1 phone-connected runbook plus working-tree inventory/change-set handoff artifacts for the no-device hold state.
+- Captured P1 physical Android demo acceptance evidence for Fruit Slash, Dodge Run and Fit Challenge on device `cffbc068`.
+- Verified physical-device cold launch and demo logs have no fatal crash signatures.
+- Added P2 completed-game session result persistence through `POST /v1/game-sessions`.
+- Added idempotent backend handling by `clientSessionId` and repository-backed Prisma storage.
+- Added Android completed-game result sync with local result preservation on backend/network failure.
+- Updated OpenAPI and release docs for game-session result submission.
+- Revalidated backend/admin/Android P2 build and test gates.
+
 ## 2026-04-26
 
 - Monorepo scaffold was established for Android, backend, admin, docs, OpenAPI and infra.
@@ -65,7 +107,7 @@
 - Home and catalog copy were tightened toward the AlbaGo arcade-sport product direction; visible debug/backend text was removed from user-facing game catalog cards.
 - `android\\gradlew.bat :app:assembleDebug` passed with Android Studio JBR 21 and explicit Android SDK env vars.
 - Physical device `cffbc068` was detected, the debug APK was installed, `adb reverse tcp:3000 tcp:3000` succeeded and cold launch completed with no `AndroidRuntime` crash in the captured log.
-- Catalog button automation remains blocked by the device OS `INJECT_EVENTS` restriction, so human touch/mirroring validation and demo video capture remain pending.
+- Catalog button automation remained blocked by the device OS `INJECT_EVENTS` restriction, so human touch/mirroring validation and demo video capture were pending at that time. P1 demo videos were later captured on 2026-05-08 with QA direct launch extras.
 
 ## 2026-05-04 design/game camera pass
 

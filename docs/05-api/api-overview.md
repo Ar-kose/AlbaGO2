@@ -51,9 +51,13 @@
   - `assets.items[]`: typed upload manifest entries for PNG/WebP/SVG-backed scene objects
 - `POST /v1/internal/assets` accepts multipart `file` uploads for PNG, WebP and sanitized SVG files up to 5 MB.
 - `GET /v1/assets/:assetId` serves uploaded asset bytes for Android/admin preview usage.
-- `PATCH /v1/game-sessions/:id` can now include a structured `resultPayload`.
-- Backend create endpoints remain idempotent on `clientSessionKey`.
+- `POST /v1/game-sessions` accepts completed Android game result submissions. Required fields are `clientSessionId`, `gameKey`, `score` and `resultPayload`; optional fields include `gameDefinitionId`, `gameDefinitionVersion`, `deviceId`, `startedAt`, `endedAt`, `durationSec`, `combo`, `accuracy` and `calories`.
+- `POST /v1/game-sessions` is idempotent on `clientSessionId`; the legacy alias `clientSessionKey` is still accepted at the boundary.
+- Duplicate game-session submissions return the existing server session with `duplicate_accepted` rather than creating a second row.
+- `PATCH /v1/game-sessions/:id` remains available for legacy session updates and can include a structured `resultPayload`.
+- Backend create endpoints that still use the older create/update flow remain idempotent on `clientSessionKey`.
 - Prisma-backed persistence is now the source of truth for game definitions, levels and audit logs.
 - Android now builds `resultPayload.motionCounts` from the active game session rather than from the workout-only summary.
+- Android submits completed game results asynchronously and keeps the local result screen usable if the backend is unavailable.
 - Android treats `/v1/game-definitions/active` as untrusted remote content: unknown enum values, empty levels and invalid motion rules are skipped before catalog display.
 - If the active-game request fails, Android falls back to cached definitions and then debug-only local demo definitions.

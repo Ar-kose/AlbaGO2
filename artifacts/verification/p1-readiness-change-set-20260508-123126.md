@@ -1,0 +1,399 @@
+﻿# P1 Readiness Change Set
+
+Date: 2026-05-08 12:31:26 +03:00
+Branch: platform-v2
+
+## Files likely belonging to P1 readiness
+
+- `scripts/verify-platform-v2.ps1` - P0/P1 verification entrypoint with normalized Android SDK detection and Gradle cache handling.
+- `scripts/preflight-physical-device.ps1` - Fail-fast physical device readiness diagnostics without APK install.
+- `scripts/accept-device-demo.ps1` - Prepared P1 device demo acceptance runner that stops before install when no physical device is visible.
+- `scripts/check-android-crash-log.ps1` - Crash signature scanner used by the P1 acceptance runner.
+- `README.md` - Latest verification note and P1 blocked/resume status.
+- `docs/08-sprint-logs/2026-05-sprint-05.md` - Sprint log records P1 readiness, no-device blocker, and no P2/P3/P4 expansion.
+- `docs/07-release/release-checklist.md` - Keeps P1 physical acceptance items unchecked while P0 remains green.
+- `docs/07-release/known-issues.md` - Open blocker for no visible physical Android device through ADB.
+- `docs/07-release/changelog.md` - Records P1 readiness tooling and blocked state.
+- `docs/07-release/p1-phone-connected-runbook.md` - Deterministic handoff path for resuming once a phone is connected.
+- `artifacts/verification/*` - Local evidence logs, blocked summaries, working tree inventory, and P1 change-set reports.
+
+## Files that appear unrelated or pre-existing
+
+- ` M .agent/.shared/ui-ux-pro-max/data/charts.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/colors.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/icons.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/landing.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/products.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/prompts.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/react-performance.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/stacks/flutter.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/stacks/html-tailwind.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/stacks/jetpack-compose.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/stacks/nextjs.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/stacks/nuxt-ui.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/stacks/nuxtjs.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/stacks/react-native.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/stacks/react.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/stacks/shadcn.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/stacks/svelte.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/stacks/swiftui.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/stacks/vue.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/styles.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/typography.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/ui-reasoning.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/ux-guidelines.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/data/web-interface.csv` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/scripts/core.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/scripts/design_system.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/.shared/ui-ux-pro-max/scripts/search.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/ARCHITECTURE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/backend-specialist.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/code-archaeologist.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/database-architect.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/debugger.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/devops-engineer.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/documentation-writer.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/explorer-agent.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/frontend-specialist.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/game-developer.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/mobile-developer.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/orchestrator.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/penetration-tester.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/performance-optimizer.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/product-manager.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/product-owner.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/project-planner.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/qa-automation-engineer.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/security-auditor.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/seo-specialist.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/agents/test-engineer.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/mcp_config.json` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/rules/GEMINI.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/scripts/auto_preview.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/scripts/checklist.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/scripts/session_manager.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/scripts/verify_all.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/api-patterns/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/api-patterns/api-style.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/api-patterns/auth.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/api-patterns/documentation.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/api-patterns/graphql.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/api-patterns/rate-limiting.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/api-patterns/response.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/api-patterns/rest.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/api-patterns/scripts/api_validator.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/api-patterns/security-testing.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/api-patterns/trpc.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/api-patterns/versioning.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/agent-coordination.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/feature-building.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/project-detection.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/scaffolding.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/tech-stack.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/astro-static/TEMPLATE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/chrome-extension/TEMPLATE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/cli-tool/TEMPLATE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/electron-desktop/TEMPLATE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/express-api/TEMPLATE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/flutter-app/TEMPLATE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/monorepo-turborepo/TEMPLATE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/nextjs-fullstack/TEMPLATE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/nextjs-saas/TEMPLATE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/nextjs-static/TEMPLATE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/nuxt-app/TEMPLATE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/python-fastapi/TEMPLATE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/app-builder/templates/react-native-app/TEMPLATE.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/architecture/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/architecture/context-discovery.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/architecture/examples.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/architecture/pattern-selection.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/architecture/patterns-reference.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/architecture/trade-off-analysis.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/bash-linux/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/behavioral-modes/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/brainstorming/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/brainstorming/dynamic-questioning.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/clean-code/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/code-review-checklist/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/database-design/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/database-design/database-selection.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/database-design/indexing.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/database-design/migrations.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/database-design/optimization.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/database-design/orm-selection.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/database-design/schema-design.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/database-design/scripts/schema_validator.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/deployment-procedures/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/doc.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/documentation-templates/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/frontend-design/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/frontend-design/animation-guide.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/frontend-design/color-system.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/frontend-design/decision-trees.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/frontend-design/motion-graphics.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/frontend-design/scripts/accessibility_checker.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/frontend-design/scripts/ux_audit.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/frontend-design/typography-system.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/frontend-design/ux-psychology.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/frontend-design/visual-effects.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/game-development/2d-games/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/game-development/3d-games/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/game-development/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/game-development/game-art/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/game-development/game-audio/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/game-development/game-design/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/game-development/mobile-games/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/game-development/multiplayer/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/game-development/pc-games/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/game-development/vr-ar/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/game-development/web-games/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/geo-fundamentals/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/geo-fundamentals/scripts/geo_checker.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/i18n-localization/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/i18n-localization/scripts/i18n_checker.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/intelligent-routing/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/lint-and-validate/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/lint-and-validate/scripts/lint_runner.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/lint-and-validate/scripts/type_coverage.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mcp-builder/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/decision-trees.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/mobile-backend.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/mobile-color-system.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/mobile-debugging.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/mobile-design-thinking.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/mobile-navigation.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/mobile-performance.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/mobile-testing.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/mobile-typography.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/platform-android.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/platform-ios.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/scripts/mobile_audit.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/mobile-design/touch-psychology.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/nextjs-react-expert/1-async-eliminating-waterfalls.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/nextjs-react-expert/2-bundle-bundle-size-optimization.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/nextjs-react-expert/3-server-server-side-performance.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/nextjs-react-expert/4-client-client-side-data-fetching.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/nextjs-react-expert/5-rerender-re-render-optimization.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/nextjs-react-expert/6-rendering-rendering-performance.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/nextjs-react-expert/7-js-javascript-performance.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/nextjs-react-expert/8-advanced-advanced-patterns.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/nextjs-react-expert/9-cache-components.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/nextjs-react-expert/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/nextjs-react-expert/scripts/convert_rules.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/nextjs-react-expert/scripts/react_performance_checker.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/nodejs-best-practices/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/parallel-agents/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/performance-profiling/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/performance-profiling/scripts/lighthouse_audit.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/plan-writing/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/powershell-windows/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/python-patterns/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/red-team-tactics/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/rust-pro/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/seo-fundamentals/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/seo-fundamentals/scripts/seo_checker.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/server-management/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/systematic-debugging/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/tailwind-patterns/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/tdd-workflow/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/testing-patterns/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/testing-patterns/scripts/test_runner.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/vulnerability-scanner/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/vulnerability-scanner/checklists.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/vulnerability-scanner/scripts/security_scan.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/web-design-guidelines/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/webapp-testing/SKILL.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/skills/webapp-testing/scripts/playwright_runner.py` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/workflows/brainstorm.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/workflows/create.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/workflows/debug.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/workflows/deploy.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/workflows/enhance.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/workflows/orchestrate.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/workflows/plan.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/workflows/preview.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/workflows/status.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/workflows/test.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .agent/workflows/ui-ux-pro-max.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .claude/settings.local.json` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M .gitignore` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/next-env.d.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/next.config.mjs` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/package.json` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/src/app/games/games-console.tsx` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/src/app/games/page.tsx` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/src/app/globals.css` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/src/app/layout.tsx` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/src/app/page.tsx` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/src/components/dashboard-card.tsx` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/src/lib/alba-api.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/src/lib/mock-data.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/src/lib/supabase/admin.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/src/lib/supabase/client.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/src/lib/supabase/types.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M admin/tsconfig.json` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/build.gradle.kts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/proguard-rules.pro` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/src/main/AndroidManifest.xml` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/src/main/java/com/alba/app/AlbaApplication.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/src/main/java/com/alba/app/ui/showcase/ShowcaseScreens.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/src/main/java/com/alba/app/ui/splash/SplashScreen.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/src/main/java/com/alba/app/ui/theme/Color.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/src/main/java/com/alba/app/ui/theme/Theme.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/src/main/java/com/alba/app/ui/theme/Type.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/src/main/res/drawable/ic_bolt.xml` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/src/main/res/values/font_certs.xml` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/src/main/res/values/strings.xml` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/src/main/res/values/themes.xml` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/app/src/test/java/com/alba/app/AppSmokeTest.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/build.gradle.kts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_camera/build.gradle.kts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_camera/src/main/java/com/alba/core/camera/CameraFrameSource.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_data/build.gradle.kts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_data/src/main/java/com/alba/core/data/AlbaMotionController.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_data/src/main/java/com/alba/core/data/MotionDebugStore.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_data/src/main/java/com/alba/core/data/MotionUiState.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_data/src/main/java/com/alba/core/data/WorkoutSessionEngine.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_motion/build.gradle.kts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_motion/src/main/java/com/alba/core/motion/MotionEngine.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_motion/src/test/java/com/alba/core/motion/MotionDetectorsTest.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_network/build.gradle.kts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_network/src/main/java/com/alba/core/network/SupabaseAuth.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_network/src/main/java/com/alba/core/network/SupabaseClient.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_network/src/main/java/com/alba/core/network/SupabaseData.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_network/src/main/java/com/alba/core/network/SupabaseModels.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_network/src/main/java/com/alba/core/network/SupabaseRealtime.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_network/src/main/java/com/alba/core/network/SupabaseStorage.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_pose/build.gradle.kts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_pose/src/main/java/com/alba/core/pose/PoseContracts.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_runtime/build.gradle.kts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/core_runtime/src/main/java/com/alba/core/runtime/GameRuntime.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/feature_games/build.gradle.kts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/feature_games/src/main/java/com/alba/feature/games/GamesFeature.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/feature_workout/build.gradle.kts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/feature_workout/src/main/java/com/alba/feature/workout/WorkoutFeature.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/gradle.properties` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/gradle/wrapper/gradle-wrapper.properties` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/gradlew` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M android/settings.gradle.kts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M artifacts/logs/admin-dev.log` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M artifacts/logs/backend-dev.log` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M artifacts/test-assets/albago-bad.svg` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M artifacts/test-assets/albago-test-fruit.svg` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/.env.example` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/jest.config.js` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/nest-cli.json` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/package.json` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/prisma/migrations/20260426190000_init/migration.sql` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/prisma/migrations/20260426194500_sprint4_demo_games/migration.sql` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/prisma/migrations/20260505120000_admin_driven_games_v1/migration.sql` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/prisma/schema.prisma` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/prisma/seed.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/app.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/assets/assets.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/audit-logs/audit-logs.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/auth/auth.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/common/contracts.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/common/in-memory-store.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/common/publish-validation.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/content-publish/content-publish.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/devices-consents/devices-consents.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/game-sessions/game-sessions.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/games/games.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/leaderboards/leaderboards.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/main.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/motions/motions.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/persistence/audit-logs.repository.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/persistence/game-definitions.repository.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/persistence/persistence.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/persistence/prisma.service.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/rewards/rewards.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/users/users.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/src/workouts/workouts.module.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/test/publish-validation.spec.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M backend/tsconfig.json` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/00-product/mobile-ui-redesign.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/00-product/mvp-scope.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/00-product/product-vision.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/00-product/roadmap.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/01-architecture/backend-architecture.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/01-architecture/game-runtime-architecture.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/01-architecture/mobile-architecture.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/01-architecture/motion-engine-architecture.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/02-motion/motion-detectors.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/03-games/admin-driven-game-system-v1.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/03-games/demo-games-sprint-4.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/03-games/remote-game-definition-schema.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/04-admin-panel/admin-requirements.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/05-api/api-overview.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/06-security-privacy/permissions.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/08-sprint-logs/2026-04-sprint-01.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/08-sprint-logs/2026-05-sprint-02.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/08-sprint-logs/2026-05-sprint-03.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/adr/0001-native-kotlin-camera-pipeline.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/adr/0002-nestjs-modular-backend.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/adr/0003-remote-game-definition-system.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M docs/adr/0004-pose-model-choice.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M infra/docker-compose.yml` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M openapi/alba-api.yaml` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M package-lock.json` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M package.json` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M stitch_a_l_ekran_splash/a_l_ekran_splash/code.html` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M stitch_a_l_ekran_splash/albago_ana_ekran/code.html` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M stitch_a_l_ekran_splash/e_itim_modu/code.html` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M stitch_a_l_ekran_splash/e_lence_modu/code.html` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M stitch_a_l_ekran_splash/kamera_i_zni/code.html` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M stitch_a_l_ekran_splash/onboarding_1_v_cut_kontrol/code.html` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M stitch_a_l_ekran_splash/onboarding_2_modlar/code.html` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M stitch_a_l_ekran_splash/onboarding_3_ba_la/code.html` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M stitch_a_l_ekran_splash/spor_modu/code.html` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M uploads/assets/asset_409b9f08-ada4-4b4a-bb16-ed92b6f85c26.svg` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- ` M uploads/assets/asset_9ae245d9-79c7-4dad-89a2-1714d9218075.svg` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- `?? .mcp.json` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- `?? android/core_runtime/src/main/java/com/alba/core/runtime/GameDefinitionV3.kt` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- `?? android/core_runtime/src/test/` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- `?? backend/src/common/game-definition-v3.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- `?? backend/test/game-definition-v3.spec.ts` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- `?? docs/08-sprint-logs/2026-05-platform-v2-build-verification.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+- `?? docs/08-sprint-logs/2026-05-sprint-04.md` - outside the P1 readiness/resume scope or ownership unclear, so not automatically included.
+
+## Suggested commit bundle
+
+### Commit A
+
+```text
+chore(android): normalize sdk detection for platform verification
+```
+
+- Suggested files: `scripts/verify-platform-v2.ps1`, relevant README/environment note only after human review because `README.md` also has broader local diff.
+
+### Commit B
+
+```text
+test(android): add physical device preflight and crash scanning
+```
+
+- Suggested files: `scripts/preflight-physical-device.ps1`, `scripts/check-android-crash-log.ps1`.
+
+### Commit C
+
+```text
+test(android): prepare p1 device demo acceptance runner
+```
+
+- Suggested files: `scripts/accept-device-demo.ps1`, P1 acceptance evidence summaries under `artifacts/verification/` if local evidence should be kept outside git or attached separately per project policy.
+
+### Commit D
+
+```text
+docs(release): document p1 blocked readiness state
+```
+
+- Suggested files: `README.md`, `docs/07-release/changelog.md`, `docs/07-release/known-issues.md`, `docs/07-release/release-checklist.md`, `docs/07-release/p1-phone-connected-runbook.md`, `docs/08-sprint-logs/2026-05-sprint-05.md`, after filtering unrelated doc edits.
+
+## Do not commit automatically because
+
+Unrelated or ownership-unclear changes are present across many tracked and untracked areas. A P1-only commit requires human approval and selective staging; automatic commit would risk mixing P1 readiness with product/backend/admin/mobile changes outside this hold plan.

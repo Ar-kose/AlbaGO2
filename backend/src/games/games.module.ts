@@ -26,6 +26,7 @@ import {
   TaskRuleEntity,
   createId
 } from '../common/contracts';
+import { validateGameDefinitionV3 } from '../common/game-definition-v3';
 import { createAuditEntry, validateGameAccess, validateGameDefinition } from '../common/publish-validation';
 import { AuditLogsRepository } from '../persistence/audit-logs.repository';
 import { GameDefinitionsRepository } from '../persistence/game-definitions.repository';
@@ -581,6 +582,11 @@ class InternalGamesController {
   @Get(':id/validation')
   async validation(@Param('id') id: string) {
     return this.service.validation(id);
+  }
+
+  @Post('v3/validate')
+  async validateV3(@Body() definition: unknown) {
+    return validateGameDefinitionV3(definition);
   }
 
   @Post()

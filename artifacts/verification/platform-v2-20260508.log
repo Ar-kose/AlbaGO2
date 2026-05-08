@@ -1,0 +1,18 @@
+﻿AlbaGo Platform v2 verification - 2026-05-08 17:02:27 +03:00
+========================================
+ AlbaGo Platform v2 - Verification
+========================================
+
+[PREFLIGHT]
+Android SDK root - OK (C:\Users\user\AppData\Local\Android\Sdk)
+WARN: GRADLE_USER_HOME was not set; using C:\gradle-cache.
+Gradle wrapper distribution cache - OK (C:\gradle-cache\wrapper\dists\gradle-8.6-bin\afr5mpiioh2wthjmwnkmdsd5w)
+java: openjdk version "21.0.9" 2025-10-21
+java: OpenJDK Runtime Environment (build 21.0.9+-14787801-b1163.94)
+java: OpenJDK 64-Bit Server VM (build 21.0.9+-14787801-b1163.94, mixed mode)
+Java major version 21 - OK
+androidx.browser:browser:1.8.0 pin - OK
+
+[npm install]
+cwd: C:\Users\user\Desktop\AlbaGo
+cmd: npm.cmd install

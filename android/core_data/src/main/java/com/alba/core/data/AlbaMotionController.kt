@@ -13,17 +13,23 @@ import com.alba.core.motion.MotionDetectorState
 import com.alba.core.motion.MotionEvent
 import com.alba.core.motion.MotionEventType
 import com.alba.core.motion.MotionType
-import com.alba.core.network.BuildConfig
 import com.alba.core.network.AlbaSupabase
 import com.alba.core.network.SupabaseAuth
 import com.alba.core.network.SupabaseData
 import com.alba.core.network.GameRow
+import com.alba.core.network.GameSessionSubmitRequest
 import com.alba.core.network.GameVersionRow
 import com.alba.core.network.GameLevelRow
+import com.alba.core.network.GameInteractionRuleRow
 import com.alba.core.network.GameMotionRuleRow
 import com.alba.core.network.WorkoutSessionRow
 import com.alba.core.network.GameSessionRow
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
 import com.alba.core.motion.SquatDetectorV1
 
@@ -45,9 +51,12 @@ import com.alba.core.runtime.GameSessionResult
 import com.alba.core.runtime.GameSessionStatus
 import com.alba.core.runtime.GameTaskDefinition
 import com.alba.core.runtime.GameTemplate
+import com.alba.core.runtime.DodgeRunSceneState
+import com.alba.core.runtime.FitChallengeSceneState
 import com.alba.core.runtime.InteractionRule
 import com.alba.core.runtime.MotionRule
 import com.alba.core.runtime.ProgramStepDefinition
+import com.alba.core.runtime.ScenePlaySceneState
 import com.alba.core.runtime.ProgramStepType
 import com.alba.core.runtime.PublishStatus
 import com.alba.core.runtime.RewardRule
@@ -83,6 +92,10 @@ class AlbaMotionController(
     private val sessionRepository = InMemorySessionRepository()
     private val workoutEngine = WorkoutSessionEngine(sessionRepository)
     private val debugStore = MotionDebugStore(appContext)
+    private val initialBackendBaseUrlOverride = debugStore.readBackendBaseUrlOverride()
+        ?.let(::normalizeBackendBaseUrl)
+    private val initialBackendBaseUrl = initialBackendBaseUrlOverride
+        ?: normalizeBackendBaseUrl(debugConfig.defaultBackendBaseUrl)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val detectors: Map<MotionType, MotionDetector> = mapOf(
         MotionType.SQUAT to SquatDetectorV1(),
@@ -97,6 +110,8 @@ class AlbaMotionController(
     private var gameRuntime: GameRuntime? = null
     private var lastFrameTimestampMs: Long = 0L
     private var gameResultSynced = false
+    private var gameSyncInFlight = false
+    private var pendingGameResult: GameSessionResult? = null
     private val gameMotionCounts = mutableMapOf<MotionType, Int>()
 
     private val _uiState = MutableStateFlow(
@@ -105,14 +120,14 @@ class AlbaMotionController(
             appVersion = debugConfig.appVersion,
             buildType = debugConfig.buildType,
             detectorVersion = detectors.getValue(MotionType.SQUAT).version,
-            backendBaseUrlOverride = null,
-            effectiveBackendBaseUrl = BuildConfig.SUPABASE_URL
+            backendBaseUrlOverride = initialBackendBaseUrlOverride,
+            effectiveBackendBaseUrl = initialBackendBaseUrl
         )
     )
     val uiState: StateFlow<MotionUiState> = _uiState.asStateFlow()
 
     init {
-        AlbaSupabase.init(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY)
+        AlbaSupabase.init(initialBackendBaseUrl)
         scope.launch {
             frameSource.frames.collect { processFrame(it) }
         }
@@ -246,6 +261,8 @@ class AlbaMotionController(
         val sessionKey = "game-${UUID.randomUUID()}"
         gameRemoteId = null
         gameResultSynced = false
+        gameSyncInFlight = false
+        pendingGameResult = null
         gameMotionCounts.clear()
         val runtime = GameRuntime(definition)
         val state = runtime.start(System.currentTimeMillis())
@@ -270,7 +287,11 @@ class AlbaMotionController(
                 accuracy = state.accuracy,
                 remainingMs = state.remainingMs,
                 motionCounts = emptyMap(),
-                sceneState = state.sceneState
+                sceneState = state.sceneState,
+                syncMessage = "Idle",
+                syncStatus = SyncStatus.IDLE,
+                syncError = null,
+                serverSessionId = null
             ),
             backendStatus = "Starting ${definition.title}"
         )
@@ -294,7 +315,10 @@ class AlbaMotionController(
                 remainingMs = state.remainingMs,
                 completed = state.completed,
                 lastEffect = state.lastEffect,
-                sceneState = state.sceneState
+                sceneState = state.sceneState,
+                syncStatus = SyncStatus.SYNCING,
+                syncMessage = "Game sync queued",
+                syncError = null
             )
         )
         maybeSyncFinishedGame(force = true)
@@ -308,8 +332,32 @@ class AlbaMotionController(
 
     fun retryPendingSync() {
         scope.launch {
-            refreshActiveGames()
+            val pending = pendingGameResult
+            if (pending != null && !gameResultSynced) {
+                syncFinishedGame(pending)
+            } else {
+                refreshActiveGames()
+            }
         }
+    }
+
+    fun saveBackendBaseUrlOverride(value: String?) {
+        val normalizedOverride = value
+            ?.let(::normalizeBackendBaseUrl)
+            ?.takeIf { it.isNotBlank() && it != normalizeBackendBaseUrl(debugConfig.defaultBackendBaseUrl) }
+        val effectiveUrl = normalizedOverride ?: normalizeBackendBaseUrl(debugConfig.defaultBackendBaseUrl)
+        debugStore.saveBackendBaseUrlOverride(normalizedOverride)
+        AlbaSupabase.setBackendBaseUrl(effectiveUrl)
+        _uiState.value = _uiState.value.copy(
+            backendBaseUrlOverride = normalizedOverride,
+            effectiveBackendBaseUrl = effectiveUrl,
+            backendStatus = "Backend URL updated",
+            lastError = null
+        )
+    }
+
+    fun resetBackendBaseUrlOverride() {
+        saveBackendBaseUrlOverride(null)
     }
 
     fun clearMotionLog() {
@@ -725,7 +773,7 @@ class AlbaMotionController(
             SupabaseData.getGameMotionRules(level.gameVersionId).mapNotNull { rule ->
                 val motion = enumValueOrNull<MotionType>(rule.motion) ?: return@mapNotNull null
                 val event = enumValueOrNull<MotionEventType>(rule.config?.get("event")?.jsonPrimitive?.content ?: "REP_COUNTED") ?: MotionEventType.REP_COUNTED
-                MotionRule(motion, event, (rule.scoring?.get("points")?.jsonPrimitive?.int ?: 0), rule.cooldownMs)
+                MotionRule(motion, event, (rule.scoring?.get("points")?.jsonPrimitive?.intOrNull ?: 0), rule.cooldownMs.toLong())
             }
         } catch (e: Exception) { emptyList() }
 
@@ -733,7 +781,7 @@ class AlbaMotionController(
 
         val rewards = try {
             SupabaseData.getGameRewardRules(level.gameVersionId).map { reward ->
-                RewardRule(reward.rewardType, reward.amount, (reward.conditions?.get("minimumScore")?.jsonPrimitive?.int ?: 0))
+                RewardRule(reward.rewardType, reward.amount, (reward.conditions?.get("minimumScore")?.jsonPrimitive?.intOrNull ?: 0))
             }
         } catch (e: Exception) { emptyList() }
 
@@ -754,6 +802,25 @@ class AlbaMotionController(
             }
         } catch (e: Exception) { emptyList() }
 
+        val interactionRules = try {
+            SupabaseData.getGameInteractionRules(level.gameVersionId).mapNotNull { ir ->
+                val irJson = ir.interactionPayload ?: return@mapNotNull null
+                val actionStr = irJson["action"]?.jsonPrimitive?.content ?: "ADD_SCORE"
+                val action = enumValueOrNull<RuleActionType>(actionStr) ?: return@mapNotNull null
+                InteractionRule(
+                    input = ir.interactionType,
+                    event = irJson["event"]?.jsonPrimitive?.content?.let { enumValueOrNull<MotionEventType>(it) },
+                    motion = ir.motion?.let { enumValueOrNull<MotionType>(it) },
+                    targetObjectType = irJson["targetObjectType"]?.jsonPrimitive?.content,
+                    action = action,
+                    points = irJson["points"]?.jsonPrimitive?.intOrNull ?: 0,
+                    cooldownMs = (irJson["cooldownMs"]?.jsonPrimitive?.intOrNull ?: 0).toLong()
+                )
+            }
+        } catch (e: Exception) { emptyList() }
+
+        val sceneConfigMap = level.sceneConfig?.let { jsonObjectToMap(it) } ?: emptyMap()
+
         return GameLevelDefinition(
             levelId = level.levelKey,
             durationSec = level.durationSec,
@@ -762,7 +829,8 @@ class AlbaMotionController(
             motionRules = motionRules,
             rewards = rewards,
             config = emptyMap(),
-            sceneConfig = emptyMap(),
+            sceneConfig = sceneConfigMap,
+            interactionRules = interactionRules,
             programSteps = programSteps
         )
     }
@@ -853,55 +921,203 @@ class AlbaMotionController(
 
     private fun maybeSyncFinishedGame(force: Boolean) {
         if (gameResultSynced) return
+        if (gameSyncInFlight) return
         val runtime = gameRuntime ?: return
         val result = runtime.buildResult(
             clientSessionKey = _uiState.value.game.clientSessionKey ?: "game-local",
             motionCounts = gameMotionCounts.toMap(),
             endedAtMs = System.currentTimeMillis()
         )
+        pendingGameResult = result
         if (!force && _uiState.value.game.status != GameSessionStatus.FINISHED) {
             _uiState.value = _uiState.value.copy(
                 game = _uiState.value.game.copy(status = GameSessionStatus.FINISHED, completed = true)
             )
         }
+        _uiState.value = _uiState.value.copy(
+            game = _uiState.value.game.copy(
+                syncStatus = SyncStatus.SYNCING,
+                syncMessage = "Game result syncing",
+                syncError = null
+            )
+        )
         scope.launch { syncFinishedGame(result) }
     }
 
     private suspend fun syncFinishedGame(result: GameSessionResult) {
-        if (gameRemoteId == null) return
-        try {
-            SupabaseData.updateGameSession(gameRemoteId!!, mapOf(
-                "ended_at" to Instant.ofEpochMilli(result.endedAtMs).toString(),
-                "score" to result.score,
-                "status" to "completed",
-                "duration_sec" to result.durationSec,
-                "result_payload" to mapOf(
-                    "gameId" to result.gameId,
-                    "gameVersion" to result.gameVersion,
-                    "score" to result.score,
-                    "comboMax" to result.comboMax,
-                    "accuracy" to result.accuracy,
-                    "motionCounts" to result.motionCounts.mapKeys { it.key.name }
-                )
-            ))
+        if (gameSyncInFlight) return
+        gameSyncInFlight = true
+        _uiState.value = _uiState.value.copy(
+            game = _uiState.value.game.copy(
+                syncStatus = SyncStatus.SYNCING,
+                syncMessage = "Game result syncing",
+                syncError = null
+            )
+        )
+
+        val request = buildGameSessionSubmitRequest(result)
+        val response = SupabaseData.submitGameSessionResult(request)
+        response.onSuccess { submitted ->
+            gameRemoteId = submitted.id
+            pendingGameResult = null
+            gameResultSynced = true
+            _uiState.value = _uiState.value.copy(
+                game = _uiState.value.game.copy(
+                    remoteSessionId = submitted.id,
+                    serverSessionId = submitted.id,
+                    elapsedMs = result.durationSec * 1000L,
+                    motionCounts = result.motionCounts,
+                    comboMax = result.comboMax,
+                    accuracy = result.accuracy,
+                    syncStatus = SyncStatus.SYNCED,
+                    syncMessage = "Game synced",
+                    syncError = null
+                ),
+                backendStatus = "Game synced",
+                lastError = null
+            )
+        }.onFailure { error ->
+            pendingGameResult = result
             _uiState.value = _uiState.value.copy(
                 game = _uiState.value.game.copy(
                     elapsedMs = result.durationSec * 1000L,
                     motionCounts = result.motionCounts,
                     comboMax = result.comboMax,
-                    accuracy = result.accuracy
+                    accuracy = result.accuracy,
+                    syncStatus = SyncStatus.FAILED,
+                    syncMessage = "Game sync failed",
+                    syncError = sanitizeSyncError(error)
                 ),
-                backendStatus = "Game synced",
-                lastError = null
-            )
-            gameResultSynced = true
-        } catch (e: Exception) {
-            _uiState.value = _uiState.value.copy(
-                game = _uiState.value.game.copy(syncMessage = "Game sync failed"),
                 backendStatus = "Game sync failed",
-                lastError = e.message
+                lastError = sanitizeSyncError(error)
             )
         }
+        gameSyncInFlight = false
+    }
+
+    private fun buildGameSessionSubmitRequest(result: GameSessionResult): GameSessionSubmitRequest {
+        val definition = _uiState.value.activeGameDefinition
+        val runtimeSnapshot = gameRuntime?.snapshot()
+        val startedAt = Instant.ofEpochMilli(result.startedAtMs).toString()
+        val endedAt = Instant.ofEpochMilli(result.endedAtMs).toString()
+        val payload = JsonObject(
+            mutableMapOf<String, JsonElement>(
+                "gameId" to JsonPrimitive(result.gameId),
+                "gameKey" to JsonPrimitive(definition?.gameId ?: result.gameId),
+                "gameTitle" to JsonPrimitive(definition?.title ?: _uiState.value.game.title),
+                "template" to JsonPrimitive(definition?.template?.name ?: _uiState.value.game.template.name),
+                "gameVersion" to JsonPrimitive(result.gameVersion),
+                "score" to JsonPrimitive(result.score),
+                "comboMax" to JsonPrimitive(result.comboMax),
+                "accuracy" to JsonPrimitive(result.accuracy.toDouble()),
+                "durationSec" to JsonPrimitive(result.durationSec),
+                "startedAt" to JsonPrimitive(startedAt),
+                "endedAt" to JsonPrimitive(endedAt),
+                "motionSummary" to result.motionCounts.toMotionSummaryJson(),
+                "programSteps" to runtimeSnapshot?.program?.steps.orEmpty().toProgramStepsJson(),
+                "sceneState" to _uiState.value.game.sceneState.toSceneSummaryJson(),
+                "debugSource" to JsonPrimitive("android_game_finish")
+            )
+        )
+        return GameSessionSubmitRequest(
+            clientSessionId = result.clientSessionKey,
+            gameKey = definition?.gameId ?: result.gameId,
+            gameDefinitionId = definition?.gameId,
+            gameDefinitionVersion = result.gameVersion,
+            deviceId = null,
+            startedAt = startedAt,
+            endedAt = endedAt,
+            durationSec = result.durationSec,
+            score = result.score,
+            combo = result.comboMax,
+            accuracy = result.accuracy.toDouble(),
+            calories = null,
+            resultPayload = payload
+        )
+    }
+
+    private fun Map<MotionType, Int>.toMotionSummaryJson(): JsonObject {
+        return JsonObject(mapKeys { it.key.name }.mapValues { JsonPrimitive(it.value) })
+    }
+
+    private fun List<com.alba.core.runtime.ProgramRuntimeStepState>.toProgramStepsJson(): JsonArray {
+        return JsonArray(map { step ->
+            JsonObject(
+                mapOf(
+                    "stepId" to JsonPrimitive(step.stepId),
+                    "type" to JsonPrimitive(step.type.name),
+                    "title" to JsonPrimitive(step.title),
+                    "status" to JsonPrimitive(step.status.name),
+                    "progressCount" to JsonPrimitive(step.progressCount),
+                    "targetCount" to nullableNumber(step.targetCount),
+                    "remainingMs" to nullableNumber(step.remainingMs),
+                    "message" to JsonPrimitive(step.message ?: "")
+                )
+            )
+        })
+    }
+
+    private fun com.alba.core.runtime.GameSceneState.toSceneSummaryJson(): JsonObject {
+        return when (this) {
+            is FruitSlashSceneState -> JsonObject(
+                mapOf(
+                    "type" to JsonPrimitive("FRUIT_SLASH"),
+                    "activeTargets" to JsonPrimitive(targets.size),
+                    "slicedCount" to JsonPrimitive(slicedCount),
+                    "missedCount" to JsonPrimitive(missedCount),
+                    "penaltyCount" to JsonPrimitive(penaltyCount)
+                )
+            )
+            is DodgeRunSceneState -> JsonObject(
+                mapOf(
+                    "type" to JsonPrimitive("DODGE_RUN"),
+                    "activeObstacles" to JsonPrimitive(obstacles.size),
+                    "lives" to JsonPrimitive(lives),
+                    "distance" to JsonPrimitive(distance),
+                    "energy" to JsonPrimitive(energy),
+                    "dodgedCount" to JsonPrimitive(dodgedCount),
+                    "missedCount" to JsonPrimitive(missedCount)
+                )
+            )
+            is FitChallengeSceneState -> JsonObject(
+                mapOf(
+                    "type" to JsonPrimitive("FIT_CHALLENGE"),
+                    "activeTaskIndex" to JsonPrimitive(activeTaskIndex),
+                    "completedTasks" to JsonPrimitive(completedTasks),
+                    "qualityScore" to JsonPrimitive(qualityScore),
+                    "tasks" to JsonArray(tasks.map { task ->
+                        JsonObject(
+                            mapOf(
+                                "motion" to JsonPrimitive(task.motion.name),
+                                "targetCount" to JsonPrimitive(task.targetCount),
+                                "currentCount" to JsonPrimitive(task.currentCount)
+                            )
+                        )
+                    })
+                )
+            )
+            is ScenePlaySceneState -> JsonObject(
+                mapOf(
+                    "type" to JsonPrimitive("SCENE_PLAY"),
+                    "activeObjects" to JsonPrimitive(objects.size),
+                    "lives" to JsonPrimitive(lives),
+                    "clearedCount" to JsonPrimitive(clearedCount),
+                    "missedCount" to JsonPrimitive(missedCount),
+                    "prompt" to JsonPrimitive(prompt)
+                )
+            )
+            else -> JsonObject(mapOf("type" to JsonPrimitive("IDLE")))
+        }
+    }
+
+    private fun nullableNumber(value: Int?): JsonElement = if (value != null) JsonPrimitive(value) else JsonPrimitive(0)
+
+    private fun nullableNumber(value: Long?): JsonElement = if (value != null) JsonPrimitive(value) else JsonPrimitive(0)
+
+    private fun sanitizeSyncError(error: Throwable): String {
+        return (error.message ?: error::class.java.simpleName)
+            .replace(Regex("(?i)(token|key|secret)=([^\\s&]+)"), "$1=<redacted>")
+            .take(180)
     }
 
     override fun close() {
@@ -1160,6 +1376,30 @@ class AlbaMotionController(
             "right_thumb"
         )
     }
+}
+
+private fun jsonObjectToMap(json: JsonObject): Map<String, Any> {
+    return json.mapValues { (_, value) -> jsonElementToAny(value) }
+}
+
+private fun jsonElementToAny(element: JsonElement): Any {
+    return when (element) {
+        is JsonPrimitive -> {
+            when {
+                element.isString -> element.content
+                element.intOrNull != null -> element.intOrNull!!
+                element.booleanOrNull != null -> element.booleanOrNull!!
+                else -> element.content
+            }
+        }
+        is JsonObject -> jsonObjectToMap(element)
+        is JsonArray -> element.map { jsonElementToAny(it) }
+        else -> element.toString()
+    }
+}
+
+private fun normalizeBackendBaseUrl(value: String): String {
+    return value.trim().trimEnd('/')
 }
 
 private fun emptyPoseResult(frame: CameraFrame): PoseEstimationResult {

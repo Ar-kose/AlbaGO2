@@ -159,3 +159,45 @@ Program steps are intentionally declarative. Examples:
 - `PLAY_GAME`: run the current game scene for a duration.
 
 This does not mean Android can run arbitrary new code. It means the shipped template/runtime can combine known motion primitives, scene rules and guided steps into many more admin-created experiences.
+
+## 2026-05-07 program runner v1
+
+The Android runtime now enforces `programSteps` as a real state machine, not just prep-screen metadata.
+
+### Runtime state model
+
+```
+ProgramStepStatus: NOT_STARTED -> ACTIVE -> COMPLETED (or BLOCKED)
+ProgramRuntimeStepState: stepId, type, title, status, progressCount, targetCount, startedAtMs, remainingMs, completedAtMs, message
+ProgramRuntimeState: activeIndex, steps[], completed
+```
+
+The `GameRuntimeState` now carries `program: ProgramRuntimeState`.
+
+### Step execution
+
+| Step Type | Behavior |
+|---|---:|
+| `PLAY_GAME` | Template-specific gameplay. Optional `durationSec` auto-completes. |
+| `MOTION_REPS` | Advances on matching `REP_COUNTED`. Completes at `targetCount`. Applies MotionRule scoring. |
+| `REST` | Timer-gated. No scoring. No motion advancement. Completes after `durationSec`. |
+| `INSTRUCTION` | Auto-advances after `durationSec` (v1 fallback: 3s). Shows message card. |
+| `HOLD_POSE` | Timer-gated hold v1. `USER_OUT_OF_FRAME` pauses. Resume continues timer. Not a real plank detector. |
+
+### Progression rules
+
+- On `start(nowMs)`: initialize from `level.programSteps`, mark first step active.
+- On `tick(nowMs)`: update timer-based steps. Template tick only runs when active step is `PLAY_GAME` or no program exists.
+- On `onMotionEvent(event)`: program runner handles `MOTION_REPS` first. Templates handle `PLAY_GAME`.
+- On step complete: auto-advance (unless `nextOnComplete = false`).
+- On last step complete: mark game completed, finish session.
+
+### Contract alignment
+
+- `successMessage` preserved end-to-end: Backend -> OpenAPI -> Android `V3ProgramStepDefinition` -> runtime `ProgramStepDefinition`.
+- Backend validation: `REST` requires `durationSec > 0`. `MOTION_REPS` requires `motion` and `targetCount > 0`. `INSTRUCTION` without `durationSec` warns (Android v1 defaults to 3s).
+- `HOLD_POSE` requires `holdSec > 0` in backend validation. Android v1 treats as timer-gated hold.
+
+### Empty program steps
+
+When a level has no `programSteps`, runtime preserves current single-scene behavior — backwards compatible with all existing templates.

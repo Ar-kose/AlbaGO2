@@ -101,8 +101,12 @@ paths:
                 $ref: '#/components/schemas/WorkoutSession'
   /v1/game-sessions:
     post:
-      summary: Create game session
-      operationId: createGameSession
+      summary: Submit completed game session result
+      description: >
+        Android submits completed game results with a stable clientSessionId.
+        Re-submitting the same clientSessionId is idempotent and returns the
+        existing server session with duplicate_accepted status.
+      operationId: submitGameSessionResult
       requestBody:
         required: true
         content:
@@ -111,11 +115,11 @@ paths:
               $ref: '#/components/schemas/CreateGameSessionRequest'
       responses:
         '201':
-          description: Game session created
+          description: Game session result stored
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GameSession'
+                $ref: '#/components/schemas/GameSessionSubmitResponse'
   /v1/game-sessions/{gameSessionId}:
     patch:
       summary: Update game session
@@ -272,6 +276,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GameDefinition'
+  /v1/internal/game-definitions/v3/validate:
+    post:
+      summary: Validate a raw GameDefinition v3 payload before publish
+      operationId: validateGameDefinitionV3
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameDefinitionV3'
+      responses:
+        '200':
+          description: Structured v3 validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameDefinitionV3ValidationResponse'
   /v1/internal/game-definitions/{gameId}:
     get:
       summary: Get admin game definition detail
@@ -532,17 +553,43 @@ components:
           additionalProperties: true
     CreateGameSessionRequest:
       type: object
-      required: [clientSessionKey, gameDefinitionId, workoutSessionId, startedAt]
+      required: [clientSessionId, gameKey, score, resultPayload]
       properties:
+        clientSessionId:
+          type: string
+          description: Stable Android-generated idempotency key for the local game session.
         clientSessionKey:
+          type: string
+          description: Legacy alias for clientSessionId.
+        gameKey:
           type: string
         gameDefinitionId:
           type: string
-        workoutSessionId:
+        gameDefinitionVersion:
+          type: integer
+        deviceId:
           type: string
         startedAt:
           type: string
           format: date-time
+        endedAt:
+          type: string
+          format: date-time
+        durationSec:
+          type: integer
+          minimum: 0
+        score:
+          type: integer
+          minimum: 0
+        combo:
+          type: integer
+          minimum: 0
+        accuracy:
+          type: number
+        calories:
+          type: number
+        resultPayload:
+          $ref: '#/components/schemas/GameSessionResultPayload'
     UpdateGameSessionRequest:
       type: object
       properties:
@@ -564,9 +611,19 @@ components:
       properties:
         id:
           type: string
+        clientSessionId:
+          type: string
+        gameKey:
+          type: string
         gameDefinitionId:
           type: string
         workoutSessionId:
+          type: string
+        gameDefinitionVersion:
+          type: integer
+        deviceId:
+          type: string
+        status:
           type: string
         startedAt:
           type: string
@@ -574,14 +631,36 @@ components:
         endedAt:
           type: string
           format: date-time
+        durationSec:
+          type: integer
         score:
           type: integer
+        combo:
+          type: integer
+        accuracy:
+          type: number
+        calories:
+          type: number
         result:
           type: string
         clientIntegrityHash:
           type: string
         resultPayload:
           $ref: '#/components/schemas/GameSessionResultPayload'
+    GameSessionSubmitResponse:
+      type: object
+      required: [id, clientSessionId, status]
+      properties:
+        id:
+          type: string
+        clientSessionId:
+          type: string
+        status:
+          type: string
+          enum: [stored, duplicate_accepted]
+        createdAt:
+          type: string
+          format: date-time
     RewardClaimRequest:
       type: object
       required: [userId, sourceType, sourceId, rewardType, amount, idempotencyKey]
@@ -693,6 +772,252 @@ components:
         publishedAt:
           type: string
           format: date-time
+    GameDefinitionV3:
+      type: object
+      required:
+        - schemaVersion
+        - gameKey
+        - version
+        - title
+        - category
+        - minAppVersion
+        - minRuntimeVersion
+        - orientation
+        - cameraRequirement
+        - capabilities
+        - supportedMotions
+        - assetManifest
+        - levels
+      properties:
+        schemaVersion:
+          type: string
+          const: '3.0'
+        gameKey:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [fun, sport, education]
+        tags:
+          type: array
+          items:
+            type: string
+        minAppVersion:
+          type: string
+          example: 0.2.0
+        minRuntimeVersion:
+          type: string
+          example: 2.0.0
+        orientation:
+          type: string
+          enum: [portrait, landscape]
+        cameraRequirement:
+          type: string
+          enum: [full_body, upper_body, hand_target]
+        capabilities:
+          type: array
+          items:
+            type: string
+            enum: [MOTION_EVENT, POSE_CONTACT, SCENE_OBJECTS, PROGRAM_STEPS, AUDIO, TIMER]
+        supportedMotions:
+          type: array
+          items:
+            type: string
+            enum: [SQUAT, JUMPING_JACK, JUMP_ROPE, PLANK_HOLD]
+        assetManifest:
+          $ref: '#/components/schemas/GameDefinitionV3AssetManifest'
+        levels:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameDefinitionV3Level'
+    GameDefinitionV3Level:
+      type: object
+      required: [levelId, durationSec, targetScore, difficulty, scene, rules]
+      properties:
+        levelId:
+          type: string
+        durationSec:
+          type: integer
+          minimum: 1
+        targetScore:
+          type: integer
+          minimum: 1
+        difficulty:
+          type: string
+        scene:
+          $ref: '#/components/schemas/GameDefinitionV3Scene'
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameDefinitionV3Rule'
+        programSteps:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameDefinitionV3ProgramStep'
+        rewards:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    GameDefinitionV3Scene:
+      type: object
+      required: [type, maxObjects, spawnRateMs, objects]
+      properties:
+        type:
+          type: string
+          enum: [PROMPT_SEQUENCE, OBJECT_SPAWN, LANE_OBSTACLES, TASK_SEQUENCE]
+        maxObjects:
+          type: integer
+          minimum: 1
+          maximum: 20
+        spawnRateMs:
+          type: integer
+          minimum: 250
+          maximum: 10000
+        objects:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameDefinitionV3SceneObject'
+    GameDefinitionV3SceneObject:
+      type: object
+      required: [objectId, assetKey, requiredMotion, lifeMs, points]
+      properties:
+        objectId:
+          type: string
+        label:
+          type: string
+        assetKey:
+          type: string
+        requiredMotion:
+          type: string
+          enum: [SQUAT, JUMPING_JACK, JUMP_ROPE, PLANK_HOLD]
+        lifeMs:
+          type: integer
+          minimum: 250
+        points:
+          type: integer
+    GameDefinitionV3Rule:
+      type: object
+      required: [ruleId, priority, when, then, cooldownMs]
+      properties:
+        ruleId:
+          type: string
+        priority:
+          type: integer
+        when:
+          $ref: '#/components/schemas/GameDefinitionV3Condition'
+        then:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameDefinitionV3Action'
+        cooldownMs:
+          type: integer
+          minimum: 0
+    GameDefinitionV3Condition:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [MOTION_EVENT, POSE_CONTACT, TIMER_EXPIRED, OBJECT_EXPIRED, STEP_COMPLETED, SCORE_REACHED, LIFE_ZERO, QUIZ_ANSWERED]
+        event:
+          type: string
+          enum: [REP_COUNTED, BAD_FORM, USER_OUT_OF_FRAME, PAUSED, RESUMED]
+        motion:
+          type: string
+          enum: [SQUAT, JUMPING_JACK, JUMP_ROPE, PLANK_HOLD]
+        targetObjectId:
+          type: string
+    GameDefinitionV3Action:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [ADD_SCORE, REMOVE_OBJECT, SPAWN_OBJECT, DECREASE_LIFE, INCREASE_LIFE, RESET_COMBO, ADD_COMBO, PAUSE_GAME, RESUME_GAME, ADVANCE_STEP, COMPLETE_LEVEL, PLAY_SOUND, SHOW_EFFECT, SHOW_MESSAGE, PROGRESS_TASK, GRANT_REWARD_REQUEST]
+        amount:
+          type: integer
+        target:
+          type: string
+    GameDefinitionV3ProgramStep:
+      type: object
+      required: [stepId, type, title]
+      properties:
+        stepId:
+          type: string
+        type:
+          type: string
+          enum: [INSTRUCTION, PLAY_GAME, MOTION_REPS, HOLD_POSE, REST]
+        title:
+          type: string
+        description:
+          type: string
+        motion:
+          type: string
+          enum: [SQUAT, JUMPING_JACK, JUMP_ROPE, PLANK_HOLD]
+        targetCount:
+          type: integer
+        holdSec:
+          type: integer
+        durationSec:
+          type: integer
+        nextOnComplete:
+          type: boolean
+    GameDefinitionV3AssetManifest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameDefinitionV3Asset'
+    GameDefinitionV3Asset:
+      type: object
+      required: [key, kind, format, uri]
+      properties:
+        key:
+          type: string
+        kind:
+          type: string
+          enum: [IMAGE, AUDIO]
+        format:
+          type: string
+          enum: [PNG, WEBP, SVG, MP3]
+        uri:
+          type: string
+        sha256:
+          type: string
+        bytes:
+          type: integer
+    GameDefinitionV3ValidationResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [passed, failed]
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameDefinitionV3ValidationIssue'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/GameDefinitionV3ValidationIssue'
+    GameDefinitionV3ValidationIssue:
+      type: object
+      properties:
+        code:
+          type: string
+        path:
+          type: string
+        message:
+          type: string
     GameLevel:
       type: object
       properties:
@@ -858,6 +1183,12 @@ components:
       properties:
         gameId:
           type: string
+        gameKey:
+          type: string
+        gameTitle:
+          type: string
+        template:
+          type: string
         gameVersion:
           type: integer
         score:
@@ -880,6 +1211,21 @@ components:
           type: string
           format: date-time
         clientSessionKey:
+          type: string
+        clientSessionId:
+          type: string
+        motionSummary:
+          type: object
+          additionalProperties: true
+        programSteps:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        sceneState:
+          type: object
+          additionalProperties: true
+        debugSource:
           type: string
     PublishActionRequest:
       type: object

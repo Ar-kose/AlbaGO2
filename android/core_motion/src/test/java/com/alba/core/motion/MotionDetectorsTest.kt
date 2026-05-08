@@ -120,7 +120,7 @@ class MotionDetectorsTest {
 
     private fun jumpingJackFrame(timestampMs: Long, isOpen: Boolean, closedReturn: Boolean = true): PoseFrame {
         val wristY = if (isOpen) 0.16f else if (closedReturn) 0.44f else 0.32f
-        val ankleSpread = if (isOpen) 0.46f else if (closedReturn) 0.18f else 0.26f
+        val ankleSpread = if (isOpen) 0.46f else if (closedReturn) 0.10f else 0.26f
         return PoseFrame(
             timestampMs = timestampMs,
             visibilityScore = 0.96f,

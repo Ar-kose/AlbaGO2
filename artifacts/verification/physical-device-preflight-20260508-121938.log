@@ -1,0 +1,33 @@
+﻿AlbaGo physical device preflight - 2026-05-08 12:19:38 +03:00
+Branch: platform-v2
+JAVA_HOME=C:\Program Files\Microsoft\jdk-21.0.10.7-hotspot\
+java: openjdk version "21.0.10" 2026-01-20 LTS
+java: OpenJDK Runtime Environment Microsoft-13106404 (build 21.0.10+7-LTS)
+java: OpenJDK 64-Bit Server VM Microsoft-13106404 (build 21.0.10+7-LTS, mixed mode, sharing)
+ANDROID_SDK_ROOT=C:\Users\user\AppData\Local\Android\Sdk
+ANDROID_HOME=C:\Users\user\AppData\Local\Android\Sdk
+GRADLE_USER_HOME=C:\gradle-cache
+adb.exe=C:\Users\user\AppData\Local\Android\Sdk\platform-tools\adb.exe
+
+> C:\Users\user\AppData\Local\Android\Sdk\platform-tools\adb.exe version
+Android Debug Bridge version 1.0.41
+Version 37.0.0-14910828
+Installed as C:\Users\user\AppData\Local\Android\Sdk\platform-tools\adb.exe
+Running on Windows 10.0.26200
+exitCode=0
+
+> C:\Users\user\AppData\Local\Android\Sdk\platform-tools\adb.exe devices -l
+List of devices attached
+
+exitCode=0
+
+Device classification:
+  physical total: 0
+  usable physical: 0
+  unauthorized physical: 0
+  offline physical: 0
+  emulators: 0
+P1 physical device acceptance blocked: no usable physical device returned by adb devices -l.
+Next action: connect/unlock device, enable USB debugging, accept RSA prompt, and verify Windows ADB driver.
+
+Log: C:\Users\user\Desktop\AlbaGo\artifacts\verification\physical-device-preflight-20260508-121938.log

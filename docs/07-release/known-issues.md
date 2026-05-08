@@ -25,19 +25,19 @@ Test edilen emulator:
 
 Kanıt videosu/screenshot:
 
-- Video pending until manual device interaction is performed through physical touch, Android Studio Device Mirroring or scrcpy.
+- Original catalog-button video proof was pending manual interaction; P1 demo videos were later captured on 2026-05-08 with QA direct launch extras.
 - Build proof: `android\\gradlew.bat :app:assembleDebug` passed on `2026-05-03` with Android Studio JBR 21 and Android SDK env vars.
 - Launch/crash proof: `artifacts/crash-reports/catalog-crash-after-fix.log` and `artifacts/albago-after-fix-home.png`.
 
-- Physical Android device detection, APK install, cold launch and screenshot capture are now confirmed, but the full camera/pose/motion/game walkthrough and the 3 separate demo video captures still require manual on-device testing.
-- Android unit tests are currently blocked by a local Gradle test worker environment issue (`worker.org.gradle.process.internal.worker.GradleWorkerMain` not found).
+- Physical Android device detection, APK install, cold launch and P1 demo video capture are now confirmed; full catalog tap walkthrough still needs human touch or mirroring validation if required.
+- Android unit tests now pass on this machine when `GRADLE_USER_HOME=C:\gradle-cache` is used; keep this environment override for repeatable verification.
 - `JUMP_ROPE` detector is still prototype quality and is not a sprint gate.
-- Prisma persistence is now active for game definitions, levels and audit logs, but workout and game session writes still fall back to in-memory runtime behavior.
+- Prisma persistence is now active for game definitions, levels, audit logs and completed game session result submissions. Workout session persistence remains a future scope.
 - Android debug builds on this Windows path require `android.overridePathCheck=true` because the workspace folder contains non-ASCII characters.
 - This machine does not currently have JDK 17 installed; debug builds were revalidated with Android Studio JBR 21 plus explicit `JAVA_HOME` and `ANDROID_SDK_ROOT`.
 - The default shell Java is Java 26 on `2026-05-03`; Gradle/Kotlin fails with `JavaVersion.parse(26)` unless `JAVA_HOME` is pointed to Android Studio JBR 21.
 - Direct `adb shell input tap` automation is blocked on the connected device by OS input-injection restrictions, so human interaction remains necessary for full demo walkthrough capture.
-- On `2026-05-03`, device-side automated taps were still blocked by OS input-injection restrictions, so catalog button interaction and demo video capture require manual interaction.
+- On `2026-05-03`, device-side automated taps were still blocked by OS input-injection restrictions, so catalog button interaction required manual interaction. P1 demo video capture later used QA direct launch extras successfully.
 
 ## 2026-05-04 update: Full-screen game camera and mock scoring
 
@@ -161,3 +161,146 @@ Acik takip:
 
 - Implement Android program runner execution so hold-pose timers, rest timers and auto-next activity transitions are enforced during gameplay.
 - Add future motion primitives such as `PLANK`, `PUSH_UP` and `LUNGE` before publishing advanced sport programs.
+
+## 2026-05-07 update: Program runner v1 and contract alignment
+
+Sebep:
+
+- `programSteps` existed in backend/admin/OpenAPI/Android parsing but Android runtime treated them as metadata only.
+- `successMessage` was lost in Android parser pipeline.
+- Backend validation had gaps for program step requirements (REST without duration, MOTION_REPS without motion).
+- `HOLD_POSE` behavior was undefined on Android.
+- Gradle test worker failed with `GradleWorkerMain` ClassNotFoundException on this Windows machine.
+
+Cozum:
+
+- Implemented Android program runner v1 state machine:
+  - `ProgramStepStatus` (NOT_STARTED, ACTIVE, COMPLETED, BLOCKED)
+  - `ProgramRuntimeStepState` and `ProgramRuntimeState` with step progression
+  - `PLAY_GAME`: Template-based gameplay with optional durationSec
+  - `MOTION_REPS`: Motion-matching rep counting with targetCount completion
+  - `REST`: Timer-gated, auto-advance after durationSec
+  - `INSTRUCTION`: Auto-advance after durationSec (v1 fallback 3s)
+  - `HOLD_POSE`: Timer-gated hold v1; pauses on USER_OUT_OF_FRAME, resumes continue timer
+  - `nextOnComplete = false` stops auto-advance
+- Added 10 unit test cases for program runner
+- Android `V3ProgramStepDefinition` now includes `successMessage`
+- Backend validation tightened:
+  - REST requires `durationSec > 0`
+  - MOTION_REPS requires `motion` field
+  - INSTRUCTION without `durationSec` generates warning
+- Gradle test worker issue documented as environment blocker:
+  - Workaround: `$env:GRADLE_USER_HOME = "C:\gradle-cache"` (avoids `ö` in default path)
+  - `:app:assembleDebug` passes; `:core_runtime:testDebugUnitTest` blocked by classpath issue
+  - Backend tests: 16/16 pass
+
+Test edilen cihaz:
+
+- Bu turda fiziksel cihaz testi yapilmadi; APK build ve backend test dogrulamasi ile sinirli.
+
+Kanit:
+
+- `npm run build --workspace backend` — PASS
+- `npm run test --workspace backend` — 16 tests PASS
+- `npm run build --workspace admin` — PASS
+- `.\gradlew.bat :app:assemblesDebug` — PASS (with GRADLE_USER_HOME workaround)
+- `.\gradlew.bat :core_runtime:compileDebugKotlin :core_runtime:compileDebugUnitTestKotlin` — PASS
+
+Acik takip:
+
+- Android unit test execution blocked by Windows username character (`ö`) in Gradle classpath. Code compiles correctly.
+- Camera readiness card composable created but not yet wired into game detail flow.
+- Demo videos were later captured in P1 on 2026-05-08.
+- `HOLD_POSE` v1 is timer-gated only; real pose detection needs `PLANK`, `PUSH_UP`, `LUNGE` primitives.
+
+## 2026-05-08 update: Platform v2 P0/P1 gate status
+
+Durum:
+
+- P0 deterministic verification now passes on this machine with `GRADLE_USER_HOME=C:\gradle-cache`.
+- The first P0 attempt was blocked by a stale/incomplete Gradle wrapper ZIP lock under `C:\gradle-cache`; the cache was seeded from the existing user Gradle cache and the verification script now performs that seed automatically when possible.
+- Backend build, backend tests, admin build, Android `:core_runtime:testDebugUnitTest`, Android `:app:testDebugUnitTest` and Android `:app:assembleDebug` passed on `2026-05-08`.
+- P1 physical-device acceptance was initially blocked because `adb devices` returned no attached device on `2026-05-08`; it passed later the same day after device `cffbc068` became visible through ADB.
+
+Kanit:
+
+- `artifacts/verification/platform-v2-20260508.log`
+- `artifacts/verification/device-prep-20260508.log`
+
+Acik takip:
+
+- Physical Android device acceptance is now complete for device `cffbc068`.
+- Required `FRUIT_SLASH`, `DODGE_RUN` and `FIT_CHALLENGE` videos were captured.
+- Per-game crash logs were captured and scanned.
+- P1 is now completed. P2 game-session result persistence is completed; P3/P4 still need a separate explicit plan before expansion.
+
+## P1 Physical Device Acceptance Environment Note
+
+- Date opened: 2026-05-08
+- Date resolved: 2026-05-08
+- Status: Resolved for P1 acceptance
+- Branch: `platform-v2`
+- Previous symptom: `adb devices -l` returned no usable physical device after ADB server restart.
+- Resolution: physical Android device `cffbc068` became visible through ADB as `device`.
+- Device: `M2007J3SI`, Android 12
+- Environment: Android SDK is under `%LOCALAPPDATA%\Android\Sdk`; ADB itself runs from that SDK path.
+- P1 result: PASS. Debug APK installed, `adb reverse tcp:3000 tcp:3000` succeeded, cold launch had no fatal crash, and Fruit Slash, Dodge Run and Fit Challenge demo videos were captured.
+- Evidence:
+  - `artifacts/verification/device-prep-20260508.log`
+  - `artifacts/verification/p1-device-acceptance-summary-20260508.md`
+  - `artifacts/verification/physical-device-preflight-20260508-121938.log`
+  - `artifacts/verification/p1-device-acceptance-summary-20260508-121945.md`
+  - `artifacts/verification/physical-device-preflight-20260508-123217.log`
+  - `artifacts/verification/p1-device-acceptance-summary-20260508-123222.md`
+  - `artifacts/verification/physical-device-preflight-20260508-150853.log`
+  - `artifacts/verification/p1-device-acceptance-summary-20260508-150858.md`
+  - `artifacts/verification/p1-evidence-index-20260508-151309.md`
+- Remaining environment note:
+  - Manual catalog tap validation may still require human touch, Android Studio Device Mirroring or scrcpy if ADB input injection is blocked.
+
+Tooling:
+
+- `powershell -ExecutionPolicy Bypass -File scripts/preflight-physical-device.ps1`
+- `powershell -ExecutionPolicy Bypass -File scripts/accept-device-demo.ps1 -Build`
+- `powershell -ExecutionPolicy Bypass -File scripts/check-android-crash-log.ps1 artifacts\crash-reports\<log>.log`
+- Phone-connected runbook: `docs/07-release/p1-phone-connected-runbook.md`
+
+## 2026-05-08 P2 session persistence notes
+
+- Status: P2 game-session result persistence passed build/test verification.
+- Backend result submissions are idempotent by `clientSessionId`.
+- Android submits completed game results asynchronously and does not block or crash the local result screen if the backend is unavailable.
+- Optional physical backend-write smoke was not run in this pass; P2 verification is covered by backend tests, Android unit tests, compile and debug APK build.
+- `npm install` still reports 5 dependency audit findings; remediation was not part of the P2 session persistence scope.
+
+## 2026-05-08 P3 Admin Publish QA notes
+
+- Status: P3 admin publish QA PASS.
+- A new SCENE_PLAY game was created via backend API, validated, published, and confirmed in active definitions.
+- Android pipeline now correctly parses `sceneConfig` and `interactionRules` from remote definitions (previously dropped as empty).
+- P3 game `p3_scene_play_deve_cuce_20260508-163452` published and verified.
+- Manual catalog tap validation remains separate; QA direct launch path was used for automated verification.
+- P3 does not include admin UI redesign, analytics, or production auth hardening (out of scope).
+
+## 2026-05-08 P4 Release Candidate Packaging
+
+- Status: P4 release candidate packaging PASS.
+- RC directory: `artifacts/release/albago-platform-v2-rc-20260508-170015/`
+- RC APK: `albago-platform-v2-rc-debug.apk`
+- SHA256: `7B2AE2ABA4DF0DD3E53509854D4EA29604A3A4C178D24695DE3B438BA709A712`
+- Build type: debug/internal RC
+- Physical smoke test: PASS on device cffbc068 (M2007J3SI, Android 12)
+
+### Accepted Non-Blocking
+
+- Manual catalog tap validation remains human/mirroring-dependent; QA direct launch evidence covers automated demo acceptance.
+- npm audit findings (5 total: 3 high backend via effect, 1 critical + 1 moderate admin via next/postcss) require follow-up triage/fix. See `artifacts/verification/p4-npm-audit-triage-20260508-170015.md`.
+- Working tree had unrelated/ownership-unclear changes (.agent/ files, stitch_* exports, local settings), so commits were not created automatically.
+
+### Follow-up
+
+- Apply `npm audit fix` in backend workspace (non-breaking semver fix for effect).
+- Monitor Next.js releases for patched 15.x version; upgrade admin when available.
+- Migrate Prisma config from `package.json#prisma` to `prisma.config.ts` before Prisma 7.
+- Android program runner execution for hold-pose timers, rest timers and auto-next transitions.
+- Add future motion primitives (PLANK, PUSH_UP, LUNGE) for advanced sport programs.

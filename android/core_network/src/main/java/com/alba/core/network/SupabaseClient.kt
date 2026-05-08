@@ -1,40 +1,27 @@
 package com.alba.core.network
 
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.storage.Storage
-import io.github.jan.supabase.realtime.Realtime
-import kotlin.time.Duration.Companion.seconds
-
 object AlbaSupabase {
+    @Volatile
+    private var configured = false
 
     @Volatile
-    private var _client: SupabaseClient? = null
+    var backendBaseUrl: String = "http://10.0.2.2:3000/v1"
+        private set
 
-    val client: SupabaseClient
-        get() = _client ?: throw IllegalStateException("Supabase client not initialized. Call AlbaSupabase.init() first.")
-
-    fun init(supabaseUrl: String, supabaseKey: String) {
-        if (_client != null) return
+    fun init(backendUrl: String, ignoredKey: String = "") {
+        if (configured) return
         synchronized(this) {
-            if (_client != null) return
-            _client = createSupabaseClient(
-                supabaseUrl = supabaseUrl,
-                supabaseKey = supabaseKey
-            ) {
-                install(Auth)
-                install(Postgrest) {
-                    defaultSchema = "public"
-                }
-                install(Storage) {
-                    transferTimeout = 120.seconds
-                }
-                install(Realtime) {
-                    heartbeatInterval = 15.seconds
-                }
-            }
+            if (configured) return
+            backendBaseUrl = normalizeBackendBaseUrl(System.getProperty("albago.backendUrl") ?: backendUrl)
+            configured = true
         }
+    }
+
+    fun setBackendBaseUrl(value: String) {
+        backendBaseUrl = normalizeBackendBaseUrl(value)
+    }
+
+    private fun normalizeBackendBaseUrl(value: String): String {
+        return value.trim().trimEnd('/').ifBlank { "http://10.0.2.2:3000/v1" }
     }
 }

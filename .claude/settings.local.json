@@ -3,7 +3,26 @@
     "allow": [
       "Bash(git init *)",
       "Bash(git remote *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(npm.cmd run *)",
+      "Bash(set JAVA_HOME=C:\\\\Program Files\\\\Android\\\\Android Studio\\\\jbr)",
+      "Bash(set ANDROID_SDK_ROOT=%LOCALAPPDATA%\\\\Android\\\\Sdk)",
+      "Bash(set ANDROID_HOME=%ANDROID_SDK_ROOT%)",
+      "Bash(set GRADLE_USER_HOME=C:\\\\gradle-cache)",
+      "Bash(set PATH=%JAVA_HOME%\\\\bin)",
+      "Bash(powershell *)",
+      "Bash(set \"JAVA_HOME=C:\\\\Program Files\\\\Microsoft\\\\jdk-21.0.10.7-hotspot\")",
+      "Bash(set \"ANDROID_SDK_ROOT=C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Android\\\\Sdk\")",
+      "Bash(set \"ANDROID_HOME=C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Android\\\\Sdk\")",
+      "Bash(set \"GRADLE_USER_HOME=C:\\\\gradle-cache\")",
+      "Bash(set \"PATH=%JAVA_HOME%\\\\bin;%ANDROID_SDK_ROOT%\\\\platform-tools;%PATH%\")",
+      "Bash(adb reverse *)",
+      "Bash(pushd \"C:\\\\Users\\\\user\\\\Desktop\\\\AlbaGo\\\\android\")",
+      "Bash(cmd /c \"set JAVA_HOME=C:\\\\Program Files\\\\Microsoft\\\\jdk-21.0.10.7-hotspot && set ANDROID_SDK_ROOT=%LOCALAPPDATA%\\\\Android\\\\Sdk && set ANDROID_HOME=%ANDROID_SDK_ROOT% && set GRADLE_USER_HOME=C:\\\\gradle-cache && set PATH=%JAVA_HOME%\\\\bin;%ANDROID_SDK_ROOT%\\\\platform-tools;%PATH% && .\\\\gradlew.bat :core_runtime:compileDebugKotlin :core_data:compileDebugKotlin :core_network:compileDebugKotlin :feature_games:compileDebugKotlin --no-daemon\")",
+      "Bash(cmd /c \"set JAVA_HOME=C:\\\\Program Files\\\\Microsoft\\\\jdk-21.0.10.7-hotspot && set ANDROID_SDK_ROOT=%LOCALAPPDATA%\\\\Android\\\\Sdk && set ANDROID_HOME=%ANDROID_SDK_ROOT% && set GRADLE_USER_HOME=C:\\\\gradle-cache && set PATH=%JAVA_HOME%\\\\bin;%ANDROID_SDK_ROOT%\\\\platform-tools;%PATH% && .\\\\gradlew.bat :app:assembleDebug --no-daemon\")",
+      "Bash(git commit *)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)"
     ]
   }
 }

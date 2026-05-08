@@ -188,31 +188,72 @@ export interface GameDefinitionEntity {
 }
 
 export interface GameSessionResultPayload {
-  gameId: string;
+  gameId?: string;
+  gameKey?: string;
+  gameTitle?: string;
+  template?: string;
   gameVersion?: number;
   score: number;
   durationSec: number;
-  motionCounts: Partial<Record<MotionType, number>>;
-  comboMax: number;
+  motionCounts?: Partial<Record<MotionType, number>>;
+  motionSummary?: Record<string, unknown>;
+  comboMax?: number;
   accuracy: number;
   startedAt: string;
   endedAt: string;
-  clientSessionKey: string;
+  clientSessionKey?: string;
+  clientSessionId?: string;
+  programSteps?: unknown[];
+  sceneState?: Record<string, unknown>;
+  debugSource?: string;
 }
 
 export interface GameSessionEntity {
   id: string;
   clientSessionKey?: string;
   userId?: string;
-  gameDefinitionId: string;
-  workoutSessionId: string;
+  gameDefinitionId?: string;
+  workoutSessionId?: string;
+  gameKey?: string;
+  gameDefinitionVersion?: number;
+  deviceId?: string;
+  status?: string;
   startedAt: string;
   endedAt?: string;
+  durationSec?: number;
   score?: number;
+  combo?: number;
+  accuracy?: number;
+  calories?: number;
   gameVersion?: number;
   result?: string;
   clientIntegrityHash?: string;
-  resultPayload?: GameSessionResultPayload;
+  resultPayload?: Record<string, unknown>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SubmitGameSessionResultInput {
+  clientSessionId: string;
+  gameKey: string;
+  gameDefinitionId?: string;
+  gameDefinitionVersion?: number;
+  deviceId?: string;
+  startedAt?: string;
+  endedAt?: string;
+  durationSec?: number;
+  score: number;
+  combo?: number;
+  accuracy?: number;
+  calories?: number;
+  resultPayload: Record<string, unknown>;
+}
+
+export interface SubmitGameSessionResultResponse {
+  id: string;
+  clientSessionId: string;
+  status: 'stored' | 'duplicate_accepted';
+  createdAt: string;
 }
 
 export interface RewardGrantEntity {

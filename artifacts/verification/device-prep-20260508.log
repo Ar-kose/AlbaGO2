@@ -1,0 +1,43 @@
+﻿AlbaGo P1 device detection recovery - 2026-05-08 12:05:10 +03:00
+branch=platform-v2
+JAVA_HOME=C:\Program Files\Android\Android Studio\jbr
+ANDROID_SDK_ROOT=C:\Users\user\AppData\Local\Android\Sdk
+ANDROID_HOME=C:\Users\user\AppData\Local\Android\Sdk
+GRADLE_USER_HOME=C:\gradle-cache
+WARN: Preferred SDK path C:\Android\Sdk not found; using C:\Users\user\AppData\Local\Android\Sdk.
+
+> adb kill-server
+cannot connect to daemon at tcp:5037: cannot connect to 127.0.0.1:5037: Hedef makine etkin olarak reddettiğinden bağlantı kurulamadı. (10061)
+exitCode=0
+
+> adb start-server
+* daemon not running; starting now at tcp:5037
+* daemon started successfully
+exitCode=0
+
+> adb version
+Android Debug Bridge version 1.0.41
+Version 37.0.0-14910828
+Installed as C:\Users\user\AppData\Local\Android\Sdk\platform-tools\adb.exe
+Running on Windows 10.0.26200
+exitCode=0
+
+> adb devices -l
+List of devices attached
+
+exitCode=0
+
+No device detected after normal adb server restart. Trying optional safe adb.exe task restart.
+> taskkill /F /IM adb.exe
+SUCCESS: The process "adb.exe" with PID 30800 has been terminated.
+exitCode=0
+
+> adb start-server
+* daemon not running; starting now at tcp:5037
+* daemon started successfully
+exitCode=0
+
+> adb devices -l
+List of devices attached
+
+exitCode=0

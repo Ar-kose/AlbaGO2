@@ -6,9 +6,9 @@ import { DashboardCard } from '../components/dashboard-card';
 import { listAuditLogs, listGameDefinitions } from '../lib/alba-api';
 
 const fallbackGames = [
-  { status: 'published', template: 'FRUIT_SLASH', title: 'Fruit Slash' },
-  { status: 'published', template: 'DODGE_RUN', title: 'Dodge Run' },
-  { status: 'draft', template: 'FIT_CHALLENGE', title: 'Fit Challenge' }
+  { status: 'PUBLISHED', template: 'FRUIT_SLASH', title: 'Fruit Slash' },
+  { status: 'PUBLISHED', template: 'DODGE_RUN', title: 'Dodge Run' },
+  { status: 'DRAFT', template: 'FIT_CHALLENGE', title: 'Fit Challenge' }
 ];
 
 const navItems = ['Genel Bakış', 'Oyunlar', 'Şablonlar', 'Kategoriler', 'Medya', 'Yayınlar', 'Analitik', 'Audit Log'];
@@ -40,8 +40,8 @@ export default function HomePage() {
   }, []);
 
   const metrics = useMemo(() => {
-    const published = games.filter((game) => game.status === 'published').length;
-    const drafts = games.filter((game) => game.status === 'draft' || game.status === 'review').length;
+    const published = games.filter((game) => game.status.toUpperCase() === 'PUBLISHED').length;
+    const drafts = games.filter((game) => ['DRAFT', 'REVIEW'].includes(game.status.toUpperCase())).length;
     const templates = new Set(games.map((game) => game.template)).size;
     return [
       { label: 'Published Games', value: String(published), detail: '%100 yayınlanmış' },

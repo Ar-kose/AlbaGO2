@@ -1,138 +1,314 @@
 package com.alba.core.network
 
-import io.github.jan.supabase.postgrest.postgrest
+import java.net.HttpURLConnection
+import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 object SupabaseData {
-
-    // ─── Game Definitions ───
+    private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
+    private var gameCache = RuntimeCatalogCache()
 
     suspend fun getActiveGames(): List<GameRow> = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("games")
-            .select { filter { "status" eq "published" } }
-            .decodeList<GameRow>()
+        val root = getJsonObject("/game-definitions/active?appVersion=0.2.0")
+        val items = root.array("items")
+        gameCache = RuntimeCatalogCache.fromBackendItems(items)
+        gameCache.games
     }
 
     suspend fun getGameWithVersions(gameId: String): Pair<GameRow?, List<GameVersionRow>> = withContext(Dispatchers.IO) {
-        val game = AlbaSupabase.client.postgrest.from("games")
-            .select { filter { "id" eq gameId } }
-            .decodeList<GameRow>()
-            .firstOrNull()
-
-        val versions = AlbaSupabase.client.postgrest.from("game_versions")
-            .select { filter { "game_id" eq gameId } }
-            .decodeList<GameVersionRow>()
-
-        game to versions
+        if (gameCache.games.none { it.id == gameId }) {
+            runCatching { getActiveGames() }
+        }
+        gameCache.games.firstOrNull { it.id == gameId } to gameCache.versionsByGameId[gameId].orEmpty()
     }
 
     suspend fun getGameLevels(versionId: String): List<GameLevelRow> = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("game_levels")
-            .select { filter { "game_version_id" eq versionId } }
-            .decodeList<GameLevelRow>()
+        gameCache.levelsByVersionId[versionId].orEmpty()
     }
 
     suspend fun getGameProgramSteps(levelId: String): List<GameProgramStepRow> = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("game_program_steps")
-            .select { filter { "game_level_id" eq levelId } }
-            .decodeList<GameProgramStepRow>()
+        gameCache.programStepsByLevelId[levelId].orEmpty()
     }
 
     suspend fun getGameMotionRules(versionId: String): List<GameMotionRuleRow> = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("game_motion_rules")
-            .select { filter { "game_version_id" eq versionId } }
-            .decodeList<GameMotionRuleRow>()
+        gameCache.motionRulesByVersionId[versionId].orEmpty()
     }
 
     suspend fun getGameInteractionRules(versionId: String): List<GameInteractionRuleRow> = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("game_interaction_rules")
-            .select { filter { "game_version_id" eq versionId } }
-            .decodeList<GameInteractionRuleRow>()
+        gameCache.interactionRulesByVersionId[versionId].orEmpty()
     }
 
     suspend fun getGameRewardRules(versionId: String): List<GameRewardRuleRow> = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("game_reward_rules")
-            .select { filter { "game_version_id" eq versionId } }
-            .decodeList<GameRewardRuleRow>()
+        gameCache.rewardRulesByVersionId[versionId].orEmpty()
     }
 
-    // ─── Workout Sessions ───
-
     suspend fun createWorkoutSession(session: WorkoutSessionRow): WorkoutSessionRow? = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("workout_sessions")
-            .insert(session) { select() }
-            .decodeSingleOrNull<WorkoutSessionRow>()
+        session.copy(id = session.id.ifBlank { "workout-local-${System.currentTimeMillis()}" })
     }
 
     suspend fun updateWorkoutSession(id: String, update: Map<String, Any>): WorkoutSessionRow? = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("workout_sessions")
-            .update(update) {
-                filter { "id" eq id }
-                select()
-            }
-            .decodeSingleOrNull<WorkoutSessionRow>()
+        null
     }
 
     suspend fun insertWorkoutEvent(event: WorkoutEventRow) = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("workout_events")
-            .insert(event)
+        Unit
     }
 
-    // ─── Game Sessions ───
-
     suspend fun createGameSession(session: GameSessionRow): GameSessionRow? = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("game_sessions")
-            .insert(session) { select() }
-            .decodeSingleOrNull<GameSessionRow>()
+        session.copy(id = session.id.ifBlank { "game-local-${System.currentTimeMillis()}" })
     }
 
     suspend fun updateGameSession(id: String, update: Map<String, Any>): GameSessionRow? = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("game_sessions")
-            .update(update) {
-                filter { "id" eq id }
-                select()
-            }
-            .decodeSingleOrNull<GameSessionRow>()
+        null
     }
 
-    // ─── Daily Goals & Leaderboards ───
+    suspend fun submitGameSessionResult(
+        request: GameSessionSubmitRequest
+    ): Result<GameSessionSubmitResponse> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response = postJson("/game-sessions", json.encodeToString(request))
+            json.decodeFromString<GameSessionSubmitResponse>(response)
+        }
+    }
 
     suspend fun getDailyGoals(): List<DailyGoalRow> = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("daily_goals")
-            .select { filter { "active" eq true } }
-            .decodeList<DailyGoalRow>()
+        emptyList()
     }
 
-    suspend fun getLeaderboards(scope: String = "global", period: String = "all_time"): List<LeaderboardEntryRow> = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("leaderboard_entries")
-            .select {
-                filter {
-                    "scope" eq scope
-                    "period" eq period
-                }
-                order("rank", io.github.jan.supabase.postgrest.Postgrest.Order.ASCENDING)
-            }
-            .decodeList<LeaderboardEntryRow>()
-    }
-
-    // ─── Rewards ───
+    suspend fun getLeaderboards(scope: String = "global", period: String = "all_time"): List<LeaderboardEntryRow> =
+        withContext(Dispatchers.IO) {
+            emptyList()
+        }
 
     suspend fun claimReward(grant: RewardGrantRow): RewardGrantRow? = withContext(Dispatchers.IO) {
-        AlbaSupabase.client.postgrest.from("reward_grants")
-            .insert(grant) { select() }
-            .decodeSingleOrNull<RewardGrantRow>()
+        grant.copy(id = grant.id.ifBlank { "reward-local-${System.currentTimeMillis()}" })
     }
 
-    // ─── Activity Modes ───
-
     suspend fun getActivityModes(): List<JsonObject> = withContext(Dispatchers.IO) {
-        @Suppress("UNCHECKED_CAST")
-        AlbaSupabase.client.postgrest.from("activity_modes")
-            .select { filter { "status" eq "published" } }
-            .decodeList<Map<String, Any>>() as List<JsonObject>
+        emptyList()
+    }
+
+    private fun getJsonObject(path: String): JsonObject {
+        val url = URL("${AlbaSupabase.backendBaseUrl}$path")
+        val connection = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 3000
+            readTimeout = 5000
+            setRequestProperty("Accept", "application/json")
+        }
+        return connection.inputStream.bufferedReader().use { reader ->
+            json.parseToJsonElement(reader.readText()).jsonObject
+        }
+    }
+
+    private fun postJson(path: String, payload: String): String {
+        val url = URL("${AlbaSupabase.backendBaseUrl}$path")
+        val connection = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            connectTimeout = 3000
+            readTimeout = 5000
+            doOutput = true
+            setRequestProperty("Accept", "application/json")
+            setRequestProperty("Content-Type", "application/json")
+        }
+        connection.outputStream.use { stream ->
+            stream.write(payload.toByteArray(Charsets.UTF_8))
+        }
+        val code = connection.responseCode
+        val body = if (code in 200..299) {
+            connection.inputStream.bufferedReader().use { it.readText() }
+        } else {
+            connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+        }
+        if (code !in 200..299) {
+            throw IllegalStateException("HTTP $code ${body.take(200)}".trim())
+        }
+        return body
     }
 }
 
-// Alias for JsonObject from kotlinx
-typealias JsonObject = kotlinx.serialization.json.JsonObject
+private data class RuntimeCatalogCache(
+    val games: List<GameRow> = emptyList(),
+    val versionsByGameId: Map<String, List<GameVersionRow>> = emptyMap(),
+    val levelsByVersionId: Map<String, List<GameLevelRow>> = emptyMap(),
+    val motionRulesByVersionId: Map<String, List<GameMotionRuleRow>> = emptyMap(),
+    val rewardRulesByVersionId: Map<String, List<GameRewardRuleRow>> = emptyMap(),
+    val interactionRulesByVersionId: Map<String, List<GameInteractionRuleRow>> = emptyMap(),
+    val programStepsByLevelId: Map<String, List<GameProgramStepRow>> = emptyMap()
+) {
+    companion object {
+        fun fromBackendItems(items: JsonArray): RuntimeCatalogCache {
+            val games = mutableListOf<GameRow>()
+            val versions = mutableMapOf<String, List<GameVersionRow>>()
+            val levels = mutableMapOf<String, List<GameLevelRow>>()
+            val motionRules = mutableMapOf<String, List<GameMotionRuleRow>>()
+            val rewardRules = mutableMapOf<String, List<GameRewardRuleRow>>()
+            val interactionRules = mutableMapOf<String, List<GameInteractionRuleRow>>()
+            val programSteps = mutableMapOf<String, List<GameProgramStepRow>>()
+
+            items.mapNotNull { it.asObject() }.forEach { item ->
+                val gameId = item.string("id")
+                val gameKey = item.string("gameKey", gameId)
+                val versionNumber = item.int("version", 1)
+                val versionId = "$gameId:v$versionNumber"
+                val template = item.string("template", "SCENE_PLAY")
+                val status = item.string("status", "PUBLISHED")
+                val cameraRequirement = item.string("cameraRequirement", "FULL_BODY")
+
+                games += GameRow(
+                    id = gameId,
+                    gameKey = gameKey,
+                    title = item.string("title", gameKey),
+                    description = item.optionalString("description"),
+                    category = item.string("category", "FUN"),
+                    status = status,
+                    minAppVersion = item.string("minAppVersion", "0.2.0"),
+                    orientation = item.string("orientation", "PORTRAIT"),
+                    requiresCamera = cameraRequirement != "HAND_TARGET",
+                    tags = item.stringArray("tags"),
+                    config = JsonObject(mapOf("template" to JsonPrimitive(template))),
+                    metadata = JsonObject(mapOf("assets" to (item["assets"] ?: JsonObject(emptyMap()))))
+                )
+
+                versions[gameId] = listOf(
+                    GameVersionRow(
+                        id = versionId,
+                        gameId = gameId,
+                        version = versionNumber.toString(),
+                        status = status,
+                        publishedAt = item.optionalString("publishedAt"),
+                        minAppVersion = item.string("minAppVersion", "0.2.0"),
+                        supportedMotions = item.stringArray("supportedMotions"),
+                        assetManifest = item["assets"] as? JsonObject,
+                        runtimeContract = JsonObject(mapOf("schemaVersion" to JsonPrimitive("3.0")))
+                    )
+                )
+
+                val levelRows = mutableListOf<GameLevelRow>()
+                val versionMotionRules = mutableListOf<GameMotionRuleRow>()
+                val versionRewardRules = mutableListOf<GameRewardRuleRow>()
+                val versionInteractionRules = mutableListOf<GameInteractionRuleRow>()
+                item.array("levels").mapNotNull { it.asObject() }.forEachIndexed { levelIndex, level ->
+                    val levelKey = level.string("levelId", "level_${levelIndex + 1}")
+                    val levelId = "$versionId:$levelKey"
+                    levelRows += GameLevelRow(
+                        id = levelId,
+                        gameVersionId = versionId,
+                        levelKey = levelKey,
+                        levelIndex = levelIndex,
+                        title = levelKey,
+                        durationSec = level.int("durationSec", 60),
+                        targetScore = level.int("targetScore", 0),
+                        difficulty = level.string("difficulty", "EASY"),
+                        sceneConfig = level["sceneConfig"] as? JsonObject,
+                        runtimeConfig = level["config"] as? JsonObject
+                    )
+
+                    level.array("motionRules").mapNotNull { it.asObject() }.forEachIndexed { ruleIndex, rule ->
+                        val motion = rule.string("motion", "SQUAT")
+                        val event = rule.string("event", "REP_COUNTED")
+                        versionMotionRules += GameMotionRuleRow(
+                            id = "$levelId:motion:$ruleIndex",
+                            gameVersionId = versionId,
+                            motion = motion,
+                            ruleKey = "${levelKey}_motion_$ruleIndex",
+                            label = "$motion $event",
+                            cooldownMs = rule.int("cooldownMs", 0),
+                            scoring = JsonObject(mapOf("points" to JsonPrimitive(rule.int("points", 0)))),
+                            config = JsonObject(mapOf("event" to JsonPrimitive(event))),
+                            sortOrder = ruleIndex
+                        )
+                    }
+
+                    level.array("rewardRules").mapNotNull { it.asObject() }.forEachIndexed { rewardIndex, reward ->
+                        versionRewardRules += GameRewardRuleRow(
+                            id = "$levelId:reward:$rewardIndex",
+                            gameVersionId = versionId,
+                            rewardType = reward.string("rewardType", "STAR"),
+                            ruleKey = "${levelKey}_reward_$rewardIndex",
+                            title = reward.string("rewardType", "STAR"),
+                            amount = reward.int("amount", 1),
+                            conditions = JsonObject(mapOf("minimumScore" to JsonPrimitive(reward.int("minimumScore", 0))))
+                        )
+                    }
+
+                    level.array("interactionRules").mapNotNull { it.asObject() }.forEachIndexed { ruleIdx, ir ->
+                        versionInteractionRules += GameInteractionRuleRow(
+                            id = "$levelId:interaction:$ruleIdx",
+                            gameVersionId = versionId,
+                            interactionKey = ir.string("ruleId", "${levelKey}_interaction_$ruleIdx"),
+                            interactionType = ir.string("input", "MOTION_EVENT"),
+                            title = ir.string("ruleId", "Rule $ruleIdx"),
+                            motion = ir.optionalString("motion"),
+                            interactionPayload = ir
+                        )
+                    }
+
+                    programSteps[levelId] = level.array("programSteps").mapNotNull { it.asObject() }
+                        .mapIndexed { stepIndex, step ->
+                            GameProgramStepRow(
+                                id = "$levelId:step:$stepIndex",
+                                gameLevelId = levelId,
+                                stepKey = step.string("stepId", "step_${stepIndex + 1}"),
+                                stepType = step.string("type", "INSTRUCTION"),
+                                title = step.string("title", "Step ${stepIndex + 1}"),
+                                motion = step.optionalString("motion"),
+                                targetCount = step.optionalInt("targetCount"),
+                                holdSec = step.optionalInt("holdSec"),
+                                durationSec = step.optionalInt("durationSec"),
+                                successMessage = step.optionalString("successMessage"),
+                                isRequired = step.optionalBoolean("nextOnComplete") ?: true,
+                                sortOrder = stepIndex
+                            )
+                        }
+                }
+                levels[versionId] = levelRows
+                motionRules[versionId] = versionMotionRules
+                rewardRules[versionId] = versionRewardRules
+                interactionRules[versionId] = versionInteractionRules
+            }
+
+            return RuntimeCatalogCache(
+                games = games,
+                versionsByGameId = versions,
+                levelsByVersionId = levels,
+                motionRulesByVersionId = motionRules,
+                rewardRulesByVersionId = rewardRules,
+                interactionRulesByVersionId = interactionRules,
+                programStepsByLevelId = programSteps
+            )
+        }
+    }
+}
+
+private fun JsonElement.asObject(): JsonObject? = this as? JsonObject
+
+private fun JsonObject.string(key: String, default: String = ""): String =
+    optionalString(key)?.takeIf { it.isNotBlank() } ?: default
+
+private fun JsonObject.optionalString(key: String): String? = this[key]?.jsonPrimitive?.contentOrNull
+
+private fun JsonObject.int(key: String, default: Int = 0): Int = this[key]?.jsonPrimitive?.intOrNull ?: default
+
+private fun JsonObject.optionalInt(key: String): Int? = this[key]?.jsonPrimitive?.intOrNull
+
+private fun JsonObject.optionalBoolean(key: String): Boolean? = this[key]?.jsonPrimitive?.booleanOrNull
+
+private fun JsonObject.array(key: String): JsonArray = this[key]?.jsonArray ?: JsonArray(emptyList())
+
+private fun JsonObject.stringArray(key: String): List<String> =
+    array(key).mapNotNull { element -> element.jsonPrimitive.contentOrNull }

@@ -93,17 +93,28 @@ model GameSession {
   id               String   @id
   clientSessionKey String?  @unique
   userId           String?
-  gameDefinitionId String
-  workoutSessionId String
+  gameDefinitionId String?
+  workoutSessionId String?
+  gameKey          String?
+  gameDefinitionVersion Int?
+  deviceId         String?
+  status           String   @default("completed")
   startedAt        DateTime
   endedAt          DateTime?
+  durationSec      Int?
   score            Int?
+  combo            Int?
+  accuracy         Float?
+  calories         Float?
   gameVersion      Int?
   result           String?
   clientIntegrityHash String?
   resultPayload    Json?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@index([gameKey])
+  @@index([createdAt])
 }
 
 model RewardGrant {

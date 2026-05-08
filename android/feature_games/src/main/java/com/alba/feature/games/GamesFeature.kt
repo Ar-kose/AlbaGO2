@@ -43,6 +43,7 @@ import com.alba.core.runtime.DodgeObstacleType
 import com.alba.core.runtime.DodgeRunSceneState
 import com.alba.core.runtime.FitChallengeSceneState
 import com.alba.core.runtime.FruitSlashSceneState
+import com.alba.core.runtime.CameraRequirement
 import com.alba.core.runtime.GameDefinition
 import com.alba.core.runtime.GameCategory
 import com.alba.core.runtime.GameSceneState
@@ -1067,4 +1068,39 @@ private fun GameDefinition.primaryLevel() = levels.firstOrNull()
 private fun GameDefinition.isPlayableCatalogItem(): Boolean {
     return supportedMotions.isNotEmpty() &&
         levels.any { it.durationSec > 0 && it.motionRules.isNotEmpty() }
+}
+
+@Composable
+fun CameraReadinessCard(cameraRequirement: CameraRequirement) {
+    val (title, guidance) = when (cameraRequirement) {
+        CameraRequirement.FULL_BODY -> "Tam Vucut" to "Tum vucudun kamerada gorundugunden emin ol. Bir adim geri at, ayaklarini ve dizlerini kadrajda tut."
+        CameraRequirement.UPPER_BODY -> "Ust Vucut" to "Govden ve kollarin kamerada gorunmeli. Ellerinin kadraj disinda kalmadigindan emin ol."
+        CameraRequirement.HAND_TARGET -> "El Hedefi" to "Ellerin ve bileklerin kamerada net gorunmeli. Hedef temasini algilamak icin yeterli isik oldugundan emin ol."
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    "Kamera: $title",
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1E40AF)
+                )
+            }
+            Text(
+                guidance,
+                color = Color(0xFF1E3A5F),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
 }

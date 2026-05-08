@@ -9,14 +9,18 @@ AlbaGo Android client is now a multi-surface demo app built around a real camera
 - `core_pose`: MediaPipe Pose adapter and `PoseFrame` mapping
 - `core_motion`: detector contracts and state-machine-based motion counting
 - `core_runtime`: multi-template game runtime and scene-state engines
-- `core_data`: motion coordinator, QA storage, workout engine, retry queue and active game fetch/cache logic
-- `core_network`: Retrofit client and backend DTOs
+- `core_data`: motion coordinator, QA storage, workout engine, retry queue, active game fetch/cache logic and game-result sync state
+- `core_network`: HTTP client and backend DTOs for active games, assets and game-session result submission
 - `feature_workout`: workout summary and control panels
 - `feature_games`: 3-game public demo catalog and session/result surfaces
 
 ## Live pipeline
 
 `PreviewView + ImageAnalysis -> MediaPipe Pose -> PoseFrame -> MotionDetector(s) -> MotionEvent(s) -> WorkoutSessionEngine / GameRuntime -> Compose UI`
+
+Completed game flow:
+
+`GameRuntime result -> AlbaMotionController.finishGame() -> GameSessionSubmitRequest -> SupabaseData.submitGameSessionResult() -> MotionUiState.syncStatus`
 
 ## Sprint 4 mobile decisions
 
@@ -42,6 +46,7 @@ AlbaGo Android client is now a multi-surface demo app built around a real camera
 - Android parses `sceneConfig` and `interactionRules` as safe template inputs; it still does not execute remote code.
 - Android parses `category`, `tags` and `programSteps` so the catalog can be grouped as sport/fun/education and the prep screen can explain playlist-like activity flows.
 - `programSteps` are presentation and guidance metadata in this pass; scoring still comes from `MotionEvent`, task rules and template runtime state.
+- Completed game results are submitted asynchronously after `finishGame()`. Network failure updates sync state to `FAILED` with a sanitized message and never blocks the local result screen.
 
 ## Device validation status
 
@@ -52,3 +57,5 @@ On `2026-05-03`, catalog crash hardening was implemented and `:app:assembleDebug
 On `2026-05-05`, `:app:assembleDebug --no-daemon --stacktrace` passed after adding remote orientation, typed asset parsing and Android asset URL resolution.
 
 On `2026-05-06`, targeted Android Kotlin compile and `:app:assembleDebug` passed after adding category filtering and program-step parsing/display for game prep.
+
+On `2026-05-08`, P2 game-session result sync was added and verified with Android module compile, root `testDebugUnitTest` and `:app:assembleDebug`. The sync path keeps local gameplay results functional when the backend cannot be reached.

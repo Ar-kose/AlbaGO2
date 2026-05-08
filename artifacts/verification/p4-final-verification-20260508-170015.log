@@ -1,0 +1,85 @@
+# AlbaGo Platform v2 — P4 Final Verification Log
+
+Date: 2026-05-08 17:00 UTC+3
+Branch: platform-v2
+Timestamp: 20260508-170015
+
+## Commands Executed
+
+### 1. npm install
+```
+up to date, audited 620 packages in 2s
+5 vulnerabilities (1 moderate, 3 high, 1 critical)
+```
+
+### 2. Backend: Prisma Generate
+```
+npm run prisma:generate --workspace backend
+Result: Generated Prisma Client (v6.17.1) - PASS
+```
+
+### 3. Backend: Build
+```
+npm run build --workspace backend
+Result: nest build - PASS
+```
+
+### 4. Backend: Tests
+```
+npm run test --workspace backend
+Result:
+  PASS test/game-definition-v3.spec.ts
+  PASS test/publish-validation.spec.ts
+  PASS test/game-sessions.spec.ts
+  Test Suites: 3 passed, 3 total
+  Tests: 32 passed, 32 total
+```
+
+### 5. Admin: Build
+```
+npm run build --workspace admin
+Result: Next.js 14.2.16 - Compiled successfully
+  Route: / (9.45 kB), /games (6.94 kB), /_not-found (873 B)
+  PASS
+```
+
+### 6. Android: Unit Tests
+```
+./gradlew.bat testDebugUnitTest --no-daemon
+Result: BUILD SUCCESSFUL in 28s
+  172 actionable tasks: 24 executed, 148 up-to-date
+  app:testDebugUnitTest - PASS
+  core_motion:testDebugUnitTest - PASS
+  core_network:testDebugUnitTest - PASS
+  core_runtime:testDebugUnitTest - PASS
+```
+
+### 7. Android: APK Build
+```
+./gradlew.bat :app:assembleDebug --no-daemon
+Result: BUILD SUCCESSFUL in 14s
+  201 actionable tasks: 13 executed, 188 up-to-date
+  APK: android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+## Acceptance Summary
+
+| Check | Result |
+|-------|--------|
+| npm install | PASS |
+| backend prisma:generate | PASS |
+| backend build | PASS |
+| backend tests (32/32) | PASS |
+| admin build | PASS |
+| Android unit tests | PASS |
+| Android APK build | PASS |
+
+## Warnings (non-blocking)
+
+- Gradle: `android.overridePathCheck=true` is experimental
+- Gradle: SDK XML version 4 encountered (version mismatch between Android Studio and CLI tools)
+- Kotlin: Unused parameter warnings in SupabaseData.kt and AlbaMotionController.kt
+- npm: 5 audit findings (triaged separately in p4-npm-audit-triage)
+- Prisma: `package.json#prisma` config property deprecated, migrate to prisma.config.ts before Prisma 7
+
+## Overall P4 Verification: PASS
