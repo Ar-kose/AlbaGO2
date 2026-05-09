@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
   const existing = await prisma.gameDefinition.count();
   if (existing > 0) {
+    console.log('Database already seeded, skipping.');
     return;
   }
 
@@ -22,9 +23,9 @@ async function main() {
         minAppVersion: game.minAppVersion,
         orientation: game.orientation,
         cameraRequirement: game.cameraRequirement,
-        segmentRuleJson: game.segmentRuleJson,
-        supportedMotions: game.supportedMotions,
-        assets: game.assets,
+        segmentRuleJson: game.segmentRuleJson as Prisma.InputJsonValue,
+        supportedMotions: game.supportedMotions as unknown as Prisma.InputJsonValue,
+        assets: game.assets as unknown as Prisma.InputJsonValue,
         publishedAt: game.publishedAt ? new Date(game.publishedAt) : null,
         levels: {
           create: game.levels.map((level) => ({
@@ -33,17 +34,18 @@ async function main() {
             durationSec: level.durationSec,
             targetScore: level.targetScore,
             difficulty: level.difficulty,
-            motionRules: level.motionRules,
-            rewardRules: level.rewardRules,
-            configJson: level.configJson,
-            sceneConfig: level.sceneConfig ?? Prisma.JsonNull,
-            interactionRules: level.interactionRules ?? Prisma.JsonNull,
-            taskRulesJson: level.taskRulesJson ?? Prisma.JsonNull
+            motionRules: level.motionRules as unknown as Prisma.InputJsonValue,
+            rewardRules: level.rewardRules as unknown as Prisma.InputJsonValue,
+            configJson: level.configJson as Prisma.InputJsonValue,
+            sceneConfig: (level.sceneConfig ?? Prisma.JsonNull) as unknown as Prisma.InputJsonValue,
+            interactionRules: (level.interactionRules ?? Prisma.JsonNull) as unknown as Prisma.InputJsonValue,
+            taskRulesJson: (level.taskRulesJson ?? Prisma.JsonNull) as unknown as Prisma.InputJsonValue
           }))
         }
       }
     });
   }
+  console.log('Seed completed.');
 }
 
 main()

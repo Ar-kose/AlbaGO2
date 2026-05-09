@@ -151,3 +151,36 @@ P3 evidence:
 - `known-issues.md` updated
 - Sprint log updated
 - Product rename note recorded
+
+## P6 Beta Readiness Gate
+
+- [x] Backend build passes — PASS (NestJS)
+- [x] Backend tests pass — PASS (32/32, 3 suites)
+- [x] Admin build passes — PASS (Next.js 14.2.16)
+- [x] Android unit tests pass — PASS (testDebugUnitTest)
+- [x] Android debug APK assembles — PASS (113,605,914 bytes)
+- [ ] Physical device cold launch passes — PENDING (device not connected)
+- [ ] Manual catalog walkthrough passes — PENDING (device not connected)
+- [ ] At least one completed session syncs to backend — PENDING (device not connected)
+- [ ] Crash logs contain no AndroidRuntime fatal signatures — PENDING (device not connected)
+- [x] Release package checksum is recorded — SHA256: `0869B549CEDE607CC312062BF100A85024540F9CD0044AC23D1D25A32F826C91`
+- [x] Known issues are updated
+
+**P6 Status: CONDITIONAL GO** — All automated verification passes. Physical device items pending device connection.
+
+### P6 Evidence
+
+- `artifacts/verification/p6-working-tree-inventory-20260508-230800.md`
+- `artifacts/verification/p6-beta-readiness-summary-20260509-001700.md`
+- `artifacts/verification/p6-manual-device-walkthrough-20260509-001700.md`
+- `artifacts/verification/p6-release-risk-register-20260508-230800.md`
+- `artifacts/verification/p6-session-sync-evidence-20260509-001700.md`
+- `artifacts/verification/p6-admin-publish-refresh-evidence-20260509-001700.md`
+
+### P6 Decision Criteria
+
+| Decision | Criteria |
+|----------|----------|
+| **GO** | All automated tests green; physical device cold launch + manual walkthrough pass; >=1 session synced; no fatal crash; known issues non-critical or clearly workarounded |
+| **CONDITIONAL GO** | Automated tests green; manual walkthrough partially successful; non-critical UX/device limitation with documented workaround |
+| **NO-GO** | Android fatal crash; backend session persistence broken; publish validation bypassable; APK cannot assemble; unknown or unreproducible release artifact |

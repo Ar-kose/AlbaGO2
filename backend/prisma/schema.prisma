@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
 }
 
 model User {
@@ -14,6 +14,8 @@ model User {
   status      String
   createdAt   DateTime
   devices     Device[]
+
+
 }
 
 model Device {
@@ -28,6 +30,7 @@ model Device {
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+
 }
 
 model GameDefinition {
@@ -51,6 +54,7 @@ model GameDefinition {
 
   @@index([gameKey])
   @@index([status])
+
 }
 
 model GameLevel {
@@ -71,6 +75,7 @@ model GameLevel {
   gameDefinition   GameDefinition @relation(fields: [gameDefinitionId], references: [id], onDelete: Cascade)
 
   @@index([gameDefinitionId])
+
 }
 
 model WorkoutSession {
@@ -87,6 +92,8 @@ model WorkoutSession {
   motionSummary    Json?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+
 }
 
 model GameSession {
@@ -115,6 +122,7 @@ model GameSession {
 
   @@index([gameKey])
   @@index([createdAt])
+
 }
 
 model RewardGrant {
@@ -126,6 +134,8 @@ model RewardGrant {
   amount         Int
   idempotencyKey String   @unique
   createdAt      DateTime
+
+
 }
 
 model AuditLog {
@@ -140,4 +150,5 @@ model AuditLog {
 
   @@index([entityType, entityId])
   @@index([createdAt])
+
 }

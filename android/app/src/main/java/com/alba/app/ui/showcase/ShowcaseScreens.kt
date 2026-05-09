@@ -37,11 +37,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -106,7 +108,8 @@ private data class QuickAction(
     val title: String,
     val icon: NeonIconType,
     val accent: Color,
-    val onClick: () -> Unit
+    val onClick: () -> Unit,
+    val enabled: Boolean = true
 )
 
 private data class GameCardUi(
@@ -321,6 +324,15 @@ fun HomeShowcaseScreen(
     onOpenDemos: () -> Unit,
     onCenterAction: () -> Unit
 ) {
+    var snackbarMessage by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(snackbarMessage) {
+        if (snackbarMessage != null) {
+            delay(2000)
+            snackbarMessage = null
+        }
+    }
+    val showSoon: () -> Unit = { snackbarMessage = "Bu özellik yakında gelecek!" }
+
     NeonScreen(
         selectedTab = ShowcaseTab.HOME,
         onHome = {},
@@ -328,7 +340,8 @@ fun HomeShowcaseScreen(
         onEducation = onOpenEducation,
         onEntertainment = onOpenEntertainment,
         onDemos = onOpenDemos,
-        onCenterAction = onCenterAction
+        onCenterAction = onCenterAction,
+        snackbarMessage = snackbarMessage
     ) {
         HomeHeader()
         HeroBanner(
@@ -343,11 +356,11 @@ fun HomeShowcaseScreen(
         SectionLabel(title = "HIZLI ERİŞİM")
         QuickActionsRow(
             actions = listOf(
-                QuickAction("Görevler", NeonIconType.Target, Orange, onOpenDemos),
-                QuickAction("Arkadaşlar", NeonIconType.Friends, Cyan, onOpenEntertainment),
-                QuickAction("Liderlik", NeonIconType.Trophy, Amber, onOpenDemos),
-                QuickAction("Mağaza", NeonIconType.Bag, HotPink, onOpenDemos),
-                QuickAction("Etkinlikler", NeonIconType.Calendar, Purple, onOpenEntertainment)
+                QuickAction("Görevler", NeonIconType.Target, Orange, onClick = showSoon, enabled = false),
+                QuickAction("Arkadaşlar", NeonIconType.Friends, Cyan, onClick = showSoon, enabled = false),
+                QuickAction("Liderlik", NeonIconType.Trophy, Amber, onClick = showSoon, enabled = false),
+                QuickAction("Mağaza", NeonIconType.Bag, HotPink, onClick = showSoon, enabled = false),
+                QuickAction("Etkinlikler", NeonIconType.Calendar, Purple, onClick = showSoon, enabled = false)
             )
         )
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -545,8 +558,10 @@ fun DemoCatalogShowcaseScreen(
     onSport: () -> Unit,
     onEducation: () -> Unit,
     onEntertainment: () -> Unit,
-    onCenterAction: () -> Unit
+    onCenterAction: () -> Unit,
+    onGameSelected: (String) -> Unit = {}
 ) {
+    var snackbarMessage by remember { mutableStateOf<String?>(null) }
     NeonScreen(
         selectedTab = ShowcaseTab.DEMOS,
         onHome = onHome,
@@ -554,37 +569,247 @@ fun DemoCatalogShowcaseScreen(
         onEducation = onEducation,
         onEntertainment = onEntertainment,
         onDemos = {},
-        onCenterAction = onCenterAction
+        onCenterAction = onCenterAction,
+        snackbarMessage = snackbarMessage
     ) {
         CenteredTitle(
             title = "Demo Oyunlar",
-            subtitle = "Deneyimle, hazırla ve oyna!"
+            subtitle = "Seç, hazırlan ve oynamaya başla!"
         )
         SegmentRow(items = listOf("Tümü", "Spor", "Eğlence", "Eğitim"))
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             DemoListCard(
                 imageRes = R.drawable.demo_fruit_slash,
-                title = "Fruit Slash",
-                category = "Eğlence",
-                description = "Meyveleri kes, combo yap! Reflekslerini test et.",
-                accent = HotPink
+                title = "Meyve Kesme",
+                category = "Eğlence · 60s · EASY",
+                description = "Jumping jack ile meyveleri kes, squat ile güçlü hedefi patlat!",
+                accent = HotPink,
+                onClick = { onGameSelected("fruit_slash_demo") }
             )
             DemoListCard(
                 imageRes = R.drawable.demo_dodge_run,
-                title = "Dodge Run",
-                category = "Spor",
-                description = "Engellerden kaç, koşunu sürdür, en uzağa ulaş!",
-                accent = Orange
+                title = "Engelden Kaçış",
+                category = "Spor · 60s · MEDIUM",
+                description = "Engeller akar; squat ile alttan geç, jumping jack ile zıpla!",
+                accent = Orange,
+                onClick = { onGameSelected("dodge_run_demo") }
             )
             DemoListCard(
                 imageRes = R.drawable.demo_fit_challenge,
-                title = "Fit Challenge",
-                category = "Spor",
-                description = "Hareket et, puan topla, formunu güçlendir!",
-                accent = Cyan
+                title = "Spor Mücadelesi",
+                category = "Spor · 120s · CHALLENGE",
+                description = "Squat, jumping jack, jump rope ve plank — 4 aşamalı program.",
+                accent = Cyan,
+                onClick = { onGameSelected("fit_challenge_demo") }
             )
         }
     }
+}
+
+@Composable
+fun NeonGamePrepScreen(
+    uiState: MotionUiState,
+    onStartGame: () -> Unit,
+    onBackToCatalog: () -> Unit,
+    onHome: () -> Unit,
+    onCenterAction: () -> Unit
+) {
+    val game = uiState.activeGameDefinition
+    if (game == null) {
+        NeonScreen(
+            selectedTab = ShowcaseTab.DEMOS,
+            onHome = onHome,
+            onSport = {},
+            onEducation = {},
+            onEntertainment = {},
+            onDemos = {},
+            onCenterAction = onCenterAction
+        ) {
+            CenteredTitle(
+                title = "Oyun Yükleniyor",
+                subtitle = "Oyun tanımı alınıyor..."
+            )
+        }
+        return
+    }
+
+    val level = game.levels.firstOrNull()
+    val durationSec = level?.durationSec ?: 60
+    val targetScore = level?.targetScore ?: 0
+    val difficulty = level?.difficulty ?: "EASY"
+    val motions = game.supportedMotions
+
+    NeonScreen(
+        selectedTab = ShowcaseTab.DEMOS,
+        onHome = onHome,
+        onSport = {},
+        onEducation = {},
+        onEntertainment = {},
+        onDemos = {},
+        onCenterAction = onCenterAction
+    ) {
+        CenteredTitle(
+            title = game.title,
+            subtitle = game.description
+        )
+
+        // Game info chips
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            InfoChip(durationSec.toString() + "s", HotPink)
+            InfoChip(difficulty, Orange)
+            InfoChip("Hedef $targetScore", Cyan)
+            InfoChip(game.category.name, Purple)
+        }
+
+        // Motion tags
+        SectionLabel(title = "HAREKETLER")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            motions.forEach { motion ->
+                Surface(
+                    color = HotPink.copy(alpha = 0.18f),
+                    shape = RoundedCornerShape(20.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, HotPink.copy(alpha = 0.5f))
+                ) {
+                    Text(
+                        motion.name.replace("_", " "),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        color = HotPink,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // How to play card
+        SectionLabel(title = "NASIL OYNANIR")
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = Panel,
+            shape = RoundedCornerShape(14.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Cyan.copy(alpha = 0.35f))
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    game.description,
+                    color = SoftWhite.copy(alpha = 0.82f),
+                    fontSize = 12.sp,
+                    lineHeight = 17.sp
+                )
+                if (level?.programSteps?.isNotEmpty() == true) {
+                    Spacer(Modifier.height(6.dp))
+                    Text("Program Akışı:", color = Cyan, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                    level.programSteps.forEachIndexed { index, step ->
+                        Text(
+                            "${index + 1}. ${step.title}" + if (step.description?.isNotBlank() == true) " — ${step.description}" else "",
+                            color = SoftWhite.copy(alpha = 0.72f),
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        // Camera recommendation
+        SectionLabel(title = "KAMERA")
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = Panel,
+            shape = RoundedCornerShape(14.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Purple.copy(alpha = 0.35f))
+        ) {
+            Row(
+                modifier = Modifier.padding(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                NeonGlyph(icon = NeonIconType.Camera, tint = Purple, modifier = Modifier.size(26.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Kamera Gereksinimi", color = SoftWhite, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(
+                        cameraLabel(game.cameraRequirement.name),
+                        color = Purple,
+                        fontSize = 11.sp
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Start button
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onStartGame),
+            color = HotPink,
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            Text(
+                "Oyuna Başla",
+                modifier = Modifier.padding(vertical = 14.dp),
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        // Back to catalog
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onBackToCatalog),
+            color = Panel,
+            shape = RoundedCornerShape(14.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, StrokeLine)
+        ) {
+            Text(
+                "Kataloğa Dön",
+                modifier = Modifier.padding(vertical = 12.dp),
+                color = SoftWhite.copy(alpha = 0.72f),
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun InfoChip(label: String, accent: Color) {
+    Surface(
+        color = accent.copy(alpha = 0.12f),
+        shape = RoundedCornerShape(8.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, accent.copy(alpha = 0.4f))
+    ) {
+        Text(
+            label,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+            color = accent,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+private fun cameraLabel(requirement: String): String = when (requirement.uppercase()) {
+    "FULL_BODY" -> "Tam vücut görünümü gerekli"
+    "UPPER_BODY" -> "Üst vücut görünümü gerekli"
+    "HAND_TARGET" -> "El hedefleme — eller kadrajda olmalı"
+    else -> requirement
 }
 
 @Composable
@@ -658,6 +883,7 @@ private fun NeonScreen(
     onEntertainment: () -> Unit,
     onDemos: () -> Unit,
     onCenterAction: () -> Unit,
+    snackbarMessage: String? = null,
     content: @Composable ColumnScopeShim.() -> Unit
 ) {
     Box(
@@ -687,6 +913,24 @@ private fun NeonScreen(
             onCenterAction = onCenterAction,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+        if (snackbarMessage != null) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 96.dp),
+                color = Panel.copy(alpha = 0.95f),
+                shape = RoundedCornerShape(24.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, HotPink.copy(alpha = 0.6f))
+            ) {
+                Text(
+                    snackbarMessage,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                    color = SoftWhite,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
     }
 }
 
@@ -854,7 +1098,7 @@ private fun QuickActionsRow(actions: List<QuickAction>) {
                     .weight(1f)
                     .height(58.dp)
                     .clickable(onClick = action.onClick),
-                color = Panel,
+                color = Panel.copy(alpha = if (action.enabled) 1f else 0.45f),
                 shape = RoundedCornerShape(13.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, StrokeLine)
             ) {
@@ -865,7 +1109,7 @@ private fun QuickActionsRow(actions: List<QuickAction>) {
                 ) {
                     NeonGlyph(icon = action.icon, tint = action.accent, modifier = Modifier.size(22.dp))
                     Text(
-                        action.title,
+                        if (action.enabled) action.title else "Yakında",
                         color = SoftWhite.copy(alpha = 0.72f),
                         fontSize = 8.sp,
                         maxLines = 1,
@@ -1118,10 +1362,13 @@ private fun DemoListCard(
     title: String,
     category: String,
     description: String,
-    accent: Color
+    accent: Color,
+    onClick: () -> Unit
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         color = Panel,
         shape = RoundedCornerShape(16.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, accent.copy(alpha = 0.42f))
@@ -1144,7 +1391,11 @@ private fun DemoListCard(
                 Text(category, color = accent, fontWeight = FontWeight.Bold, fontSize = 10.sp)
                 Text(description, color = SoftWhite.copy(alpha = 0.66f), fontSize = 10.sp, lineHeight = 13.sp)
             }
-            Surface(color = HotPink, shape = RoundedCornerShape(7.dp)) {
+            Surface(
+                modifier = Modifier.clickable(onClick = onClick),
+                color = HotPink,
+                shape = RoundedCornerShape(7.dp)
+            ) {
                 Text(
                     "Hazırla",
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),

@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Injectable, Module, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Injectable, Module, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { AdminTokenGuard } from '../common/admin-token.guard';
 import { ApiTags } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
@@ -566,6 +567,7 @@ class GamesController {
 
 @ApiTags('internal-games')
 @Controller('internal/game-definitions')
+@UseGuards(AdminTokenGuard)
 class InternalGamesController {
   constructor(private readonly service: GamesService) {}
 

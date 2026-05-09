@@ -1,4 +1,5 @@
-import { Body, Controller, Injectable, Module, Param, Post } from '@nestjs/common';
+import { Body, Controller, Injectable, Module, Param, Post, UseGuards } from '@nestjs/common';
+import { AdminTokenGuard } from '../common/admin-token.guard';
 import { ApiTags } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 import { GameDefinitionEntity } from '../common/contracts';
@@ -64,6 +65,7 @@ class ContentPublishService {
 
 @ApiTags('content-publish')
 @Controller('internal/game-definitions')
+@UseGuards(AdminTokenGuard)
 class ContentPublishController {
   constructor(private readonly service: ContentPublishService) {}
 

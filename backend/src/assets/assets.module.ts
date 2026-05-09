@@ -1,4 +1,5 @@
-import { BadRequestException, Controller, Get, Module, NotFoundException, Param, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Module, NotFoundException, Param, Post, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { AdminTokenGuard } from '../common/admin-token.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { createHash, randomUUID } from 'node:crypto';
@@ -28,6 +29,7 @@ interface UploadedAssetDto {
 
 @ApiTags('assets')
 @Controller('internal/assets')
+@UseGuards(AdminTokenGuard)
 class InternalAssetsController {
   private readonly assets = new Map<string, UploadedAssetDto>();
 

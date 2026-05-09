@@ -226,20 +226,20 @@ private fun GameDetailScreen(
         description = definition.description,
         accent = templateAccent(definition.template)
     )
-    Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
+    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1627))) {
         Column(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text("Oyuna hazırlan", style = MaterialTheme.typography.titleLarge)
-            DetailRow("Süre", "${level.durationSec} saniye")
-            DetailRow("Zorluk", level.difficulty)
-            DetailRow("Hedef skor", level.targetScore.toString())
-            DetailRow("Hareketler", definition.supportedMotions.joinToString { motionLabel(it) })
-            Text("Nasıl oynanır?", style = MaterialTheme.typography.titleMedium)
-            Text(howToPlay(definition.template), color = Color(0xFF475569))
+            Text("Oyuna hazırlan", style = MaterialTheme.typography.titleLarge, color = Color.White)
+            DetailRow("Süre", "${level.durationSec} saniye", Color.White)
+            DetailRow("Zorluk", level.difficulty, Color.White)
+            DetailRow("Hedef skor", level.targetScore.toString(), Color.White)
+            DetailRow("Hareketler", definition.supportedMotions.joinToString { motionLabel(it) }, Color.White)
+            Text("Nasıl oynanır?", style = MaterialTheme.typography.titleMedium, color = Color.White)
+            Text(howToPlay(definition.template), color = Color.White.copy(alpha = 0.68f))
             if (level.programSteps.isNotEmpty()) {
-                Text("Program akisi", style = MaterialTheme.typography.titleMedium)
+                Text("Program akisi", style = MaterialTheme.typography.titleMedium, color = Color.White)
                 ProgramStepList(steps = level.programSteps)
             }
             Text("Kamera önerisi", style = MaterialTheme.typography.titleMedium)
@@ -289,14 +289,14 @@ private fun ActiveGameScreen(
         lastEffect = uiState.game.lastEffect
     )
 
-    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF7FBFF))) {
+    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1627))) {
         Column(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("Canlı oturum", style = MaterialTheme.typography.titleMedium)
-            Text("Aktif hareket: ${motionLabel(uiState.selectedMotionType)}")
-            Text("Desteklenen hareketler: ${gameDefinition.supportedMotions.joinToString { motionLabel(it) }}")
+            Text("Canlı oturum", style = MaterialTheme.typography.titleMedium, color = Color.White)
+            Text("Aktif hareket: ${motionLabel(uiState.selectedMotionType)}", color = Color.White.copy(alpha = 0.78f))
+            Text("Desteklenen hareketler: ${gameDefinition.supportedMotions.joinToString { motionLabel(it) }}", color = Color.White.copy(alpha = 0.68f))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (uiState.game.status == GameSessionStatus.ACTIVE ||
                     uiState.game.status == GameSessionStatus.PAUSED
@@ -341,7 +341,7 @@ private fun DemoGameCard(
     val level = definition.primaryLevel()
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1627))
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -361,8 +361,8 @@ private fun DemoGameCard(
                         label = categoryLabel(definition.category),
                         color = categoryAccent(definition.category)
                     )
-                    Text(definition.title, style = MaterialTheme.typography.titleLarge)
-                    Text(definition.description)
+                    Text(definition.title, style = MaterialTheme.typography.titleLarge, color = Color.White)
+                    Text(definition.description, color = Color.White.copy(alpha = 0.68f))
                 }
                 if (selected) {
                     StatusPill(label = "Hazır", color = Color(0xFF22C55E))
@@ -588,14 +588,15 @@ private fun programStepLabel(type: ProgramStepType): String {
 @Composable
 private fun DetailRow(
     label: String,
-    value: String
+    value: String,
+    valueColor: Color = Color.Black
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label, color = Color(0xFF64748B))
-        Text(value, fontWeight = FontWeight.SemiBold)
+        Text(value, fontWeight = FontWeight.SemiBold, color = valueColor)
     }
 }
 
@@ -887,13 +888,14 @@ private fun ResultSheet(
     onBrowseGames: () -> Unit
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF122033))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1627)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF20DB9).copy(alpha = 0.6f))
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Oyun Sonucu", style = MaterialTheme.typography.titleLarge, color = Color.White)
+            Text("Oyun Sonucu", style = MaterialTheme.typography.titleLarge, color = Color.White, fontWeight = FontWeight.Bold)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

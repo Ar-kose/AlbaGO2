@@ -304,3 +304,44 @@ Tooling:
 - Migrate Prisma config from `package.json#prisma` to `prisma.config.ts` before Prisma 7.
 - Android program runner execution for hold-pose timers, rest timers and auto-next transitions.
 - Add future motion primitives (PLANK, PUSH_UP, LUNGE) for advanced sport programs.
+
+## 2026-05-09 update: P6 Beta Readiness & Release Hardening
+
+Durum:
+
+- P6 beta readiness sprint tamamlandi. Tum otomatik dogrulamalar gecti.
+- `C:\Android\Sdk` junction'i baska bir kullaniciya (`Ali Rahman Kose`) isaret ediyordu; temiz SDK kurulumuyla cozuldu.
+- Android SDK: platform-tools 37.0.0, platforms android-34, build-tools 34.0.0
+- `verify-platform-v2.ps1` tum adimlarda basarili (preflight, npm install, backend prisma generate, backend build, backend test, admin build, Android unit tests, Android APK assemble).
+- Fiziksel cihaz bu turda bagli degildi; manuel walkthrough ve session sync fiziksel kaniti bir sonraki turda toplanacak.
+
+Kanit:
+
+- `artifacts/verification/p6-working-tree-inventory-20260508-230800.md`
+- `artifacts/verification/p6-beta-readiness-summary-20260509-001700.md`
+- `artifacts/verification/p6-release-risk-register-20260508-230800.md`
+- `artifacts/verification/p6-manual-device-walkthrough-20260509-001700.md`
+- `artifacts/verification/p6-session-sync-evidence-20260509-001700.md`
+- `artifacts/verification/p6-admin-publish-refresh-evidence-20260509-001700.md`
+- `artifacts/verification/p6-platform-verification-20260508-230800.log`
+
+APK:
+
+- Path: `android/app/build/outputs/apk/debug/app-debug.apk`
+- SHA256: `0869B549CEDE607CC312062BF100A85024540F9CD0044AC23D1D25A32F826C91`
+
+Acik takip:
+
+- Fiziksel cihaz baglanip manuel walkthrough tamamlanmali.
+- En az 1 completed session backend'e sync edilmeli.
+- Admin publish/refresh akisi fiziksel cihazda dogrulanmali.
+- Crash log kontrolu fiziksel cihazda yapilmali.
+
+## P6 Android SDK Environment Fix
+
+- Date opened: 2026-05-08
+- Date resolved: 2026-05-09
+- Status: Resolved
+- Symptom: `C:\Android\Sdk` junction target `C:\Users\Ali Rahman Köse\AppData\Local\Android\Sdk` inaccessible
+- Resolution: Removed broken junction, downloaded Android command-line tools, installed fresh SDK at `C:\Android\Sdk` with platform-tools, platforms android-34, and build-tools 34.0.0
+- Verification: `verify-platform-v2.ps1` all green (9/9 steps)

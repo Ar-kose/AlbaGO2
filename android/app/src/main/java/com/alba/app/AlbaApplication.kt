@@ -7,6 +7,7 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -83,6 +84,7 @@ import com.alba.app.ui.showcase.DemoCatalogShowcaseScreen
 import com.alba.app.ui.showcase.EducationModeShowcaseScreen
 import com.alba.app.ui.showcase.EntertainmentModeShowcaseScreen
 import com.alba.app.ui.showcase.HomeShowcaseScreen
+import com.alba.app.ui.showcase.NeonGamePrepScreen
 import com.alba.app.ui.showcase.OnboardingBodyTrackingScreen
 import com.alba.app.ui.showcase.OnboardingCameraWorldScreen
 import com.alba.app.ui.showcase.OnboardingModesScreen
@@ -122,6 +124,7 @@ private enum class AlbaDestination {
     EDUCATION_MODE,
     ENTERTAINMENT_MODE,
     DEMO_CATALOG,
+    GAME_PREP,
     MOTION_LAB,
     WORKOUT,
     GAMES
@@ -155,8 +158,19 @@ private fun AlbaRoot(
             AlbaDestination.values().firstOrNull { it.name == initialDestinationName } ?: AlbaDestination.SPLASH
         )
     }
+    var previousDestination by rememberSaveable { mutableStateOf<AlbaDestination?>(null) }
     val uiState by controller.uiState.collectAsState()
     var autoStarted by rememberSaveable(autoStartGameId) { mutableStateOf(false) }
+
+    fun navigate(next: AlbaDestination) {
+        previousDestination = destination
+        destination = next
+    }
+
+    fun navigateBack() {
+        destination = previousDestination ?: AlbaDestination.HOME
+        previousDestination = null
+    }
 
     LaunchedEffect(uiState.game.status, uiState.activeGameDefinition?.orientation) {
         val activity = context as? ComponentActivity ?: return@LaunchedEffect
@@ -176,7 +190,7 @@ private fun AlbaRoot(
             !autoStartGameId.isNullOrBlank() &&
             uiState.availableGames.any { it.gameId == autoStartGameId }
         ) {
-            destination = AlbaDestination.GAMES
+            navigate(AlbaDestination.GAMES)
             controller.selectGameDefinition(autoStartGameId)
             controller.startGame()
             runCatching { autoMockMotionName?.let(MotionType::valueOf) }
@@ -192,67 +206,82 @@ private fun AlbaRoot(
     ) { padding ->
         when (destination) {
             AlbaDestination.SPLASH -> SplashScreen(
-                onFinished = { destination = AlbaDestination.ONBOARDING_BODY }
+                onFinished = { navigate(AlbaDestination.ONBOARDING_BODY) }
             )
 
             AlbaDestination.ONBOARDING_BODY -> OnboardingBodyTrackingScreen(
-                onNext = { destination = AlbaDestination.ONBOARDING_MODES }
+                onNext = { navigate(AlbaDestination.ONBOARDING_MODES) }
             )
 
             AlbaDestination.ONBOARDING_MODES -> OnboardingModesScreen(
-                onNext = { destination = AlbaDestination.ONBOARDING_CAMERA },
-                onSport = { destination = AlbaDestination.SPORT_MODE },
-                onEducation = { destination = AlbaDestination.EDUCATION_MODE },
-                onEntertainment = { destination = AlbaDestination.ENTERTAINMENT_MODE }
+                onNext = { navigate(AlbaDestination.ONBOARDING_CAMERA) },
+                onSport = { navigate(AlbaDestination.SPORT_MODE) },
+                onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
+                onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) }
             )
 
             AlbaDestination.ONBOARDING_CAMERA -> OnboardingCameraWorldScreen(
-                onNext = { destination = AlbaDestination.CAMERA_PERMISSION }
+                onNext = { navigate(AlbaDestination.CAMERA_PERMISSION) }
             )
 
             AlbaDestination.CAMERA_PERMISSION -> CameraPermissionShowcaseScreen(
-                onFinished = { destination = AlbaDestination.HOME }
+                onFinished = { navigate(AlbaDestination.HOME) }
             )
 
             AlbaDestination.HOME -> HomeShowcaseScreen(
                 uiState = uiState,
-                onOpenSport = { destination = AlbaDestination.SPORT_MODE },
-                onOpenEducation = { destination = AlbaDestination.EDUCATION_MODE },
-                onOpenEntertainment = { destination = AlbaDestination.ENTERTAINMENT_MODE },
-                onOpenDemos = { destination = AlbaDestination.DEMO_CATALOG },
-                onCenterAction = { destination = AlbaDestination.MOTION_LAB }
+                onOpenSport = { navigate(AlbaDestination.SPORT_MODE) },
+                onOpenEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
+                onOpenEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
+                onOpenDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
+                onCenterAction = { navigate(AlbaDestination.HOME) }
             )
 
             AlbaDestination.SPORT_MODE -> SportModeShowcaseScreen(
-                onHome = { destination = AlbaDestination.HOME },
-                onEducation = { destination = AlbaDestination.EDUCATION_MODE },
-                onEntertainment = { destination = AlbaDestination.ENTERTAINMENT_MODE },
-                onDemos = { destination = AlbaDestination.DEMO_CATALOG },
-                onCenterAction = { destination = AlbaDestination.MOTION_LAB }
+                onHome = { navigate(AlbaDestination.HOME) },
+                onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
+                onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
+                onDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
+                onCenterAction = { navigate(AlbaDestination.HOME) }
             )
 
             AlbaDestination.EDUCATION_MODE -> EducationModeShowcaseScreen(
-                onHome = { destination = AlbaDestination.HOME },
-                onSport = { destination = AlbaDestination.SPORT_MODE },
-                onEntertainment = { destination = AlbaDestination.ENTERTAINMENT_MODE },
-                onDemos = { destination = AlbaDestination.DEMO_CATALOG },
-                onCenterAction = { destination = AlbaDestination.MOTION_LAB }
+                onHome = { navigate(AlbaDestination.HOME) },
+                onSport = { navigate(AlbaDestination.SPORT_MODE) },
+                onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
+                onDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
+                onCenterAction = { navigate(AlbaDestination.HOME) }
             )
 
             AlbaDestination.ENTERTAINMENT_MODE -> EntertainmentModeShowcaseScreen(
-                onHome = { destination = AlbaDestination.HOME },
-                onSport = { destination = AlbaDestination.SPORT_MODE },
-                onEducation = { destination = AlbaDestination.EDUCATION_MODE },
-                onDemos = { destination = AlbaDestination.DEMO_CATALOG },
-                onCenterAction = { destination = AlbaDestination.MOTION_LAB }
+                onHome = { navigate(AlbaDestination.HOME) },
+                onSport = { navigate(AlbaDestination.SPORT_MODE) },
+                onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
+                onDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
+                onCenterAction = { navigate(AlbaDestination.HOME) }
             )
 
             AlbaDestination.DEMO_CATALOG -> DemoCatalogShowcaseScreen(
-                onHome = { destination = AlbaDestination.HOME },
-                onSport = { destination = AlbaDestination.SPORT_MODE },
-                onEducation = { destination = AlbaDestination.EDUCATION_MODE },
-                onEntertainment = { destination = AlbaDestination.ENTERTAINMENT_MODE },
-                onCenterAction = { destination = AlbaDestination.GAMES }
+                onHome = { navigate(AlbaDestination.HOME) },
+                onSport = { navigate(AlbaDestination.SPORT_MODE) },
+                onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
+                onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
+                onCenterAction = { navigate(AlbaDestination.HOME) },
+                onGameSelected = { gameId ->
+                    controller.selectGameDefinition(gameId)
+                    navigate(AlbaDestination.GAME_PREP)
+                }
+            )
+
+            AlbaDestination.GAME_PREP -> NeonGamePrepScreen(
+                uiState = uiState,
+                onStartGame = {
+                    controller.startGame()
+                    navigate(AlbaDestination.GAMES)
+                },
+                onBackToCatalog = { navigate(AlbaDestination.DEMO_CATALOG) },
+                onHome = { navigate(AlbaDestination.HOME) },
+                onCenterAction = { navigate(AlbaDestination.HOME) }
             )
 
             AlbaDestination.MOTION_LAB -> MotionScreenShell(
@@ -261,7 +290,7 @@ private fun AlbaRoot(
                 contentPadding = padding,
                 controller = controller,
                 uiState = uiState,
-                onNavigateBack = { destination = AlbaDestination.HOME },
+                onNavigateBack = { navigateBack() },
                 qaEnabled = BuildConfig.DEBUG
             ) {
                 MotionLabPanel(uiState = uiState)
@@ -273,13 +302,13 @@ private fun AlbaRoot(
                 contentPadding = padding,
                 controller = controller,
                 uiState = uiState,
-                onNavigateBack = { destination = AlbaDestination.HOME },
+                onNavigateBack = { navigateBack() },
                 qaEnabled = BuildConfig.DEBUG
             ) {
                 WorkoutHomeScreen(
                     contentPadding = PaddingValues(0.dp),
                     uiState = uiState,
-                    onNavigateBack = { destination = AlbaDestination.HOME },
+                    onNavigateBack = { navigateBack() },
                     onStartWorkout = controller::beginWorkout,
                     onPauseWorkout = controller::pauseWorkout,
                     onResumeWorkout = controller::resumeWorkout,
@@ -292,13 +321,13 @@ private fun AlbaRoot(
                 contentPadding = padding,
                 controller = controller,
                 uiState = uiState,
-                onNavigateBack = { destination = AlbaDestination.HOME },
+                onNavigateBack = { navigateBack() },
                 qaEnabled = BuildConfig.DEBUG
             ) {
                 GamesHomeScreen(
                     contentPadding = PaddingValues(0.dp),
                     uiState = uiState,
-                    onNavigateBack = { destination = AlbaDestination.HOME },
+                    onNavigateBack = { navigateBack() },
                     onStartGame = { gameId ->
                         controller.selectGameDefinition(gameId)
                         controller.startGame()
@@ -610,6 +639,8 @@ private fun MotionScreenShell(
 ) {
     var qaExpanded by rememberSaveable { mutableStateOf(false) }
 
+    BackHandler(onBack = onNavigateBack)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -690,6 +721,8 @@ private fun GameExperienceShell(
     var qaExpanded by rememberSaveable { mutableStateOf(false) }
     val gameRunning = uiState.game.status == GameSessionStatus.ACTIVE || uiState.game.status == GameSessionStatus.PAUSED
 
+    BackHandler(onBack = onNavigateBack)
+
     if (gameRunning) {
         Box(
             modifier = Modifier
@@ -731,6 +764,7 @@ private fun GameExperienceShell(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(AlbaColors.BackgroundDark)
             .padding(contentPadding)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),

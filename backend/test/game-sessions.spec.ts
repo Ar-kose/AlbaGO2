@@ -9,9 +9,11 @@ describe('game session result submission', () => {
 
   beforeEach(() => {
     delete process.env.DATABASE_URL;
+    process.env.ALLOW_IN_MEMORY_FALLBACK = 'true';
     const store = new InMemoryStore();
     const prisma = new PrismaService();
     service = new GameSessionsService(new GameSessionsRepository(store, prisma));
+    delete process.env.ALLOW_IN_MEMORY_FALLBACK;
   });
 
   it('stores a completed game session result', async () => {
