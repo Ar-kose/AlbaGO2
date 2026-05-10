@@ -169,7 +169,12 @@ class AlbaMotionController(
     }
 
     fun selectGameDefinition(gameId: String) {
-        val definition = _uiState.value.availableGames.firstOrNull { it.gameId == gameId && it.isPlayablePublicGame() } ?: return
+        var definition = _uiState.value.availableGames.firstOrNull { it.gameId == gameId && it.isPlayablePublicGame() }
+        if (definition == null) {
+            // Fallback: search hardcoded demo games when backend returns UUID-based IDs
+            definition = fallbackDemoGames().firstOrNull { it.gameId == gameId }
+        }
+        if (definition == null) return
         _uiState.value = _uiState.value.copy(
             activeGameDefinition = definition,
             activeGameId = definition.gameId,

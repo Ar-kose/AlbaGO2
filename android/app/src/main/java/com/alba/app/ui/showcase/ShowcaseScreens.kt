@@ -39,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -79,7 +80,8 @@ enum class ShowcaseTab {
     SPORT,
     EDUCATION,
     ENTERTAINMENT,
-    DEMOS
+    DEMOS,
+    PROFILE
 }
 
 private enum class NeonIconType {
@@ -117,7 +119,8 @@ private data class GameCardUi(
     val subtitle: String,
     val meta: String,
     val imageRes: Int,
-    val accent: Color
+    val accent: Color,
+    val gameId: String? = null
 )
 
 @Composable
@@ -323,7 +326,7 @@ fun HomeShowcaseScreen(
     onOpenEntertainment: () -> Unit,
     onOpenDemos: () -> Unit,
     onOpenProfile: () -> Unit,
-    onCenterAction: () -> Unit
+    onProfile: () -> Unit
 ) {
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(snackbarMessage) {
@@ -341,7 +344,7 @@ fun HomeShowcaseScreen(
         onEducation = onOpenEducation,
         onEntertainment = onOpenEntertainment,
         onDemos = onOpenDemos,
-        onCenterAction = onCenterAction,
+        onProfile = onProfile,
         snackbarMessage = snackbarMessage
     ) {
         HomeHeader()
@@ -408,7 +411,7 @@ fun SportModeShowcaseScreen(
     onEducation: () -> Unit,
     onEntertainment: () -> Unit,
     onDemos: () -> Unit,
-    onCenterAction: () -> Unit
+    onProfile: () -> Unit
 ) {
     NeonScreen(
         selectedTab = ShowcaseTab.SPORT,
@@ -417,7 +420,7 @@ fun SportModeShowcaseScreen(
         onEducation = onEducation,
         onEntertainment = onEntertainment,
         onDemos = onDemos,
-        onCenterAction = onCenterAction
+        onProfile = onProfile
     ) {
         CenteredTitle(
             title = "Spor Modu",
@@ -448,7 +451,7 @@ fun EducationModeShowcaseScreen(
     onSport: () -> Unit,
     onEntertainment: () -> Unit,
     onDemos: () -> Unit,
-    onCenterAction: () -> Unit
+    onProfile: () -> Unit
 ) {
     NeonScreen(
         selectedTab = ShowcaseTab.EDUCATION,
@@ -457,7 +460,7 @@ fun EducationModeShowcaseScreen(
         onEducation = {},
         onEntertainment = onEntertainment,
         onDemos = onDemos,
-        onCenterAction = onCenterAction
+        onProfile = onProfile
     ) {
         CenteredTitle(
             title = "Öğrenirken\nHareket Et!",
@@ -502,8 +505,39 @@ fun EntertainmentModeShowcaseScreen(
     onSport: () -> Unit,
     onEducation: () -> Unit,
     onDemos: () -> Unit,
-    onCenterAction: () -> Unit
+    onProfile: () -> Unit,
+    uiState: MotionUiState? = null,
+    onGameSelected: (String) -> Unit = {}
 ) {
+    // Build game cards from real available games, fall back to hardcoded
+    val availableGames = uiState?.availableGames ?: emptyList()
+    val featuredCards = remember(availableGames) {
+        if (availableGames.isNotEmpty()) {
+            availableGames.take(6).map { game ->
+                val level = game.levels.firstOrNull()
+                val mins = (level?.durationSec ?: 60) / 60
+                GameCardUi(
+                    title = game.title.replace(" ", "\n"),
+                    subtitle = game.category.name.lowercase().replaceFirstChar { it.uppercase() },
+                    meta = "${mins} dk",
+                    imageRes = R.drawable.demo_fruit_slash, // placeholder
+                    accent = when (game.category.name) {
+                        "SPORT" -> HotPink
+                        "EDUCATION" -> Cyan
+                        else -> Purple
+                    },
+                    gameId = game.gameId
+                )
+            }
+        } else {
+            listOf(
+                GameCardUi("Dans\nSavaşı", "Parti", "8 dk", R.drawable.game_dans_savasi, HotPink),
+                GameCardUi("Neon\nKoşu", "Refleks", "10 dk", R.drawable.game_neon_kosu, Cyan),
+                GameCardUi("Ritmik\nVuruş", "Ritim", "9 dk", R.drawable.game_ritmik_vurus, Purple)
+            )
+        }
+    }
+
     NeonScreen(
         selectedTab = ShowcaseTab.ENTERTAINMENT,
         onHome = onHome,
@@ -511,7 +545,7 @@ fun EntertainmentModeShowcaseScreen(
         onEducation = onEducation,
         onEntertainment = {},
         onDemos = onDemos,
-        onCenterAction = onCenterAction
+        onProfile = onProfile
     ) {
         CenteredTitle(
             title = "Eğlence Modu",
@@ -529,12 +563,11 @@ fun EntertainmentModeShowcaseScreen(
         SegmentRow(items = listOf("Tümü", "Parti", "Ritim", "Hızlı"))
         SectionLabel(title = "Öne Çıkan Oyunlar", trailing = "Tümünü Gör >")
         HorizontalGameCards(
-            cards = listOf(
-                GameCardUi("Dans\nSavaşı", "Parti", "8 dk", R.drawable.game_dans_savasi, HotPink),
-                GameCardUi("Neon\nKoşu", "Refleks", "10 dk", R.drawable.game_neon_kosu, Cyan),
-                GameCardUi("Ritmik\nVuruş", "Ritim", "9 dk", R.drawable.game_ritmik_vurus, Purple)
-            ),
-            onClick = onDemos
+            cards = featuredCards,
+            onClick = onDemos,
+            onCardClick = { card ->
+                card.gameId?.let { onGameSelected(it) }
+            }
         )
         SectionLabel(title = "Canlı Odalar")
         LiveRoomCard(
@@ -553,16 +586,62 @@ fun EntertainmentModeShowcaseScreen(
     }
 }
 
+private data class DemoGameCard(
+    val imageRes: Int,
+    val title: String,
+    val category: String,
+    val description: String,
+    val accent: Color,
+    val gameId: String,
+    val categoryKey: String // "SPORT", "FUN", "EDUCATION" for filtering
+)
+
 @Composable
 fun DemoCatalogShowcaseScreen(
     onHome: () -> Unit,
     onSport: () -> Unit,
     onEducation: () -> Unit,
     onEntertainment: () -> Unit,
-    onCenterAction: () -> Unit,
-    onGameSelected: (String) -> Unit = {}
+    onProfile: () -> Unit,
+    onGameSelected: (String) -> Unit = {},
+    uiState: MotionUiState? = null
 ) {
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+
+    val demoGames = remember(uiState?.availableGames) {
+        val realGames = uiState?.availableGames
+        if (realGames != null && realGames.isNotEmpty()) {
+            realGames.map { game ->
+                val level = game.levels.firstOrNull()
+                DemoGameCard(
+                    imageRes = R.drawable.demo_fruit_slash, // placeholder for real games
+                    title = game.title,
+                    category = "${game.category.name.lowercase().replaceFirstChar { it.uppercase() }} · ${level?.durationSec ?: 60}s · ${level?.difficulty ?: "EASY"}",
+                    description = game.description,
+                    accent = when (game.category.name) { "SPORT" -> HotPink; "EDUCATION" -> Cyan; else -> Purple },
+                    gameId = game.gameId,
+                    categoryKey = game.category.name
+                )
+            }
+        } else {
+            listOf(
+                DemoGameCard(R.drawable.demo_fruit_slash, "Meyve Kesme", "Eğlence · 60s · EASY", "Jumping jack ile meyveleri kes, squat ile güçlü hedefi patlat!", HotPink, "fruit_slash_demo", "FUN"),
+                DemoGameCard(R.drawable.demo_dodge_run, "Engelden Kaçış", "Spor · 60s · MEDIUM", "Engeller akar; squat ile alttan geç, jumping jack ile zıpla!", Orange, "dodge_run_demo", "SPORT"),
+                DemoGameCard(R.drawable.demo_fit_challenge, "Spor Mücadelesi", "Spor · 120s · CHALLENGE", "Squat, jumping jack, jump rope ve plank — 4 aşamalı program.", Cyan, "fit_challenge_demo", "SPORT")
+            )
+        }
+    }
+
+    val filteredGames = remember(selectedTabIndex) {
+        when (selectedTabIndex) {
+            1 -> demoGames.filter { it.categoryKey == "SPORT" }
+            2 -> demoGames.filter { it.categoryKey == "FUN" }
+            3 -> demoGames.filter { it.categoryKey == "EDUCATION" }
+            else -> demoGames
+        }
+    }
+
     NeonScreen(
         selectedTab = ShowcaseTab.DEMOS,
         onHome = onHome,
@@ -570,39 +649,47 @@ fun DemoCatalogShowcaseScreen(
         onEducation = onEducation,
         onEntertainment = onEntertainment,
         onDemos = {},
-        onCenterAction = onCenterAction,
+        onProfile = onProfile,
         snackbarMessage = snackbarMessage
     ) {
         CenteredTitle(
             title = "Demo Oyunlar",
             subtitle = "Seç, hazırlan ve oynamaya başla!"
         )
-        SegmentRow(items = listOf("Tümü", "Spor", "Eğlence", "Eğitim"))
+        SegmentRow(
+            items = listOf("Tümü", "Spor", "Eğlence", "Eğitim"),
+            selectedIndex = selectedTabIndex,
+            onSelect = { selectedTabIndex = it }
+        )
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            DemoListCard(
-                imageRes = R.drawable.demo_fruit_slash,
-                title = "Meyve Kesme",
-                category = "Eğlence · 60s · EASY",
-                description = "Jumping jack ile meyveleri kes, squat ile güçlü hedefi patlat!",
-                accent = HotPink,
-                onClick = { onGameSelected("fruit_slash_demo") }
-            )
-            DemoListCard(
-                imageRes = R.drawable.demo_dodge_run,
-                title = "Engelden Kaçış",
-                category = "Spor · 60s · MEDIUM",
-                description = "Engeller akar; squat ile alttan geç, jumping jack ile zıpla!",
-                accent = Orange,
-                onClick = { onGameSelected("dodge_run_demo") }
-            )
-            DemoListCard(
-                imageRes = R.drawable.demo_fit_challenge,
-                title = "Spor Mücadelesi",
-                category = "Spor · 120s · CHALLENGE",
-                description = "Squat, jumping jack, jump rope ve plank — 4 aşamalı program.",
-                accent = Cyan,
-                onClick = { onGameSelected("fit_challenge_demo") }
-            )
+            if (filteredGames.isEmpty()) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Panel,
+                    shape = RoundedCornerShape(14.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, StrokeLine)
+                ) {
+                    Text(
+                        "Eğitim oyunu yakında",
+                        modifier = Modifier.padding(24.dp),
+                        color = SoftWhite.copy(alpha = 0.6f),
+                        fontSize = 13.sp,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            } else {
+                filteredGames.forEach { game ->
+                    DemoListCard(
+                        imageRes = game.imageRes,
+                        title = game.title,
+                        category = game.category,
+                        description = game.description,
+                        accent = game.accent,
+                        onClick = { onGameSelected(game.gameId) }
+                    )
+                }
+            }
         }
     }
 }
@@ -613,7 +700,7 @@ fun NeonGamePrepScreen(
     onStartGame: () -> Unit,
     onBackToCatalog: () -> Unit,
     onHome: () -> Unit,
-    onCenterAction: () -> Unit
+    onProfile: () -> Unit
 ) {
     val game = uiState.activeGameDefinition
     if (game == null) {
@@ -624,7 +711,7 @@ fun NeonGamePrepScreen(
             onEducation = {},
             onEntertainment = {},
             onDemos = {},
-            onCenterAction = onCenterAction
+            onProfile = onProfile
         ) {
             CenteredTitle(
                 title = "Oyun Yükleniyor",
@@ -647,7 +734,7 @@ fun NeonGamePrepScreen(
         onEducation = {},
         onEntertainment = {},
         onDemos = {},
-        onCenterAction = onCenterAction
+        onProfile = onProfile
     ) {
         CenteredTitle(
             title = game.title,
@@ -883,7 +970,7 @@ private fun NeonScreen(
     onEducation: () -> Unit,
     onEntertainment: () -> Unit,
     onDemos: () -> Unit,
-    onCenterAction: () -> Unit,
+    onProfile: () -> Unit,
     snackbarMessage: String? = null,
     content: @Composable ColumnScopeShim.() -> Unit
 ) {
@@ -911,7 +998,7 @@ private fun NeonScreen(
             onEducation = onEducation,
             onEntertainment = onEntertainment,
             onDemos = onDemos,
-            onCenterAction = onCenterAction,
+            onProfile = onProfile,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
         if (snackbarMessage != null) {
@@ -1204,7 +1291,7 @@ private fun DailyGoalWideCard(percent: Float, title: String, detail: String, acc
 }
 
 @Composable
-private fun HorizontalGameCards(cards: List<GameCardUi>, onClick: () -> Unit) {
+private fun HorizontalGameCards(cards: List<GameCardUi>, onClick: () -> Unit, onCardClick: (GameCardUi) -> Unit = {}) {
     Row(
         modifier = Modifier.horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -1216,7 +1303,7 @@ private fun HorizontalGameCards(cards: List<GameCardUi>, onClick: () -> Unit) {
                     .height(126.dp)
                     .clip(RoundedCornerShape(13.dp))
                     .border(1.dp, card.accent.copy(alpha = 0.48f), RoundedCornerShape(13.dp))
-                    .clickable(onClick = onClick)
+                    .clickable(onClick = { if (card.gameId != null) onCardClick(card) else onClick() })
             ) {
                 Image(
                     painter = painterResource(id = card.imageRes),
@@ -1500,7 +1587,11 @@ private fun BenefitRow(icon: NeonIconType, title: String, body: String, accent: 
 }
 
 @Composable
-private fun SegmentRow(items: List<String>) {
+private fun SegmentRow(
+    items: List<String>,
+    selectedIndex: Int = 0,
+    onSelect: (Int) -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1509,14 +1600,15 @@ private fun SegmentRow(items: List<String>) {
     ) {
         items.forEachIndexed { index, item ->
             Surface(
-                color = if (index == 0) HotPink else Panel,
+                modifier = Modifier.clickable(onClick = { onSelect(index) }),
+                color = if (index == selectedIndex) HotPink else Panel,
                 shape = RoundedCornerShape(8.dp),
-                border = if (index == 0) null else androidx.compose.foundation.BorderStroke(1.dp, StrokeLine)
+                border = if (index == selectedIndex) null else androidx.compose.foundation.BorderStroke(1.dp, StrokeLine)
             ) {
                 Text(
                     item,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                    color = if (index == 0) Color.White else SoftWhite.copy(alpha = 0.72f),
+                    color = if (index == selectedIndex) Color.White else SoftWhite.copy(alpha = 0.72f),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -1533,7 +1625,7 @@ private fun BottomBar(
     onEducation: () -> Unit,
     onEntertainment: () -> Unit,
     onDemos: () -> Unit,
-    onCenterAction: () -> Unit,
+    onProfile: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -1551,22 +1643,11 @@ private fun BottomBar(
                 .height(64.dp)
                 .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             BottomItem("Ana Sayfa", NeonIconType.Home, selectedTab == ShowcaseTab.HOME, HotPink, onHome)
             BottomItem("Spor", NeonIconType.Sport, selectedTab == ShowcaseTab.SPORT, HotPink, onSport)
-            Surface(
-                modifier = Modifier
-                    .size(58.dp)
-                    .shadow(20.dp, CircleShape, ambientColor = HotPink, spotColor = HotPink)
-                    .clickable(onClick = onCenterAction),
-                color = HotPink,
-                shape = CircleShape
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    NeonGlyph(icon = NeonIconType.CenterA, tint = Color.White, modifier = Modifier.size(34.dp))
-                }
-            }
+            BottomItem("Profil", NeonIconType.Friends, selectedTab == ShowcaseTab.PROFILE, Cyan, onProfile)
             BottomItem("Eğitim", NeonIconType.Education, selectedTab == ShowcaseTab.EDUCATION, Cyan, onEducation)
             BottomItem("Eğlence", NeonIconType.Fun, selectedTab == ShowcaseTab.ENTERTAINMENT, Purple, onEntertainment)
         }

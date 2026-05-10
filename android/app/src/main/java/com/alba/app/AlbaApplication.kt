@@ -234,7 +234,7 @@ private fun AlbaRoot(
                 onOpenEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
                 onOpenDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
                 onOpenProfile = { navigate(AlbaDestination.PROFILE) },
-                onCenterAction = { navigate(AlbaDestination.HOME) }
+                onProfile = { navigate(AlbaDestination.PROFILE) }
             )
 
             AlbaDestination.SPORT_MODE -> SportModeShowcaseScreen(
@@ -242,7 +242,7 @@ private fun AlbaRoot(
                 onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
                 onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
                 onDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
-                onCenterAction = { navigate(AlbaDestination.HOME) }
+                onProfile = { navigate(AlbaDestination.PROFILE) }
             )
 
             AlbaDestination.EDUCATION_MODE -> EducationModeShowcaseScreen(
@@ -250,7 +250,7 @@ private fun AlbaRoot(
                 onSport = { navigate(AlbaDestination.SPORT_MODE) },
                 onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
                 onDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
-                onCenterAction = { navigate(AlbaDestination.HOME) }
+                onProfile = { navigate(AlbaDestination.PROFILE) }
             )
 
             AlbaDestination.ENTERTAINMENT_MODE -> EntertainmentModeShowcaseScreen(
@@ -258,7 +258,12 @@ private fun AlbaRoot(
                 onSport = { navigate(AlbaDestination.SPORT_MODE) },
                 onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
                 onDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
-                onCenterAction = { navigate(AlbaDestination.HOME) }
+                onProfile = { navigate(AlbaDestination.PROFILE) },
+                uiState = uiState,
+                onGameSelected = { gameId ->
+                    controller.selectGameDefinition(gameId)
+                    navigate(AlbaDestination.GAME_PREP)
+                }
             )
 
             AlbaDestination.DEMO_CATALOG -> DemoCatalogShowcaseScreen(
@@ -266,7 +271,8 @@ private fun AlbaRoot(
                 onSport = { navigate(AlbaDestination.SPORT_MODE) },
                 onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
                 onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
-                onCenterAction = { navigate(AlbaDestination.HOME) },
+                onProfile = { navigate(AlbaDestination.PROFILE) },
+                uiState = uiState,
                 onGameSelected = { gameId ->
                     controller.selectGameDefinition(gameId)
                     navigate(AlbaDestination.GAME_PREP)
@@ -281,7 +287,7 @@ private fun AlbaRoot(
                 },
                 onBackToCatalog = { navigate(AlbaDestination.DEMO_CATALOG) },
                 onHome = { navigate(AlbaDestination.HOME) },
-                onCenterAction = { navigate(AlbaDestination.HOME) }
+                onProfile = { navigate(AlbaDestination.PROFILE) }
             )
 
             AlbaDestination.MOTION_LAB -> MotionScreenShell(

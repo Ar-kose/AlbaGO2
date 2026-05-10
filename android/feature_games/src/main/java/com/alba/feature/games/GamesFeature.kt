@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
@@ -885,14 +886,14 @@ private fun ResultSheet(
     onBrowseGames: () -> Unit
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1627)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF20DB9).copy(alpha = 0.6f))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF05060E)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF1593).copy(alpha = 0.6f))
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Oyun Sonucu", style = MaterialTheme.typography.titleLarge, color = Color.White, fontWeight = FontWeight.Bold)
+            Text("Oyun Sonucu", style = MaterialTheme.typography.titleLarge, color = Color(0xFFFF1593), fontWeight = FontWeight.Bold)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -900,8 +901,8 @@ private fun ResultSheet(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 StatusPill(label = templateLabel(template), color = templateAccent(template))
-                StatusPill(label = "Skor ${game.score}", color = Color(0xFFF97316))
-                StatusPill(label = "Combo max ${game.comboMax}", color = Color(0xFF0EA5E9))
+                StatusPill(label = "Skor ${game.score}", color = Color(0xFFFFB020))
+                StatusPill(label = "Combo max ${game.comboMax}", color = Color(0xFF11D7F4))
                 StatusPill(label = "Accuracy ${(game.accuracy * 100).toInt()}%", color = Color(0xFF22C55E))
             }
             // P14: Local-first — result always saved on device, sync is secondary
@@ -935,11 +936,14 @@ private fun ResultSheet(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 game.motionCounts.forEach { (motion, count) ->
-                    StatusPill(label = "${motion.shortLabel()} x$count", color = Color(0xFF475569))
+                    StatusPill(label = "${motion.shortLabel()} x$count", color = Color(0xFF8B5CF6))
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onReplay) {
+                Button(
+                    onClick = onReplay,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF1593))
+                ) {
                     Text("Tekrar oyna")
                 }
                 OutlinedButton(onClick = onBrowseGames) {
