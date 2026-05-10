@@ -5,7 +5,7 @@ object AlbaSupabase {
     private var configured = false
 
     @Volatile
-    var backendBaseUrl: String = "http://10.0.2.2:3000/v1"
+    var backendBaseUrl: String = "http://localhost:3000/v1"
         private set
 
     fun init(backendUrl: String, ignoredKey: String = "") {
@@ -22,6 +22,6 @@ object AlbaSupabase {
     }
 
     private fun normalizeBackendBaseUrl(value: String): String {
-        return value.trim().trimEnd('/').ifBlank { "http://10.0.2.2:3000/v1" }
+        return value.trim().trimEnd('/').ifBlank { "http://localhost:3000/v1" }
     }
 }

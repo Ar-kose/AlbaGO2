@@ -12,6 +12,7 @@ import { MotionsModule } from './motions/motions.module';
 import { RewardsModule } from './rewards/rewards.module';
 import { UsersModule } from './users/users.module';
 import { WorkoutsModule } from './workouts/workouts.module';
+import { ProfilesModule } from './profiles/profiles.module';
 import { PersistenceModule } from './persistence/persistence.module';
 
 @Module({
@@ -28,7 +29,8 @@ import { PersistenceModule } from './persistence/persistence.module';
     LeaderboardsModule,
     ContentPublishModule,
     AssetsModule,
-    AuditLogsModule
+    AuditLogsModule,
+    ProfilesModule
   ],
   providers: [InMemoryStore]
 })

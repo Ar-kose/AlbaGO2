@@ -201,10 +201,10 @@ function normalizeSubmitDto(dto: CreateGameSessionDto): SubmitGameSessionResultI
   if (dto.combo !== undefined && (!Number.isInteger(dto.combo) || dto.combo < 0)) {
     throw new BadRequestException('combo must be a non-negative integer');
   }
-  if (dto.accuracy !== undefined && !isFiniteNumber(dto.accuracy)) {
+  if (dto.accuracy !== undefined && dto.accuracy !== null && !isFiniteNumber(dto.accuracy)) {
     throw new BadRequestException('accuracy must be numeric');
   }
-  if (dto.calories !== undefined && !isFiniteNumber(dto.calories)) {
+  if (dto.calories !== undefined && dto.calories !== null && !isFiniteNumber(dto.calories)) {
     throw new BadRequestException('calories must be numeric');
   }
   assertIsoDate('startedAt', dto.startedAt);

@@ -1,7 +1,5 @@
 package com.alba.core.network
 
-import java.net.HttpURLConnection
-import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -17,10 +15,30 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.logging.HttpLoggingInterceptor
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 object SupabaseData {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
     private var gameCache = RuntimeCatalogCache()
+
+    private val okHttp: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .addInterceptor(HttpLoggingInterceptor { message ->
+                android.util.Log.d("AlbaGoOkHttp", message.take(500))
+            }.apply { level = HttpLoggingInterceptor.Level.BASIC })
+            .build()
+    }
+
+    private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
     suspend fun getActiveGames(): List<GameRow> = withContext(Dispatchers.IO) {
         val root = getJsonObject("/game-definitions/active?appVersion=0.2.0")
@@ -102,42 +120,29 @@ object SupabaseData {
         emptyList()
     }
 
+    // P15: OkHttp replaces HttpURLConnection for reliable network on all Android devices
     private fun getJsonObject(path: String): JsonObject {
-        val url = URL("${AlbaSupabase.backendBaseUrl}$path")
-        val connection = (url.openConnection() as HttpURLConnection).apply {
-            requestMethod = "GET"
-            connectTimeout = 3000
-            readTimeout = 5000
-            setRequestProperty("Accept", "application/json")
+        val url = "${AlbaSupabase.backendBaseUrl}$path"
+        val request = Request.Builder().url(url).header("Accept", "application/json").build()
+        val response = okHttp.newCall(request).execute()
+        val body = response.body?.string() ?: throw IOException("Empty GET response from $url")
+        if (!response.isSuccessful) {
+            throw IOException("HTTP ${response.code} GET $url: ${body.take(200)}")
         }
-        return connection.inputStream.bufferedReader().use { reader ->
-            json.parseToJsonElement(reader.readText()).jsonObject
-        }
+        return json.parseToJsonElement(body).jsonObject
     }
 
     private fun postJson(path: String, payload: String): String {
-        val url = URL("${AlbaSupabase.backendBaseUrl}$path")
-        val connection = (url.openConnection() as HttpURLConnection).apply {
-            requestMethod = "POST"
-            connectTimeout = 3000
-            readTimeout = 5000
-            doOutput = true
-            setRequestProperty("Accept", "application/json")
-            setRequestProperty("Content-Type", "application/json")
+        val url = "${AlbaSupabase.backendBaseUrl}$path"
+        val body = payload.toRequestBody(JSON_MEDIA_TYPE)
+        val request = Request.Builder().url(url).post(body).build()
+        val response = okHttp.newCall(request).execute()
+        val responseBody = response.body?.string().orEmpty()
+        android.util.Log.d("AlbaGoSync", "POST $url -> HTTP ${response.code} body=${responseBody.take(300)}")
+        if (!response.isSuccessful) {
+            throw IOException("HTTP ${response.code} ${responseBody.take(200)}".trim())
         }
-        connection.outputStream.use { stream ->
-            stream.write(payload.toByteArray(Charsets.UTF_8))
-        }
-        val code = connection.responseCode
-        val body = if (code in 200..299) {
-            connection.inputStream.bufferedReader().use { it.readText() }
-        } else {
-            connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-        }
-        if (code !in 200..299) {
-            throw IllegalStateException("HTTP $code ${body.take(200)}".trim())
-        }
-        return body
+        return responseBody
     }
 }
 

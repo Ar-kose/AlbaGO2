@@ -32,6 +32,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
 import com.alba.core.motion.SquatDetectorV1
+import com.alba.core.data.local.AlbaDatabase
+import com.alba.core.data.local.GameSessionRepository
+import com.alba.core.data.local.GameSessionSyncWorker
 
 import com.alba.core.pose.MediaPipePoseEstimator
 import com.alba.core.pose.PoseEstimationResult
@@ -88,6 +91,11 @@ class AlbaMotionController(
 ) : AutoCloseable {
     private val appContext = context.applicationContext
     private val frameSource: CameraFrameSource = CameraXFrameSource(appContext)
+    private val sessionRepo: GameSessionRepository by lazy {
+        GameSessionRepository(AlbaDatabase.getInstance(appContext))
+    }
+
+    val gameSessionRepo: GameSessionRepository get() = sessionRepo
     private val poseEstimator: PoseEstimator = MediaPipePoseEstimator(appContext)
     private val sessionRepository = InMemorySessionRepository()
     private val workoutEngine = WorkoutSessionEngine(sessionRepository)
@@ -936,8 +944,13 @@ class AlbaMotionController(
         }
         _uiState.value = _uiState.value.copy(
             game = _uiState.value.game.copy(
-                syncStatus = SyncStatus.SYNCING,
-                syncMessage = "Game result syncing",
+                score = result.score,
+                comboMax = result.comboMax,
+                accuracy = result.accuracy.toFloat(),
+                elapsedMs = result.durationSec * 1000L,
+                motionCounts = result.motionCounts,
+                syncStatus = SyncStatus.LOCAL_SAVED,
+                syncMessage = SyncStatus.LOCAL_SAVED.userMessage(),
                 syncError = null
             )
         )
@@ -950,17 +963,27 @@ class AlbaMotionController(
         _uiState.value = _uiState.value.copy(
             game = _uiState.value.game.copy(
                 syncStatus = SyncStatus.SYNCING,
-                syncMessage = "Game result syncing",
+                syncMessage = SyncStatus.SYNCING.userMessage(),
                 syncError = null
             )
         )
 
         val request = buildGameSessionSubmitRequest(result)
+        val motionMap = result.motionCounts.mapKeys { it.key.name }
+
+        // P18: Save to local Room DB + enqueue WorkManager
+        runCatching {
+            sessionRepo.saveAndEnqueue(request, request.resultPayload, motionMap)
+        }
+        GameSessionSyncWorker.enqueue(appContext, request.clientSessionId)
+
+        // Fast path: try direct sync
         val response = SupabaseData.submitGameSessionResult(request)
         response.onSuccess { submitted ->
             gameRemoteId = submitted.id
             pendingGameResult = null
             gameResultSynced = true
+            runCatching { sessionRepo.markSynced("local-${request.clientSessionId}", submitted.id) }
             _uiState.value = _uiState.value.copy(
                 game = _uiState.value.game.copy(
                     remoteSessionId = submitted.id,
@@ -970,13 +993,14 @@ class AlbaMotionController(
                     comboMax = result.comboMax,
                     accuracy = result.accuracy,
                     syncStatus = SyncStatus.SYNCED,
-                    syncMessage = "Game synced",
+                    syncMessage = SyncStatus.SYNCED.userMessage(),
                     syncError = null
                 ),
-                backendStatus = "Game synced",
+                backendStatus = SyncStatus.SYNCED.userMessage(),
                 lastError = null
             )
         }.onFailure { error ->
+            android.util.Log.e("AlbaGoSync", "Game sync deferred to worker", error)
             pendingGameResult = result
             _uiState.value = _uiState.value.copy(
                 game = _uiState.value.game.copy(
@@ -984,12 +1008,12 @@ class AlbaMotionController(
                     motionCounts = result.motionCounts,
                     comboMax = result.comboMax,
                     accuracy = result.accuracy,
-                    syncStatus = SyncStatus.FAILED,
-                    syncMessage = "Game sync failed",
-                    syncError = sanitizeSyncError(error)
+                    syncStatus = SyncStatus.LOCAL_SAVED,
+                    syncMessage = "Cihaza kaydedildi — arka planda gonderilecek",
+                    syncError = null
                 ),
-                backendStatus = "Game sync failed",
-                lastError = sanitizeSyncError(error)
+                backendStatus = "Arka plana alindi",
+                lastError = null
             )
         }
         gameSyncInFlight = false
@@ -1031,7 +1055,7 @@ class AlbaMotionController(
             score = result.score,
             combo = result.comboMax,
             accuracy = result.accuracy.toDouble(),
-            calories = null,
+            calories = 0.0,
             resultPayload = payload
         )
     }

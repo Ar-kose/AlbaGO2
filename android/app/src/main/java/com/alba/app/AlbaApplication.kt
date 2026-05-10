@@ -85,6 +85,7 @@ import com.alba.app.ui.showcase.EducationModeShowcaseScreen
 import com.alba.app.ui.showcase.EntertainmentModeShowcaseScreen
 import com.alba.app.ui.showcase.HomeShowcaseScreen
 import com.alba.app.ui.showcase.NeonGamePrepScreen
+import com.alba.app.ui.showcase.ProfileScreen
 import com.alba.app.ui.showcase.OnboardingBodyTrackingScreen
 import com.alba.app.ui.showcase.OnboardingCameraWorldScreen
 import com.alba.app.ui.showcase.OnboardingModesScreen
@@ -127,7 +128,8 @@ private enum class AlbaDestination {
     GAME_PREP,
     MOTION_LAB,
     WORKOUT,
-    GAMES
+    GAMES,
+    PROFILE
 }
 
 @Composable
@@ -176,11 +178,8 @@ private fun AlbaRoot(
         val activity = context as? ComponentActivity ?: return@LaunchedEffect
         val isGameRunning = uiState.game.status == GameSessionStatus.ACTIVE ||
             uiState.game.status == GameSessionStatus.PAUSED
-        activity.requestedOrientation = if (isGameRunning && uiState.activeGameDefinition?.orientation == GameOrientation.LANDSCAPE) {
-            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        } else {
-            ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-        }
+        // P13G: Beta portrait lock — landscape support deferred to P14/P15 responsive shell
+        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     }
 
     LaunchedEffect(autoStartGameId, autoMockMotionName, uiState.availableGames) {
@@ -234,6 +233,7 @@ private fun AlbaRoot(
                 onOpenEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
                 onOpenEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
                 onOpenDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
+                onOpenProfile = { navigate(AlbaDestination.PROFILE) },
                 onCenterAction = { navigate(AlbaDestination.HOME) }
             )
 
@@ -337,6 +337,13 @@ private fun AlbaRoot(
                     onSelectGameDefinition = controller::selectGameDefinition
                 )
             }
+
+            AlbaDestination.PROFILE -> ProfileScreen(
+                uiState = uiState,
+                repository = controller.gameSessionRepo,
+                onNavigateBack = { navigateBack() },
+                onNavigateHome = { navigate(AlbaDestination.HOME) }
+            )
         }
     }
 }

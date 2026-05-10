@@ -322,6 +322,7 @@ fun HomeShowcaseScreen(
     onOpenEducation: () -> Unit,
     onOpenEntertainment: () -> Unit,
     onOpenDemos: () -> Unit,
+    onOpenProfile: () -> Unit,
     onCenterAction: () -> Unit
 ) {
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
@@ -356,8 +357,8 @@ fun HomeShowcaseScreen(
         SectionLabel(title = "HIZLI ERİŞİM")
         QuickActionsRow(
             actions = listOf(
+                QuickAction("Profil", NeonIconType.Friends, Cyan, onClick = onOpenProfile, enabled = true),
                 QuickAction("Görevler", NeonIconType.Target, Orange, onClick = showSoon, enabled = false),
-                QuickAction("Arkadaşlar", NeonIconType.Friends, Cyan, onClick = showSoon, enabled = false),
                 QuickAction("Liderlik", NeonIconType.Trophy, Amber, onClick = showSoon, enabled = false),
                 QuickAction("Mağaza", NeonIconType.Bag, HotPink, onClick = showSoon, enabled = false),
                 QuickAction("Etkinlikler", NeonIconType.Calendar, Purple, onClick = showSoon, enabled = false)

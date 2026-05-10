@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alba.core.data.GameUiState
 import com.alba.core.data.MotionUiState
+import com.alba.core.data.SyncStatus
 import com.alba.core.motion.MotionType
 import com.alba.core.runtime.DodgeObstacleType
 import com.alba.core.runtime.DodgeRunSceneState
@@ -282,19 +283,14 @@ private fun ActiveGameScreen(
         motionType = uiState.selectedMotionType
     )
 
-    SceneStateCard(
-        template = gameDefinition.template,
-        sceneState = uiState.game.sceneState,
-        combo = uiState.game.combo,
-        lastEffect = uiState.game.lastEffect
-    )
+    // P14: Scene debug card removed from normal user flow
 
     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1627))) {
         Column(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("Canlı oturum", style = MaterialTheme.typography.titleMedium, color = Color.White)
+            Text("Oyun", style = MaterialTheme.typography.titleMedium, color = Color.White)
             Text("Aktif hareket: ${motionLabel(uiState.selectedMotionType)}", color = Color.White.copy(alpha = 0.78f))
             Text("Desteklenen hareketler: ${gameDefinition.supportedMotions.joinToString { motionLabel(it) }}", color = Color.White.copy(alpha = 0.68f))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -671,7 +667,8 @@ private fun SceneStateCard(
     combo: Int,
     lastEffect: String?
 ) {
-    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBF5))) {
+    // P13G: Neon dark theme — white card replaced with dark neon to match app design
+    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1A0E1F)), border = androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFFF20DB9).copy(alpha = 0.3f))) {
         Column(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -907,10 +904,30 @@ private fun ResultSheet(
                 StatusPill(label = "Combo max ${game.comboMax}", color = Color(0xFF0EA5E9))
                 StatusPill(label = "Accuracy ${(game.accuracy * 100).toInt()}%", color = Color(0xFF22C55E))
             }
+            // P14: Local-first — result always saved on device, sync is secondary
             Text(
-                "Süre ${(game.elapsedMs / 1000L)}s • Kayıt durumu: ${game.syncMessage}",
-                color = Color.White.copy(alpha = 0.8f)
+                "Sure ${(game.elapsedMs / 1000L)}s",
+                color = Color.White.copy(alpha = 0.9f)
             )
+            Text(
+                "Bu cihazda kaydedildi",
+                color = Color(0xFF22C55E),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            // P14: Sync status shown as small secondary badge, not blocking error
+            val syncBadge = when (game.syncStatus) {
+                SyncStatus.SYNCED -> null
+                SyncStatus.SYNCING -> "Sunucuya gonderiliyor"
+                SyncStatus.FAILED -> "Cevrimdisi — sonra gonderilecek"
+                else -> null
+            }
+            if (syncBadge != null) {
+                Text(
+                    syncBadge,
+                    color = Color.White.copy(alpha = 0.45f),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

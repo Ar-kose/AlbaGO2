@@ -13,7 +13,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "0.1.0"
-        buildConfigField("String", "ALBA_API_BASE_URL", "\"http://10.0.2.2:3000/v1\"")
+        buildConfigField("String", "ALBA_API_BASE_URL", "\"http://localhost:3000/v1\"")
         buildConfigField("String", "SUPABASE_URL", "\"https://cszfdskmawqgjoxpkull.supabase.co\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"sb_publishable_LjR_DV-Ksp19GtwBNQCCvg_YX_iWoZA\"")
 

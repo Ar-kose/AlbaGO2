@@ -12,9 +12,18 @@ import com.alba.core.runtime.IdleSceneState
 
 enum class SyncStatus {
     IDLE,
+    LOCAL_SAVED,
     SYNCING,
     SYNCED,
-    FAILED
+    FAILED;
+
+    fun userMessage(): String = when (this) {
+        IDLE -> ""
+        LOCAL_SAVED -> "Bu cihazda kaydedildi"
+        SYNCING -> "Sunucuya kaydediliyor..."
+        SYNCED -> "Sunucuya kaydedildi"
+        FAILED -> "Sunucu kaydi basarisiz"
+    }
 }
 
 data class WorkoutUiState(

@@ -1,0 +1,693 @@
+﻿AlbaGo Platform v2 verification - 2026-05-09 23:36:32 +03:00
+========================================
+ AlbaGo Platform v2 - Verification
+========================================
+
+[PREFLIGHT]
+Android SDK root - OK (C:\Users\Arkose\AppData\Local\Android\Sdk)
+Gradle wrapper distribution cache - OK (C:\gradle-cache\wrapper\dists\gradle-8.6-bin\afr5mpiioh2wthjmwnkmdsd5w)
+java: openjdk version "21.0.10" 2026-01-20
+java: OpenJDK Runtime Environment (build 21.0.10+-14961533-b1163.108)
+java: OpenJDK 64-Bit Server VM (build 21.0.10+-14961533-b1163.108, mixed mode)
+Java major version 21 - OK
+androidx.browser:browser:1.8.0 pin - OK
+
+[npm install]
+cwd: C:\Users\Arkose\Desktop\AlbaGO2
+cmd: npm.cmd install
+
+up to date, audited 620 packages in 4s
+
+99 packages are looking for funding
+  run `npm fund` for details
+
+3 vulnerabilities (1 moderate, 1 high, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues, run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+RESULT: PASS - npm install
+
+[backend prisma generate]
+cwd: C:\Users\Arkose\Desktop\AlbaGO2
+cmd: npm.cmd run prisma:generate --workspace backend
+
+> backend@0.1.0 prisma:generate
+> prisma generate --schema prisma/schema.prisma
+
+warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+System.Management.Automation.RemoteException
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v6.19.3) to .\..\node_modules\@prisma\client in 151ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+
+RESULT: PASS - backend prisma generate
+
+[backend build]
+cwd: C:\Users\Arkose\Desktop\AlbaGO2
+cmd: npm.cmd run build --workspace backend
+
+> backend@0.1.0 build
+> nest build
+
+RESULT: PASS - backend build
+
+[backend test]
+cwd: C:\Users\Arkose\Desktop\AlbaGO2
+cmd: npm.cmd run test --workspace backend
+
+> backend@0.1.0 test
+> jest
+
+PASS test/publish-validation.spec.ts (6.76 s)
+PASS test/game-definition-v3.spec.ts
+PASS test/profiles.spec.ts (8.946 s)
+PASS test/game-sessions.spec.ts (8.939 s)
+[33m[Nest] 13700  - [39m09.05.2026 23:36:57 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 13700  - [39m09.05.2026 23:36:57 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 13700  - [39m09.05.2026 23:36:57 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 13700  - [39m09.05.2026 23:36:57 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 13700  - [39m09.05.2026 23:36:57 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 13700  - [39m09.05.2026 23:36:57 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 13700  - [39m09.05.2026 23:36:57 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 13700  - [39m09.05.2026 23:36:57 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 13660  - [39m09.05.2026 23:36:57 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 13660  - [39m09.05.2026 23:36:57 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 13660  - [39m09.05.2026 23:36:57 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 13660  - [39m09.05.2026 23:36:57 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 13660  - [39m09.05.2026 23:36:57 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+System.Management.Automation.RemoteException
+Test Suites: 4 passed, 4 total
+Tests:       40 passed, 40 total
+Snapshots:   0 total
+Time:        10.299 s
+Ran all test suites.
+RESULT: PASS - backend test
+
+[admin build]
+cwd: C:\Users\Arkose\Desktop\AlbaGO2
+cmd: npm.cmd run build --workspace admin
+
+> admin@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.16
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/5) ...
+   Generating static pages (1/5) 
+   Generating static pages (2/5) 
+   Generating static pages (3/5) 
+ ✓ Generating static pages (5/5)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    9.45 kB         102 kB
+├ ○ /_not-found                          873 B            88 kB
+└ ○ /games                               6.94 kB        99.4 kB
++ First Load JS shared by all            87.2 kB
+  ├ chunks/364-7a615152ccd77cba.js       31.6 kB
+  ├ chunks/618f8807-6a8e3248b56261b9.js  53.6 kB
+  └ other shared chunks (total)          1.95 kB
+
+
+○  (Static)  prerendered as static content
+
+RESULT: PASS - admin build
+
+[android core_runtime unit tests]
+cwd: C:\Users\Arkose\Desktop\AlbaGO2\android
+cmd: .\gradlew.bat :core_runtime:testDebugUnitTest --no-daemon --stacktrace
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.6/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :app
+WARNING: The option setting 'android.overridePathCheck=true' is experimental.
+The current default is 'false'.
+
+> Task :core_camera:checkKotlinGradlePluginConfigurationErrors
+> Task :core_camera:preBuild UP-TO-DATE
+> Task :core_camera:preDebugBuild UP-TO-DATE
+> Task :core_camera:generateDebugResValues UP-TO-DATE
+> Task :core_camera:generateDebugResources UP-TO-DATE
+> Task :core_camera:packageDebugResources UP-TO-DATE
+> Task :core_camera:parseDebugLocalResources UP-TO-DATE
+> Task :core_camera:generateDebugRFile UP-TO-DATE
+> Task :core_camera:compileDebugKotlin UP-TO-DATE
+> Task :core_camera:javaPreCompileDebug UP-TO-DATE
+> Task :core_camera:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_camera:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_camera:processDebugJavaRes UP-TO-DATE
+> Task :core_motion:checkKotlinGradlePluginConfigurationErrors
+> Task :core_motion:preBuild UP-TO-DATE
+> Task :core_motion:preDebugBuild UP-TO-DATE
+> Task :core_motion:generateDebugResValues UP-TO-DATE
+> Task :core_motion:generateDebugResources UP-TO-DATE
+> Task :core_motion:packageDebugResources UP-TO-DATE
+> Task :core_motion:parseDebugLocalResources UP-TO-DATE
+> Task :core_motion:generateDebugRFile UP-TO-DATE
+> Task :core_camera:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_pose:checkKotlinGradlePluginConfigurationErrors
+> Task :core_pose:preBuild UP-TO-DATE
+> Task :core_pose:preDebugBuild UP-TO-DATE
+> Task :core_pose:generateDebugResValues UP-TO-DATE
+> Task :core_pose:generateDebugResources UP-TO-DATE
+> Task :core_pose:packageDebugResources UP-TO-DATE
+> Task :core_pose:parseDebugLocalResources UP-TO-DATE
+> Task :core_pose:generateDebugRFile UP-TO-DATE
+> Task :core_pose:compileDebugKotlin UP-TO-DATE
+> Task :core_pose:javaPreCompileDebug UP-TO-DATE
+> Task :core_pose:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_pose:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_motion:compileDebugKotlin UP-TO-DATE
+> Task :core_motion:javaPreCompileDebug UP-TO-DATE
+> Task :core_motion:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_motion:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_motion:processDebugJavaRes UP-TO-DATE
+> Task :core_pose:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_pose:processDebugJavaRes UP-TO-DATE
+> Task :core_motion:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_runtime:checkKotlinGradlePluginConfigurationErrors
+> Task :core_runtime:preBuild UP-TO-DATE
+> Task :core_runtime:preDebugBuild UP-TO-DATE
+> Task :core_runtime:generateDebugResValues UP-TO-DATE
+> Task :core_runtime:generateDebugResources UP-TO-DATE
+> Task :core_runtime:packageDebugResources UP-TO-DATE
+> Task :core_runtime:parseDebugLocalResources UP-TO-DATE
+> Task :core_runtime:generateDebugRFile UP-TO-DATE
+> Task :core_runtime:compileDebugKotlin UP-TO-DATE
+> Task :core_runtime:javaPreCompileDebug UP-TO-DATE
+> Task :core_runtime:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_runtime:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_runtime:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_runtime:preDebugUnitTestBuild UP-TO-DATE
+> Task :core_runtime:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :core_runtime:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core_runtime:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core_runtime:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core_runtime:processDebugJavaRes UP-TO-DATE
+> Task :core_runtime:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core_runtime:testDebugUnitTest UP-TO-DATE
+
+BU�LD SUCCESSFUL in 28s
+49 actionable tasks: 4 executed, 45 up-to-date
+RESULT: PASS - android core_runtime unit tests
+
+[android app unit tests]
+cwd: C:\Users\Arkose\Desktop\AlbaGO2\android
+cmd: .\gradlew.bat :app:testDebugUnitTest --no-daemon --stacktrace
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.6/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :app
+WARNING: The option setting 'android.overridePathCheck=true' is experimental.
+The current default is 'false'.
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :core_camera:preBuild UP-TO-DATE
+> Task :core_camera:preDebugBuild UP-TO-DATE
+> Task :core_camera:writeDebugAarMetadata UP-TO-DATE
+> Task :core_data:preBuild UP-TO-DATE
+> Task :core_data:preDebugBuild UP-TO-DATE
+> Task :core_data:writeDebugAarMetadata UP-TO-DATE
+> Task :core_motion:preBuild UP-TO-DATE
+> Task :core_motion:preDebugBuild UP-TO-DATE
+> Task :core_motion:writeDebugAarMetadata UP-TO-DATE
+> Task :core_network:preBuild UP-TO-DATE
+> Task :core_network:preDebugBuild UP-TO-DATE
+> Task :core_network:writeDebugAarMetadata UP-TO-DATE
+> Task :core_pose:preBuild UP-TO-DATE
+> Task :core_pose:preDebugBuild UP-TO-DATE
+> Task :core_pose:writeDebugAarMetadata UP-TO-DATE
+> Task :core_runtime:preBuild UP-TO-DATE
+> Task :core_runtime:preDebugBuild UP-TO-DATE
+> Task :core_runtime:writeDebugAarMetadata UP-TO-DATE
+> Task :feature_games:preBuild UP-TO-DATE
+> Task :feature_games:preDebugBuild UP-TO-DATE
+> Task :feature_games:writeDebugAarMetadata UP-TO-DATE
+> Task :feature_workout:preBuild UP-TO-DATE
+> Task :feature_workout:preDebugBuild UP-TO-DATE
+> Task :feature_workout:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :core_camera:generateDebugResValues UP-TO-DATE
+> Task :core_camera:generateDebugResources UP-TO-DATE
+> Task :core_camera:packageDebugResources UP-TO-DATE
+> Task :core_data:generateDebugResValues UP-TO-DATE
+> Task :core_data:generateDebugResources UP-TO-DATE
+> Task :core_data:packageDebugResources UP-TO-DATE
+> Task :core_motion:generateDebugResValues UP-TO-DATE
+> Task :core_motion:generateDebugResources UP-TO-DATE
+> Task :core_motion:packageDebugResources UP-TO-DATE
+> Task :core_network:generateDebugResValues UP-TO-DATE
+> Task :core_network:generateDebugResources UP-TO-DATE
+> Task :core_network:packageDebugResources UP-TO-DATE
+> Task :core_pose:generateDebugResValues UP-TO-DATE
+> Task :core_pose:generateDebugResources UP-TO-DATE
+> Task :core_pose:packageDebugResources UP-TO-DATE
+> Task :core_runtime:generateDebugResValues UP-TO-DATE
+> Task :core_runtime:generateDebugResources UP-TO-DATE
+> Task :core_runtime:packageDebugResources UP-TO-DATE
+> Task :feature_games:generateDebugResValues UP-TO-DATE
+> Task :feature_games:generateDebugResources UP-TO-DATE
+> Task :feature_games:packageDebugResources UP-TO-DATE
+> Task :feature_workout:generateDebugResValues UP-TO-DATE
+> Task :feature_workout:generateDebugResources UP-TO-DATE
+> Task :feature_workout:packageDebugResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :core_camera:extractDeepLinksDebug UP-TO-DATE
+> Task :core_camera:processDebugManifest UP-TO-DATE
+> Task :core_data:extractDeepLinksDebug UP-TO-DATE
+> Task :core_data:processDebugManifest UP-TO-DATE
+> Task :core_motion:extractDeepLinksDebug UP-TO-DATE
+> Task :core_motion:processDebugManifest UP-TO-DATE
+> Task :core_network:extractDeepLinksDebug UP-TO-DATE
+> Task :core_network:processDebugManifest UP-TO-DATE
+> Task :core_pose:extractDeepLinksDebug UP-TO-DATE
+> Task :core_pose:processDebugManifest UP-TO-DATE
+> Task :core_runtime:extractDeepLinksDebug UP-TO-DATE
+> Task :core_runtime:processDebugManifest UP-TO-DATE
+> Task :feature_games:extractDeepLinksDebug UP-TO-DATE
+> Task :feature_games:processDebugManifest UP-TO-DATE
+> Task :feature_workout:extractDeepLinksDebug UP-TO-DATE
+> Task :feature_workout:processDebugManifest UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :core_camera:compileDebugLibraryResources UP-TO-DATE
+> Task :core_camera:parseDebugLocalResources UP-TO-DATE
+> Task :core_camera:generateDebugRFile UP-TO-DATE
+> Task :core_data:compileDebugLibraryResources UP-TO-DATE
+> Task :core_data:parseDebugLocalResources UP-TO-DATE
+> Task :core_data:generateDebugRFile UP-TO-DATE
+> Task :core_motion:compileDebugLibraryResources UP-TO-DATE
+> Task :core_motion:parseDebugLocalResources UP-TO-DATE
+> Task :core_motion:generateDebugRFile UP-TO-DATE
+> Task :core_network:compileDebugLibraryResources UP-TO-DATE
+> Task :core_network:parseDebugLocalResources UP-TO-DATE
+> Task :core_network:generateDebugRFile UP-TO-DATE
+> Task :core_pose:compileDebugLibraryResources UP-TO-DATE
+> Task :core_pose:parseDebugLocalResources UP-TO-DATE
+> Task :core_pose:generateDebugRFile UP-TO-DATE
+> Task :core_runtime:compileDebugLibraryResources UP-TO-DATE
+> Task :core_runtime:parseDebugLocalResources UP-TO-DATE
+> Task :core_runtime:generateDebugRFile UP-TO-DATE
+> Task :feature_games:compileDebugLibraryResources UP-TO-DATE
+> Task :feature_games:parseDebugLocalResources UP-TO-DATE
+> Task :feature_games:generateDebugRFile UP-TO-DATE
+> Task :feature_workout:compileDebugLibraryResources UP-TO-DATE
+> Task :feature_workout:parseDebugLocalResources UP-TO-DATE
+> Task :feature_workout:generateDebugRFile UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :core_camera:checkKotlinGradlePluginConfigurationErrors
+> Task :core_camera:compileDebugKotlin UP-TO-DATE
+> Task :core_camera:javaPreCompileDebug UP-TO-DATE
+> Task :core_camera:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_camera:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_data:checkKotlinGradlePluginConfigurationErrors
+> Task :core_motion:checkKotlinGradlePluginConfigurationErrors
+> Task :core_pose:checkKotlinGradlePluginConfigurationErrors
+> Task :core_pose:compileDebugKotlin UP-TO-DATE
+> Task :core_pose:javaPreCompileDebug UP-TO-DATE
+> Task :core_pose:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_pose:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_motion:compileDebugKotlin UP-TO-DATE
+> Task :core_motion:javaPreCompileDebug UP-TO-DATE
+> Task :core_motion:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_motion:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_network:checkKotlinGradlePluginConfigurationErrors
+> Task :core_network:generateDebugBuildConfig UP-TO-DATE
+> Task :core_network:compileDebugKotlin UP-TO-DATE
+> Task :core_network:javaPreCompileDebug UP-TO-DATE
+> Task :core_network:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core_network:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_runtime:checkKotlinGradlePluginConfigurationErrors
+> Task :core_runtime:compileDebugKotlin UP-TO-DATE
+> Task :core_runtime:javaPreCompileDebug UP-TO-DATE
+> Task :core_runtime:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_runtime:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_data:compileDebugKotlin UP-TO-DATE
+> Task :core_data:javaPreCompileDebug UP-TO-DATE
+> Task :core_data:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :feature_games:checkKotlinGradlePluginConfigurationErrors
+> Task :feature_games:compileDebugKotlin UP-TO-DATE
+> Task :feature_games:javaPreCompileDebug UP-TO-DATE
+> Task :feature_games:compileDebugJavaWithJavac NO-SOURCE
+> Task :feature_games:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :feature_workout:checkKotlinGradlePluginConfigurationErrors
+> Task :feature_workout:compileDebugKotlin UP-TO-DATE
+> Task :feature_workout:javaPreCompileDebug UP-TO-DATE
+> Task :feature_workout:compileDebugJavaWithJavac NO-SOURCE
+> Task :feature_workout:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core_camera:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_camera:processDebugJavaRes UP-TO-DATE
+> Task :core_data:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_data:processDebugJavaRes UP-TO-DATE
+> Task :core_motion:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_motion:processDebugJavaRes UP-TO-DATE
+> Task :core_network:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_network:processDebugJavaRes UP-TO-DATE
+> Task :core_pose:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_pose:processDebugJavaRes UP-TO-DATE
+> Task :core_runtime:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_runtime:processDebugJavaRes UP-TO-DATE
+> Task :feature_games:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :feature_games:processDebugJavaRes UP-TO-DATE
+> Task :feature_workout:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :feature_workout:processDebugJavaRes UP-TO-DATE
+> Task :app:testDebugUnitTest UP-TO-DATE
+
+BU�LD SUCCESSFUL in 33s
+147 actionable tasks: 9 executed, 138 up-to-date
+RESULT: PASS - android app unit tests
+
+[android debug apk assemble]
+cwd: C:\Users\Arkose\Desktop\AlbaGO2\android
+cmd: .\gradlew.bat :app:assembleDebug --no-daemon --stacktrace
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.6/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :app
+WARNING: The option setting 'android.overridePathCheck=true' is experimental.
+The current default is 'false'.
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :core_camera:preBuild UP-TO-DATE
+> Task :core_camera:preDebugBuild UP-TO-DATE
+> Task :core_camera:writeDebugAarMetadata UP-TO-DATE
+> Task :core_data:preBuild UP-TO-DATE
+> Task :core_data:preDebugBuild UP-TO-DATE
+> Task :core_data:writeDebugAarMetadata UP-TO-DATE
+> Task :core_motion:preBuild UP-TO-DATE
+> Task :core_motion:preDebugBuild UP-TO-DATE
+> Task :core_motion:writeDebugAarMetadata UP-TO-DATE
+> Task :core_network:preBuild UP-TO-DATE
+> Task :core_network:preDebugBuild UP-TO-DATE
+> Task :core_network:writeDebugAarMetadata UP-TO-DATE
+> Task :core_pose:preBuild UP-TO-DATE
+> Task :core_pose:preDebugBuild UP-TO-DATE
+> Task :core_pose:writeDebugAarMetadata UP-TO-DATE
+> Task :core_runtime:preBuild UP-TO-DATE
+> Task :core_runtime:preDebugBuild UP-TO-DATE
+> Task :core_runtime:writeDebugAarMetadata UP-TO-DATE
+> Task :feature_games:preBuild UP-TO-DATE
+> Task :feature_games:preDebugBuild UP-TO-DATE
+> Task :feature_games:writeDebugAarMetadata UP-TO-DATE
+> Task :feature_workout:preBuild UP-TO-DATE
+> Task :feature_workout:preDebugBuild UP-TO-DATE
+> Task :feature_workout:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :core_camera:generateDebugResValues UP-TO-DATE
+> Task :core_camera:generateDebugResources UP-TO-DATE
+> Task :core_camera:packageDebugResources UP-TO-DATE
+> Task :core_data:generateDebugResValues UP-TO-DATE
+> Task :core_data:generateDebugResources UP-TO-DATE
+> Task :core_data:packageDebugResources UP-TO-DATE
+> Task :core_motion:generateDebugResValues UP-TO-DATE
+> Task :core_motion:generateDebugResources UP-TO-DATE
+> Task :core_motion:packageDebugResources UP-TO-DATE
+> Task :core_network:generateDebugResValues UP-TO-DATE
+> Task :core_network:generateDebugResources UP-TO-DATE
+> Task :core_network:packageDebugResources UP-TO-DATE
+> Task :core_pose:generateDebugResValues UP-TO-DATE
+> Task :core_pose:generateDebugResources UP-TO-DATE
+> Task :core_pose:packageDebugResources UP-TO-DATE
+> Task :core_runtime:generateDebugResValues UP-TO-DATE
+> Task :core_runtime:generateDebugResources UP-TO-DATE
+> Task :core_runtime:packageDebugResources UP-TO-DATE
+> Task :feature_games:generateDebugResValues UP-TO-DATE
+> Task :feature_games:generateDebugResources UP-TO-DATE
+> Task :feature_games:packageDebugResources UP-TO-DATE
+> Task :feature_workout:generateDebugResValues UP-TO-DATE
+> Task :feature_workout:generateDebugResources UP-TO-DATE
+> Task :feature_workout:packageDebugResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :core_camera:extractDeepLinksDebug UP-TO-DATE
+> Task :core_camera:processDebugManifest UP-TO-DATE
+> Task :core_data:extractDeepLinksDebug UP-TO-DATE
+> Task :core_data:processDebugManifest UP-TO-DATE
+> Task :core_motion:extractDeepLinksDebug UP-TO-DATE
+> Task :core_motion:processDebugManifest UP-TO-DATE
+> Task :core_network:extractDeepLinksDebug UP-TO-DATE
+> Task :core_network:processDebugManifest UP-TO-DATE
+> Task :core_pose:extractDeepLinksDebug UP-TO-DATE
+> Task :core_pose:processDebugManifest UP-TO-DATE
+> Task :core_runtime:extractDeepLinksDebug UP-TO-DATE
+> Task :core_runtime:processDebugManifest UP-TO-DATE
+> Task :feature_games:extractDeepLinksDebug UP-TO-DATE
+> Task :feature_games:processDebugManifest UP-TO-DATE
+> Task :feature_workout:extractDeepLinksDebug UP-TO-DATE
+> Task :feature_workout:processDebugManifest UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :core_camera:compileDebugLibraryResources UP-TO-DATE
+> Task :core_camera:parseDebugLocalResources UP-TO-DATE
+> Task :core_camera:generateDebugRFile UP-TO-DATE
+> Task :core_data:compileDebugLibraryResources UP-TO-DATE
+> Task :core_data:parseDebugLocalResources UP-TO-DATE
+> Task :core_data:generateDebugRFile UP-TO-DATE
+> Task :core_motion:compileDebugLibraryResources UP-TO-DATE
+> Task :core_motion:parseDebugLocalResources UP-TO-DATE
+> Task :core_motion:generateDebugRFile UP-TO-DATE
+> Task :core_network:compileDebugLibraryResources UP-TO-DATE
+> Task :core_network:parseDebugLocalResources UP-TO-DATE
+> Task :core_network:generateDebugRFile UP-TO-DATE
+> Task :core_pose:compileDebugLibraryResources UP-TO-DATE
+> Task :core_pose:parseDebugLocalResources UP-TO-DATE
+> Task :core_pose:generateDebugRFile UP-TO-DATE
+> Task :core_runtime:compileDebugLibraryResources UP-TO-DATE
+> Task :core_runtime:parseDebugLocalResources UP-TO-DATE
+> Task :core_runtime:generateDebugRFile UP-TO-DATE
+> Task :feature_games:compileDebugLibraryResources UP-TO-DATE
+> Task :feature_games:parseDebugLocalResources UP-TO-DATE
+> Task :feature_games:generateDebugRFile UP-TO-DATE
+> Task :feature_workout:compileDebugLibraryResources UP-TO-DATE
+> Task :feature_workout:parseDebugLocalResources UP-TO-DATE
+> Task :feature_workout:generateDebugRFile UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :core_camera:checkKotlinGradlePluginConfigurationErrors
+> Task :core_camera:compileDebugKotlin UP-TO-DATE
+> Task :core_camera:javaPreCompileDebug UP-TO-DATE
+> Task :core_camera:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_camera:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_data:checkKotlinGradlePluginConfigurationErrors
+> Task :core_motion:checkKotlinGradlePluginConfigurationErrors
+> Task :core_pose:checkKotlinGradlePluginConfigurationErrors
+> Task :core_pose:compileDebugKotlin UP-TO-DATE
+> Task :core_pose:javaPreCompileDebug UP-TO-DATE
+> Task :core_pose:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_pose:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_motion:compileDebugKotlin UP-TO-DATE
+> Task :core_motion:javaPreCompileDebug UP-TO-DATE
+> Task :core_motion:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_motion:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_network:checkKotlinGradlePluginConfigurationErrors
+> Task :core_network:generateDebugBuildConfig UP-TO-DATE
+> Task :core_network:compileDebugKotlin UP-TO-DATE
+> Task :core_network:javaPreCompileDebug UP-TO-DATE
+> Task :core_network:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core_network:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_runtime:checkKotlinGradlePluginConfigurationErrors
+> Task :core_runtime:compileDebugKotlin UP-TO-DATE
+> Task :core_runtime:javaPreCompileDebug UP-TO-DATE
+> Task :core_runtime:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_runtime:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core_data:compileDebugKotlin UP-TO-DATE
+> Task :core_data:javaPreCompileDebug UP-TO-DATE
+> Task :core_data:compileDebugJavaWithJavac NO-SOURCE
+> Task :core_data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :feature_games:checkKotlinGradlePluginConfigurationErrors
+> Task :feature_games:compileDebugKotlin UP-TO-DATE
+> Task :feature_games:javaPreCompileDebug UP-TO-DATE
+> Task :feature_games:compileDebugJavaWithJavac NO-SOURCE
+> Task :feature_games:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :feature_workout:checkKotlinGradlePluginConfigurationErrors
+> Task :feature_workout:compileDebugKotlin UP-TO-DATE
+> Task :feature_workout:javaPreCompileDebug UP-TO-DATE
+> Task :feature_workout:compileDebugJavaWithJavac NO-SOURCE
+> Task :feature_workout:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :core_camera:mergeDebugShaders UP-TO-DATE
+> Task :core_camera:compileDebugShaders NO-SOURCE
+> Task :core_camera:generateDebugAssets UP-TO-DATE
+> Task :core_camera:packageDebugAssets UP-TO-DATE
+> Task :core_data:mergeDebugShaders UP-TO-DATE
+> Task :core_data:compileDebugShaders NO-SOURCE
+> Task :core_data:generateDebugAssets UP-TO-DATE
+> Task :core_data:packageDebugAssets UP-TO-DATE
+> Task :core_motion:mergeDebugShaders UP-TO-DATE
+> Task :core_motion:compileDebugShaders NO-SOURCE
+> Task :core_motion:generateDebugAssets UP-TO-DATE
+> Task :core_motion:packageDebugAssets UP-TO-DATE
+> Task :core_network:mergeDebugShaders UP-TO-DATE
+> Task :core_network:compileDebugShaders NO-SOURCE
+> Task :core_network:generateDebugAssets UP-TO-DATE
+> Task :core_network:packageDebugAssets UP-TO-DATE
+> Task :core_pose:mergeDebugShaders UP-TO-DATE
+> Task :core_pose:compileDebugShaders NO-SOURCE
+> Task :core_pose:generateDebugAssets UP-TO-DATE
+> Task :core_pose:packageDebugAssets UP-TO-DATE
+> Task :core_runtime:mergeDebugShaders UP-TO-DATE
+> Task :core_runtime:compileDebugShaders NO-SOURCE
+> Task :core_runtime:generateDebugAssets UP-TO-DATE
+> Task :core_runtime:packageDebugAssets UP-TO-DATE
+> Task :feature_games:mergeDebugShaders UP-TO-DATE
+> Task :feature_games:compileDebugShaders NO-SOURCE
+> Task :feature_games:generateDebugAssets UP-TO-DATE
+> Task :feature_games:packageDebugAssets UP-TO-DATE
+> Task :feature_workout:mergeDebugShaders UP-TO-DATE
+> Task :feature_workout:compileDebugShaders NO-SOURCE
+> Task :feature_workout:generateDebugAssets UP-TO-DATE
+> Task :feature_workout:packageDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :feature_workout:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :feature_games:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_data:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_runtime:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_motion:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_pose:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_camera:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core_network:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:dexBuilderDebug UP-TO-DATE
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :core_camera:processDebugJavaRes UP-TO-DATE
+> Task :core_data:processDebugJavaRes UP-TO-DATE
+> Task :core_motion:processDebugJavaRes UP-TO-DATE
+> Task :core_network:processDebugJavaRes UP-TO-DATE
+> Task :core_pose:processDebugJavaRes UP-TO-DATE
+> Task :core_runtime:processDebugJavaRes UP-TO-DATE
+> Task :feature_games:processDebugJavaRes UP-TO-DATE
+> Task :feature_workout:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeDebugStartupProfile UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :feature_workout:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :feature_games:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :core_data:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :core_runtime:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :core_motion:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :core_pose:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :core_camera:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :core_network:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeProjectDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core_camera:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core_camera:mergeDebugNativeLibs NO-SOURCE
+> Task :core_camera:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :core_data:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core_data:mergeDebugNativeLibs NO-SOURCE
+> Task :core_data:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :core_motion:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core_motion:mergeDebugNativeLibs NO-SOURCE
+> Task :core_motion:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :core_network:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core_network:mergeDebugNativeLibs NO-SOURCE
+> Task :core_network:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :core_pose:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core_pose:mergeDebugNativeLibs NO-SOURCE
+> Task :core_pose:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :core_runtime:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core_runtime:mergeDebugNativeLibs NO-SOURCE
+> Task :core_runtime:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :feature_games:mergeDebugJniLibFolders UP-TO-DATE
+> Task :feature_games:mergeDebugNativeLibs NO-SOURCE
+> Task :feature_games:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :feature_workout:mergeDebugJniLibFolders UP-TO-DATE
+> Task :feature_workout:mergeDebugNativeLibs NO-SOURCE
+> Task :feature_workout:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:packageDebug UP-TO-DATE
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug UP-TO-DATE
+
+BU�LD SUCCESSFUL in 34s
+201 actionable tasks: 9 executed, 192 up-to-date
+RESULT: PASS - android debug apk assemble
+
+========================================
+ Verification Summary
+========================================
+Log: C:\Users\Arkose\Desktop\AlbaGO2\artifacts\verification\platform-v2-20260509.log
+
+Successful steps:
+  - preflight
+  - npm install
+  - backend prisma generate
+  - backend build
+  - backend test
+  - admin build
+  - android core_runtime unit tests
+  - android app unit tests
+  - android debug apk assemble
+
+Environment-blocked steps:
+  (none)
+
+Failed steps:
+  (none)
+
+Warnings:
+  (none)
+
+Verification completed successfully.
