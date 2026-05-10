@@ -1,4 +1,18 @@
-# Roadmap
+# Roadmap (Historical)
+
+**This file is deprecated.** See the current master roadmap:
+
+→ **[albago-master-roadmap.md](albago-master-roadmap.md)** ←
+
+This document was the original phase-based roadmap (Faz 0–5). It has been superseded by the P20–P30 master roadmap which provides:
+- Detailed gate-level task breakdowns
+- Acceptance criteria and verification requirements
+- Readiness levels (demo-ready → internal beta-ready → usable APK-ready → store-ready)
+- AI agent execution rules
+
+---
+
+## Original phases (historical reference)
 
 ## Faz 0
 

@@ -1,4 +1,4 @@
-﻿AlbaGo Platform v2 verification - 2026-05-10 13:13:50 +03:00
+﻿AlbaGo Platform v2 verification - 2026-05-10 14:31:36 +03:00
 ========================================
  AlbaGo Platform v2 - Verification
 ========================================
@@ -16,7 +16,7 @@ androidx.browser:browser:1.8.0 pin - OK
 cwd: C:\Users\Arkose\Desktop\AlbaGO2
 cmd: npm.cmd install
 
-up to date, audited 620 packages in 10s
+up to date, audited 620 packages in 7s
 
 99 packages are looking for funding
   run `npm fund` for details
@@ -45,7 +45,7 @@ System.Management.Automation.RemoteException
 Environment variables loaded from .env
 Prisma schema loaded from prisma\schema.prisma
 
-✔ Generated Prisma Client (v6.19.3) to .\..\node_modules\@prisma\client in 219ms
+✔ Generated Prisma Client (v6.19.3) to .\..\node_modules\@prisma\client in 258ms
 
 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
 
@@ -69,28 +69,28 @@ cmd: npm.cmd run test --workspace backend
 > backend@0.1.0 test
 > jest
 
-PASS test/publish-validation.spec.ts (8.453 s)
+PASS test/publish-validation.spec.ts (12.565 s)
 PASS test/game-definition-v3.spec.ts
-PASS test/game-sessions.spec.ts (10.359 s)
-PASS test/profiles.spec.ts (10.461 s)
-[33m[Nest] 19944  - [39m10.05.2026 13:14:30 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
-[33m[Nest] 19944  - [39m10.05.2026 13:14:30 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
-[33m[Nest] 19944  - [39m10.05.2026 13:14:30 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
-[33m[Nest] 19944  - [39m10.05.2026 13:14:30 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
-[33m[Nest] 19944  - [39m10.05.2026 13:14:30 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
-[33m[Nest] 15832  - [39m10.05.2026 13:14:30 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
-[33m[Nest] 15832  - [39m10.05.2026 13:14:30 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
-[33m[Nest] 15832  - [39m10.05.2026 13:14:30 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
-[33m[Nest] 15832  - [39m10.05.2026 13:14:30 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
-[33m[Nest] 15832  - [39m10.05.2026 13:14:30 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
-[33m[Nest] 15832  - [39m10.05.2026 13:14:30 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
-[33m[Nest] 15832  - [39m10.05.2026 13:14:30 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
-[33m[Nest] 15832  - [39m10.05.2026 13:14:30 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+PASS test/game-sessions.spec.ts (18.466 s)
+[33m[Nest] 17204  - [39m10.05.2026 14:32:24 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 17204  - [39m10.05.2026 14:32:24 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 17204  - [39m10.05.2026 14:32:24 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 17204  - [39m10.05.2026 14:32:24 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 17204  - [39m10.05.2026 14:32:24 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 20360  - [39m10.05.2026 14:32:24 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+PASS test/profiles.spec.ts (18.753 s)
+[33m[Nest] 20360  - [39m10.05.2026 14:32:24 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 20360  - [39m10.05.2026 14:32:24 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 20360  - [39m10.05.2026 14:32:24 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 20360  - [39m10.05.2026 14:32:24 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 20360  - [39m10.05.2026 14:32:24 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 20360  - [39m10.05.2026 14:32:24 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
+[33m[Nest] 20360  - [39m10.05.2026 14:32:24 [33m   WARN[39m [38;5;3m[PrismaService] [39m[33mPERSISTENCE_MODE=prisma but DATABASE_URL is missing. Falling back to in-memory storage because ALLOW_IN_MEMORY_FALLBACK=true.[39m
 System.Management.Automation.RemoteException
 Test Suites: 4 passed, 4 total
 Tests:       40 passed, 40 total
 Snapshots:   0 total
-Time:        11.961 s
+Time:        20.899 s, estimated 30 s
 Ran all test suites.
 RESULT: PASS - backend test
 
@@ -203,7 +203,7 @@ The current default is 'false'.
 > Task :core_runtime:processDebugUnitTestJavaRes UP-TO-DATE
 > Task :core_runtime:testDebugUnitTest UP-TO-DATE
 
-BU�LD SUCCESSFUL in 33s
+BU�LD SUCCESSFUL in 55s
 49 actionable tasks: 4 executed, 45 up-to-date
 RESULT: PASS - android core_runtime unit tests
 
@@ -368,9 +368,9 @@ The current default is 'false'.
 > Task :app:compileDebugKotlin UP-TO-DATE
 > Task :app:javaPreCompileDebug UP-TO-DATE
 > Task :app:compileDebugJavaWithJavac UP-TO-DATE
-> Task :app:bundleDebugClassesToRuntimeJar
-> Task :app:bundleDebugClassesToCompileJar
-> Task :app:compileDebugUnitTestKotlin
+> Task :app:bundleDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:compileDebugUnitTestKotlin UP-TO-DATE
 > Task :app:preDebugUnitTestBuild UP-TO-DATE
 > Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
 > Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
@@ -392,10 +392,10 @@ The current default is 'false'.
 > Task :feature_games:processDebugJavaRes UP-TO-DATE
 > Task :feature_workout:bundleLibRuntimeToJarDebug UP-TO-DATE
 > Task :feature_workout:processDebugJavaRes UP-TO-DATE
-> Task :app:testDebugUnitTest
+> Task :app:testDebugUnitTest UP-TO-DATE
 
-BU�LD SUCCESSFUL in 48s
-150 actionable tasks: 13 executed, 137 up-to-date
+BU�LD SUCCESSFUL in 1m 3s
+150 actionable tasks: 9 executed, 141 up-to-date
 RESULT: PASS - android app unit tests
 
 [android debug apk assemble]
@@ -665,7 +665,7 @@ The current default is 'false'.
 > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDebug UP-TO-DATE
 
-BU�LD SUCCESSFUL in 42s
+BU�LD SUCCESSFUL in 1m 5s
 204 actionable tasks: 9 executed, 195 up-to-date
 RESULT: PASS - android debug apk assemble
 

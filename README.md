@@ -8,6 +8,7 @@ Android-first, AI-assisted and gamified exercise MVP monorepo.
 - `backend/`: NestJS modular monolith API with Prisma-backed game definition and audit persistence
 - `admin/`: Next.js admin console for multi-template demo game management
 - `docs/`: product, architecture, ADR and sprint documentation
+- **Master Roadmap:** [docs/00-product/albago-master-roadmap.md](docs/00-product/albago-master-roadmap.md)
 - `openapi/`: API contract sources
 - `infra/`: local infrastructure bootstrap
 - `artifacts/`: local device screenshots, demo evidence files, verification logs and release artifacts

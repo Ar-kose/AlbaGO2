@@ -14,6 +14,7 @@ android/.cxx/
 android/captures/
 backend/.env
 admin/.env.local
+*.apk
 artifacts/demo-videos/
 artifacts/crash-reports/
 artifacts/release/
