@@ -44,7 +44,7 @@ data class GameUiState(
     val remoteSessionId: String? = null,
     val gameId: String? = null,
     val template: GameTemplate = GameTemplate.FRUIT_SLASH,
-    val title: String = "Demo Game",
+    val title: String = "Oyun",
     val status: GameSessionStatus = GameSessionStatus.READY,
     val score: Int = 0,
     val combo: Int = 0,

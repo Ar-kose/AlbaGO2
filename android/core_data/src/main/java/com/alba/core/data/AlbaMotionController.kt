@@ -728,10 +728,9 @@ class AlbaMotionController(
             activeGameTemplate = selectedDefinition?.template,
             activeGameVersion = selectedDefinition?.version,
             backendStatus = when {
-                !hasError && definitions.isNotEmpty() -> "Bağlı"
-                definitions.isNotEmpty() -> "Önbellekten yüklendi"
-                debugConfig.isDebugBuild -> "Yerel demo oyunlar açıldı"
-                else -> "Oyun kataloğu yüklenemedi"
+                !hasError && definitions.isNotEmpty() -> "Bagli"
+                definitions.isNotEmpty() -> "Onbellekten yuklendi"
+                else -> "Cevrimdisi — veri yuklenemedi"
             },
             lastError = if (hasError) "Supabase bağlantısı başarısız, önbellek kullanılıyor" else null
         )
@@ -1388,7 +1387,14 @@ class AlbaMotionController(
             GameTemplate.FRUIT_SLASH,
             GameTemplate.DODGE_RUN,
             GameTemplate.FIT_CHALLENGE,
-            GameTemplate.SCENE_PLAY
+            GameTemplate.SCENE_PLAY,
+            GameTemplate.WHACK_A_MOLE,
+            GameTemplate.POSE_CONTACT_TARGETS,
+            GameTemplate.POSE_HOLD,
+            GameTemplate.RHYTHM_MOTION,
+            GameTemplate.REP_COUNTER,
+            GameTemplate.MOTION_SEQUENCE,
+            GameTemplate.INTERVAL_WORKOUT
         )
 
         const val MIN_VISIBLE_KEYPOINT_CONFIDENCE = 0.45f

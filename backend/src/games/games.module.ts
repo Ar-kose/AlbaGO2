@@ -31,19 +31,23 @@ import { validateGameDefinitionV3 } from '../common/game-definition-v3';
 import { createAuditEntry, validateGameAccess, validateGameDefinition } from '../common/publish-validation';
 import { AuditLogsRepository } from '../persistence/audit-logs.repository';
 import { GameDefinitionsRepository } from '../persistence/game-definitions.repository';
+import { TEMPLATE_REGISTRY } from '../common/game-validation/game-template-registry';
+import { getAllCategories } from '../common/game-categories';
 
 const supportedTemplates: GameTemplateKey[] = [
-  'TARGET_HIT',
-  'ENDLESS_RUNNER',
-  'FRUIT_SLASH',
-  'DODGE_RUN',
-  'FIT_CHALLENGE',
-  'SCENE_PLAY'
+  'FRUIT_SLASH', 'DODGE_RUN', 'FIT_CHALLENGE', 'SCENE_PLAY',
+  'TARGET_HIT', 'ENDLESS_RUNNER',
+  'WHACK_A_MOLE', 'POSE_CONTACT_TARGETS', 'CAMERA_ARCADE_OVERLAY',
+  'RHYTHM_MOTION', 'POSE_HOLD', 'REP_COUNTER',
+  'MOTION_SEQUENCE', 'INTERVAL_WORKOUT',
+  'QUIZ', 'FLASHCARD', 'MEMORY_MATCH', 'TRUE_FALSE', 'MATCH_PAIRS',
+  'REACTION', 'CATCH_FALLING', 'AVOID_OBSTACLE', 'COLLECT_ITEMS',
+  'PROGRAM_FLOW', 'HYBRID_SCENE'
 ];
 
 class MotionRuleDto {
   @IsString()
-  @IsIn(['SQUAT', 'JUMPING_JACK', 'JUMP_ROPE'])
+  @IsIn(['SQUAT', 'JUMPING_JACK', 'JUMP_ROPE', 'PLANK_HOLD', 'LEFT_HAND_HIT', 'RIGHT_HAND_HIT', 'BOTH_HANDS_UP', 'BALANCE', 'POSE_STABLE', 'POSE_LOST'])
   motion!: MotionType;
 
   @IsString()
@@ -74,7 +78,7 @@ class RewardRuleDto {
 
 class TaskRuleDto {
   @IsString()
-  @IsIn(['SQUAT', 'JUMPING_JACK', 'JUMP_ROPE'])
+  @IsIn(['SQUAT', 'JUMPING_JACK', 'JUMP_ROPE', 'PLANK_HOLD', 'LEFT_HAND_HIT', 'RIGHT_HAND_HIT', 'BOTH_HANDS_UP', 'BALANCE', 'POSE_STABLE', 'POSE_LOST'])
   motion!: TaskRuleEntity['motion'];
 
   @IsInt()
@@ -105,7 +109,7 @@ class ProgramStepDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['SQUAT', 'JUMPING_JACK', 'JUMP_ROPE'])
+  @IsIn(['SQUAT', 'JUMPING_JACK', 'JUMP_ROPE', 'PLANK_HOLD', 'LEFT_HAND_HIT', 'RIGHT_HAND_HIT', 'BOTH_HANDS_UP', 'BALANCE', 'POSE_STABLE', 'POSE_LOST'])
   motion?: MotionType;
 
   @IsOptional()
@@ -161,7 +165,7 @@ class InteractionRuleDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['SQUAT', 'JUMPING_JACK', 'JUMP_ROPE'])
+  @IsIn(['SQUAT', 'JUMPING_JACK', 'JUMP_ROPE', 'PLANK_HOLD', 'LEFT_HAND_HIT', 'RIGHT_HAND_HIT', 'BOTH_HANDS_UP', 'BALANCE', 'POSE_STABLE', 'POSE_LOST'])
   motion?: MotionType;
 
   @IsOptional()
@@ -351,7 +355,7 @@ class CreateGameDefinitionDto {
   cameraRequirement!: CameraRequirement;
 
   @IsArray()
-  @IsIn(['SQUAT', 'JUMPING_JACK', 'JUMP_ROPE'], { each: true })
+  @IsIn(['SQUAT', 'JUMPING_JACK', 'JUMP_ROPE', 'PLANK_HOLD', 'LEFT_HAND_HIT', 'RIGHT_HAND_HIT', 'BOTH_HANDS_UP', 'BALANCE', 'POSE_STABLE', 'POSE_LOST'], { each: true })
   supportedMotions!: MotionType[];
 
   @IsArray()
@@ -417,7 +421,7 @@ class UpdateGameDefinitionDto {
 
   @IsOptional()
   @IsArray()
-  @IsIn(['SQUAT', 'JUMPING_JACK', 'JUMP_ROPE'], { each: true })
+  @IsIn(['SQUAT', 'JUMPING_JACK', 'JUMP_ROPE', 'PLANK_HOLD', 'LEFT_HAND_HIT', 'RIGHT_HAND_HIT', 'BOTH_HANDS_UP', 'BALANCE', 'POSE_STABLE', 'POSE_LOST'], { each: true })
   supportedMotions?: MotionType[];
 
   @IsOptional()
@@ -563,6 +567,11 @@ class GamesController {
       items: await this.service.getActive(appVersion)
     };
   }
+
+  @Get('categories')
+  async categories() {
+    return { categories: getAllCategories() };
+  }
 }
 
 @ApiTags('internal-games')
@@ -574,6 +583,26 @@ class InternalGamesController {
   @Get()
   async list() {
     return { items: await this.service.getAll() };
+  }
+
+  @Get('templates')
+  async templates() {
+    const templates = Object.values(TEMPLATE_REGISTRY).map((meta) => ({
+      template: meta.template,
+      label: meta.label,
+      supportLevel: meta.supportLevel,
+      categoryCompatibility: meta.categoryCompatibility,
+      mechanics: meta.mechanics,
+      requiredCapabilities: meta.requiredCapabilities,
+      supportedMotions: meta.supportedMotions,
+      requiresCamera: meta.requiresCamera,
+      allowedCameraRequirements: meta.allowedCameraRequirements,
+      supportsAudio: meta.supportsAudio,
+      requiredImageAssetKeys: meta.requiredImageAssetKeys,
+      optionalImageAssetKeys: meta.optionalImageAssetKeys,
+      minRuntimeVersion: meta.minRuntimeVersion
+    }));
+    return { templates };
   }
 
   @Get(':id')
@@ -629,15 +658,19 @@ function isInternalGame(game: GameDefinitionEntity): boolean {
   return game.segmentRuleJson.internalOnly === true;
 }
 
+const TEMPLATE_RANK: Record<GameTemplateKey, number> = {
+  FRUIT_SLASH: 0, DODGE_RUN: 1, FIT_CHALLENGE: 2, SCENE_PLAY: 3,
+  TARGET_HIT: 4, ENDLESS_RUNNER: 5,
+  WHACK_A_MOLE: 6, POSE_CONTACT_TARGETS: 7, CAMERA_ARCADE_OVERLAY: 8,
+  RHYTHM_MOTION: 9, POSE_HOLD: 10, REP_COUNTER: 11,
+  MOTION_SEQUENCE: 12, INTERVAL_WORKOUT: 13,
+  QUIZ: 14, FLASHCARD: 15, MEMORY_MATCH: 16, TRUE_FALSE: 17, MATCH_PAIRS: 18,
+  REACTION: 19, CATCH_FALLING: 20, AVOID_OBSTACLE: 21, COLLECT_ITEMS: 22,
+  PROGRAM_FLOW: 23, HYBRID_SCENE: 24
+};
+
 function templateRank(template: GameTemplateKey): number {
-  return {
-    FRUIT_SLASH: 0,
-    DODGE_RUN: 1,
-    FIT_CHALLENGE: 2,
-    SCENE_PLAY: 3,
-    TARGET_HIT: 4,
-    ENDLESS_RUNNER: 5
-  }[template];
+  return TEMPLATE_RANK[template] ?? 99;
 }
 
 function sortGames(left: GameDefinitionEntity, right: GameDefinitionEntity): number {

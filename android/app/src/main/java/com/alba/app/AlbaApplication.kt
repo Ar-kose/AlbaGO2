@@ -85,7 +85,7 @@ import com.alba.app.ui.showcase.EducationModeShowcaseScreen
 import com.alba.app.ui.showcase.EntertainmentModeShowcaseScreen
 import com.alba.app.ui.showcase.HomeShowcaseScreen
 import com.alba.app.ui.showcase.NeonGamePrepScreen
-import com.alba.app.ui.showcase.ProfileScreen
+import com.alba.app.ui.showcase.ProfileShowcaseScreen
 import com.alba.app.ui.showcase.OnboardingBodyTrackingScreen
 import com.alba.app.ui.showcase.OnboardingCameraWorldScreen
 import com.alba.app.ui.showcase.OnboardingModesScreen
@@ -344,11 +344,17 @@ private fun AlbaRoot(
                 )
             }
 
-            AlbaDestination.PROFILE -> ProfileScreen(
+            AlbaDestination.PROFILE -> ProfileShowcaseScreen(
                 uiState = uiState,
                 repository = controller.gameSessionRepo,
                 onNavigateBack = { navigateBack() },
-                onNavigateHome = { navigate(AlbaDestination.HOME) }
+                onNavigateHome = { navigate(AlbaDestination.HOME) },
+                onHome = { navigate(AlbaDestination.HOME) },
+                onSport = { navigate(AlbaDestination.SPORT_MODE) },
+                onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
+                onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
+                onDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
+                onProfile = { }
             )
         }
     }

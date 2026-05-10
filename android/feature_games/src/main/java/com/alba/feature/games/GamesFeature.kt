@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alba.core.data.GameUiState
 import com.alba.core.data.MotionUiState
@@ -47,6 +48,7 @@ import com.alba.core.runtime.FitChallengeSceneState
 import com.alba.core.runtime.FruitSlashSceneState
 import com.alba.core.runtime.CameraRequirement
 import com.alba.core.runtime.GameDefinition
+import com.alba.core.runtime.WhackAMoleSceneState
 import com.alba.core.runtime.GameCategory
 import com.alba.core.runtime.GameSceneState
 import com.alba.core.runtime.GameSessionStatus
@@ -57,7 +59,7 @@ import com.alba.core.runtime.ProgramStepType
 import com.alba.core.runtime.ScenePlaySceneState
 
 private enum class GameFlowStage {
-    CATALOG,
+    LIST,
     DETAIL,
     SESSION
 }
@@ -72,7 +74,7 @@ fun GamesHomeScreen(
     onRefreshGames: () -> Unit,
     onSelectGameDefinition: (String) -> Unit
 ) {
-    var stage by rememberSaveable { mutableStateOf(GameFlowStage.CATALOG) }
+    var stage by rememberSaveable { mutableStateOf(GameFlowStage.LIST) }
     var selectedGameId by rememberSaveable { mutableStateOf<String?>(uiState.activeGameId) }
 
     LaunchedEffect(uiState.game.status, uiState.activeGameId) {
@@ -97,7 +99,7 @@ fun GamesHomeScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         when (stage) {
-            GameFlowStage.CATALOG -> GameCatalogScreen(
+            GameFlowStage.LIST -> GameCatalogScreen(
                 uiState = uiState,
                 games = games,
                 onOpenDetail = { gameId ->
@@ -117,12 +119,12 @@ fun GamesHomeScreen(
                         onStartGame(selectedDefinition.gameId)
                         stage = GameFlowStage.SESSION
                     },
-                    onBackToCatalog = { stage = GameFlowStage.CATALOG }
+                    onBackToCatalog = { stage = GameFlowStage.LIST }
                 )
             } else {
                 EmptyCatalogCard(
                     onRefreshGames = onRefreshGames,
-                    onNavigateBack = { stage = GameFlowStage.CATALOG }
+                    onNavigateBack = { stage = GameFlowStage.LIST }
                 )
             }
 
@@ -134,14 +136,14 @@ fun GamesHomeScreen(
                         gameDefinition = activeDefinition,
                         onFinishGame = onFinishGame,
                         onReplay = { onStartGame(activeDefinition.gameId) },
-                        onBrowseGames = { stage = GameFlowStage.CATALOG },
+                        onBrowseGames = onNavigateBack,
                         onRefreshGames = onRefreshGames,
                         onNavigateBack = onNavigateBack
                     )
                 } else {
                     EmptyCatalogCard(
                         onRefreshGames = onRefreshGames,
-                        onNavigateBack = { stage = GameFlowStage.CATALOG }
+                        onNavigateBack = { stage = GameFlowStage.LIST }
                     )
                 }
             }
@@ -172,7 +174,7 @@ private fun GameCatalogScreen(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("Demo vitrini", style = MaterialTheme.typography.titleLarge, color = Color.White)
+            Text("Oyun vitrini", style = MaterialTheme.typography.titleLarge, color = Color.White)
             Text(
                 "Önce oyunu incele, kameranı güvenli bir yere yerleştir, sonra hareketlerinle skor üret.",
                 color = Color.White.copy(alpha = 0.78f)
@@ -189,6 +191,7 @@ private fun GameCatalogScreen(
     }
 
     CategoryFilterRow(
+        games = games,
         selectedCategory = selectedCategory,
         onSelectCategory = { selectedCategory = it }
     )
@@ -254,7 +257,7 @@ private fun GameDetailScreen(
                     Text("Oyunu başlat")
                 }
                 OutlinedButton(onClick = onBackToCatalog) {
-                    Text("Kataloğa dön")
+                    Text("Oyunlara dön")
                 }
             }
         }
@@ -271,6 +274,18 @@ private fun ActiveGameScreen(
     onRefreshGames: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    if (uiState.game.status == GameSessionStatus.FINISHED) {
+        GameResultScreen(
+            game = uiState.game,
+            template = gameDefinition.template,
+            gameTitle = gameDefinition.title,
+            onReplay = onReplay,
+            onBackToGames = onBrowseGames,
+            onHome = onNavigateBack
+        )
+        return
+    }
+
     HeroCard(
         title = gameDefinition.title,
         eyebrow = templateLabel(gameDefinition.template),
@@ -283,8 +298,6 @@ private fun ActiveGameScreen(
         gameDefinition = gameDefinition,
         motionType = uiState.selectedMotionType
     )
-
-    // P14: Scene debug card removed from normal user flow
 
     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1627))) {
         Column(
@@ -299,33 +312,18 @@ private fun ActiveGameScreen(
                     uiState.game.status == GameSessionStatus.PAUSED
                 ) {
                     Button(onClick = onFinishGame) {
-                        Text("Bitir")
+                        Text("Oyunu bitir")
                     }
                 } else {
                     Button(onClick = onReplay) {
                         Text("Tekrar oyna")
                     }
                 }
-                OutlinedButton(onClick = onRefreshGames) {
-                    Text("Yenile")
-                }
-                OutlinedButton(onClick = onBrowseGames) {
-                    Text("Katalog")
-                }
                 OutlinedButton(onClick = onNavigateBack) {
                     Text("Ana ekran")
                 }
             }
         }
-    }
-
-    if (uiState.game.status == GameSessionStatus.FINISHED) {
-        ResultSheet(
-            game = uiState.game,
-            template = gameDefinition.template,
-            onReplay = onReplay,
-            onBrowseGames = onBrowseGames
-        )
     }
 }
 
@@ -441,7 +439,7 @@ private fun CatalogStateCard(
             "Oyunlar yükleniyor..."
 
         uiState.backendStatus.contains("Yerel demo", ignoreCase = true) ->
-            "Bağlantı kurulamadı. Demo oyunlar yerel modda açıldı."
+            "Baglanti kurulamadi. Cevrimdisi oyun gosterilemiyor."
 
         uiState.backendStatus.contains("Önbellek", ignoreCase = true) ->
             "Son yayınlanan oyunlar cihaz önbelleğinden gösteriliyor."
@@ -481,7 +479,7 @@ private fun InvalidGameDefinitionCard(onBackToCatalog: () -> Unit) {
                 color = Color(0xFF9A3412)
             )
             Button(onClick = onBackToCatalog) {
-                Text("Kataloğa dön")
+                Text("Oyunlara dön")
             }
         }
     }
@@ -489,9 +487,15 @@ private fun InvalidGameDefinitionCard(onBackToCatalog: () -> Unit) {
 
 @Composable
 private fun CategoryFilterRow(
+    games: List<GameDefinition>,
     selectedCategory: GameCategory?,
     onSelectCategory: (GameCategory?) -> Unit
 ) {
+    val availableCategories = games
+        .map { it.category }
+        .distinct()
+        .sortedBy { it.displayRank() }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -504,7 +508,7 @@ private fun CategoryFilterRow(
             color = Color(0xFF0F172A),
             onClick = { onSelectCategory(null) }
         )
-        GameCategory.values().forEach { category ->
+        availableCategories.forEach { category ->
             CategoryChip(
                 label = categoryLabel(category),
                 selected = selectedCategory == category,
@@ -680,7 +684,9 @@ private fun SceneStateCard(
                 is DodgeRunSceneState -> DodgeRunScene(sceneState)
                 is FitChallengeSceneState -> FitChallengeScene(sceneState)
                 is ScenePlaySceneState -> ScenePlayScene(sceneState)
+                is WhackAMoleSceneState -> WhackAMoleScene(sceneState)
                 IdleSceneState -> Text("Oyun hazırlanıyor...")
+                else -> Text("Oyun hazırlanıyor...")
             }
             Text(
                 "Combo x$combo${if (!lastEffect.isNullOrBlank()) " • $lastEffect" else ""}",
@@ -879,76 +885,114 @@ private fun ScenePlayScene(sceneState: ScenePlaySceneState) {
 }
 
 @Composable
-private fun ResultSheet(
-    game: GameUiState,
-    template: GameTemplate,
-    onReplay: () -> Unit,
-    onBrowseGames: () -> Unit
-) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF05060E)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF1593).copy(alpha = 0.6f))
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text("Oyun Sonucu", style = MaterialTheme.typography.titleLarge, color = Color(0xFFFF1593), fontWeight = FontWeight.Bold)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+private fun WhackAMoleScene(sceneState: WhackAMoleSceneState) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SceneMetric("Vurulan", sceneState.hitCount.toString(), Color(0xFF20E99A))
+            SceneMetric("Kacan", sceneState.missCount.toString(), Color(0xFFEF4444))
+            SceneMetric("Can", sceneState.lives.toString(), Color(0xFFFF1593))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            StatusPill(label = "Aktif hedef: ${sceneState.activeTargetIds.size}", color = Color(0xFF11D7F4))
+            StatusPill(label = "Spawn: ${sceneState.spawnIntervalMs}ms", color = Color(0xFF9B4DFF))
+        }
+        if (sceneState.activeTargetIds.isEmpty()) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color(0xFF101522),
+                shape = RoundedCornerShape(14.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF9B4DFF).copy(alpha = 0.3f))
             ) {
-                StatusPill(label = templateLabel(template), color = templateAccent(template))
-                StatusPill(label = "Skor ${game.score}", color = Color(0xFFFFB020))
-                StatusPill(label = "Combo max ${game.comboMax}", color = Color(0xFF11D7F4))
-                StatusPill(label = "Accuracy ${(game.accuracy * 100).toInt()}%", color = Color(0xFF22C55E))
-            }
-            // P14: Local-first — result always saved on device, sync is secondary
-            Text(
-                "Sure ${(game.elapsedMs / 1000L)}s",
-                color = Color.White.copy(alpha = 0.9f)
-            )
-            Text(
-                "Bu cihazda kaydedildi",
-                color = Color(0xFF22C55E),
-                style = MaterialTheme.typography.bodyMedium
-            )
-            // P14: Sync status shown as small secondary badge, not blocking error
-            val syncBadge = when (game.syncStatus) {
-                SyncStatus.SYNCED -> null
-                SyncStatus.SYNCING -> "Sunucuya gonderiliyor"
-                SyncStatus.FAILED -> "Cevrimdisi — sonra gonderilecek"
-                else -> null
-            }
-            if (syncBadge != null) {
                 Text(
-                    syncBadge,
-                    color = Color.White.copy(alpha = 0.45f),
-                    style = MaterialTheme.typography.bodySmall
+                    "Hedef bekleniyor...",
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    color = Color.White.copy(alpha = 0.55f),
+                    textAlign = TextAlign.Center
                 )
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        }
+    }
+}
+
+@Composable
+private fun GameResultScreen(
+    game: GameUiState,
+    template: GameTemplate,
+    gameTitle: String,
+    onReplay: () -> Unit,
+    onBackToGames: () -> Unit,
+    onHome: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF05060E)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF1593).copy(alpha = 0.7f))
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                game.motionCounts.forEach { (motion, count) ->
-                    StatusPill(label = "${motion.shortLabel()} x$count", color = Color(0xFF8B5CF6))
+                Text("Oyun tamamlandi", style = MaterialTheme.typography.labelLarge, color = Color(0xFFFF1593), fontWeight = FontWeight.Bold)
+                Text(gameTitle, style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    StatusPill(label = templateLabel(template), color = templateAccent(template))
+                    StatusPill(label = "Skor ${game.score}", color = Color(0xFFFFB020))
+                    StatusPill(label = "Combo max ${game.comboMax}", color = Color(0xFF11D7F4))
+                    StatusPill(label = "Accuracy ${(game.accuracy * 100).toInt()}%", color = Color(0xFF22C55E))
+                }
+                Text(
+                    "Sure ${(game.elapsedMs / 1000L)}s",
+                    color = Color.White.copy(alpha = 0.9f)
+                )
+                Text(
+                    "Bu cihazda kaydedildi",
+                    color = Color(0xFF22C55E),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                val syncBadge = when (game.syncStatus) {
+                    SyncStatus.SYNCED -> null
+                    SyncStatus.SYNCING -> "Sunucuya gonderiliyor"
+                    SyncStatus.FAILED -> "Cevrimdisi — sonra gonderilecek"
+                    else -> null
+                }
+                if (syncBadge != null) {
+                    Text(
+                        syncBadge,
+                        color = Color.White.copy(alpha = 0.45f),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    game.motionCounts.forEach { (motion, count) ->
+                        StatusPill(label = "${motion.shortLabel()} x$count", color = Color(0xFF8B5CF6))
+                    }
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    onClick = onReplay,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF1593))
-                ) {
-                    Text("Tekrar oyna")
-                }
-                OutlinedButton(onClick = onBrowseGames) {
-                    Text("Diğer oyunlar")
-                }
+        }
+
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onReplay,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF1593))
+            ) {
+                Text("Tekrar oyna")
+            }
+            OutlinedButton(modifier = Modifier.fillMaxWidth(), onClick = onBackToGames) {
+                Text("Oyunlara dön")
+            }
+            OutlinedButton(modifier = Modifier.fillMaxWidth(), onClick = onHome) {
+                Text("Ana sayfa")
             }
         }
     }
@@ -1021,6 +1065,14 @@ private fun templateLabel(template: GameTemplate): String {
         GameTemplate.SCENE_PLAY -> "Scene Play"
         GameTemplate.TARGET_HIT -> "Target Hit"
         GameTemplate.ENDLESS_RUNNER -> "Endless Runner"
+        GameTemplate.WHACK_A_MOLE -> "Whack-a-Mole"
+        GameTemplate.POSE_CONTACT_TARGETS -> "Pose Contact"
+        GameTemplate.QUIZ -> "Quiz"
+        GameTemplate.MEMORY_MATCH -> "Hafiza"
+        GameTemplate.FLASHCARD -> "Flash Card"
+        GameTemplate.POSE_HOLD -> "Pose Hold"
+        GameTemplate.RHYTHM_MOTION -> "Ritim"
+        else -> template.name.lowercase().replaceFirstChar { it.uppercase() }
     }
 }
 
@@ -1032,6 +1084,9 @@ private fun templateAccent(template: GameTemplate): Color {
         GameTemplate.SCENE_PLAY -> Color(0xFFF59E0B)
         GameTemplate.TARGET_HIT -> Color(0xFF9333EA)
         GameTemplate.ENDLESS_RUNNER -> Color(0xFF0F766E)
+        GameTemplate.WHACK_A_MOLE,
+        GameTemplate.POSE_CONTACT_TARGETS -> Color(0xFFFF1593)
+        else -> Color(0xFF6366F1)
     }
 }
 
@@ -1059,6 +1114,9 @@ private fun howToPlay(template: GameTemplate): String {
         GameTemplate.TARGET_HIT -> "Doğru hareket hedefi vurur."
         GameTemplate.SCENE_PLAY -> "Panelden gelen komutu oku; istenen hareketi yaparak obje/komutu temizle."
         GameTemplate.ENDLESS_RUNNER -> "Ritmini koruyarak ilerle."
+        GameTemplate.WHACK_A_MOLE,
+        GameTemplate.POSE_CONTACT_TARGETS -> "Cikan hedeflere elinle dokun. Bileklerini hedef noktasina getir, skor yap."
+        else -> "Hareketlerini kullanarak hedefleri tamamla."
     }
 }
 

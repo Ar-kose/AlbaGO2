@@ -130,6 +130,10 @@ export class GameDefinitionsRepository {
     if (!this.prisma.client || this.seeded) {
       return;
     }
+    if (process.env.AUTO_SEED_DEMO_GAMES !== 'true') {
+      this.seeded = true;
+      return;
+    }
     const count = await this.prisma.client.gameDefinition.count();
     if (count === 0) {
       this.seeded = true;

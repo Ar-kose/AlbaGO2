@@ -74,6 +74,7 @@ import androidx.core.content.ContextCompat
 import com.alba.app.R
 import com.alba.app.ui.theme.AlbaColors
 import com.alba.core.data.MotionUiState
+import com.alba.core.data.local.GameSessionRepository
 
 enum class ShowcaseTab {
     HOME,
@@ -607,7 +608,7 @@ fun DemoCatalogShowcaseScreen(
     uiState: MotionUiState? = null
 ) {
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
 
     val demoGames = remember(uiState?.availableGames) {
         val realGames = uiState?.availableGames
@@ -633,13 +634,15 @@ fun DemoCatalogShowcaseScreen(
         }
     }
 
-    val filteredGames = remember(selectedTabIndex) {
-        when (selectedTabIndex) {
-            1 -> demoGames.filter { it.categoryKey == "SPORT" }
-            2 -> demoGames.filter { it.categoryKey == "FUN" }
-            3 -> demoGames.filter { it.categoryKey == "EDUCATION" }
-            else -> demoGames
-        }
+    val availableCategories = remember(demoGames) {
+        demoGames.map { it.categoryKey }.distinct().sorted()
+    }
+
+    val categoryLabels = mapOf("SPORT" to "Spor", "FUN" to "Eglence", "EDUCATION" to "Egitim")
+
+    val filteredGames = remember(selectedCategory, demoGames) {
+        if (selectedCategory == null) demoGames
+        else demoGames.filter { it.categoryKey == selectedCategory }
     }
 
     NeonScreen(
@@ -657,9 +660,11 @@ fun DemoCatalogShowcaseScreen(
             subtitle = "Seç, hazırlan ve oynamaya başla!"
         )
         SegmentRow(
-            items = listOf("Tümü", "Spor", "Eğlence", "Eğitim"),
-            selectedIndex = selectedTabIndex,
-            onSelect = { selectedTabIndex = it }
+            items = listOf("Tumu") + availableCategories.map { categoryLabels[it] ?: it },
+            selectedIndex = if (selectedCategory == null) 0 else availableCategories.indexOf(selectedCategory) + 1,
+            onSelect = { index ->
+                selectedCategory = if (index == 0) null else availableCategories.getOrNull(index - 1)
+            }
         )
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (filteredGames.isEmpty()) {
@@ -2156,6 +2161,43 @@ private fun DrawScope.drawNeonIcon(icon: NeonIconType, tint: Color) {
 
 private fun Context.hasCameraPermission(): Boolean =
     ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+
+@Composable
+fun ProfileShowcaseScreen(
+    uiState: MotionUiState,
+    repository: GameSessionRepository?,
+    onNavigateBack: () -> Unit,
+    onNavigateHome: () -> Unit,
+    onHome: () -> Unit,
+    onSport: () -> Unit,
+    onEducation: () -> Unit,
+    onEntertainment: () -> Unit,
+    onDemos: () -> Unit,
+    onProfile: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DeepBlack)
+    ) {
+        ProfileScreen(
+            uiState = uiState,
+            repository = repository,
+            onNavigateBack = onNavigateBack,
+            onNavigateHome = onNavigateHome
+        )
+        BottomBar(
+            selectedTab = ShowcaseTab.PROFILE,
+            onHome = onHome,
+            onSport = onSport,
+            onEducation = onEducation,
+            onEntertainment = onEntertainment,
+            onDemos = onDemos,
+            onProfile = onProfile,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+    }
+}
 
 private val DeepBlack = Color(0xFF05060E)
 private val Panel = Color(0xD90B1020)

@@ -1,9 +1,12 @@
-import { Body, Controller, Injectable, Module, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Injectable, Module, Param, Post, UseGuards } from '@nestjs/common';
 import { AdminTokenGuard } from '../common/admin-token.guard';
 import { ApiTags } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 import { GameDefinitionEntity } from '../common/contracts';
-import { createAuditEntry, validateGameDefinition } from '../common/publish-validation';
+import { createAuditEntry } from '../common/publish-validation';
+import { validateGameDefinition } from '../common/game-validation/validate-game-definition';
+import { GameValidationResult } from '../common/game-validation/validation-result';
+import { TEMPLATE_REGISTRY } from '../common/game-validation/game-template-registry';
 import { AuditLogsRepository } from '../persistence/audit-logs.repository';
 import { GameDefinitionsRepository } from '../persistence/game-definitions.repository';
 
@@ -26,8 +29,20 @@ class ContentPublishService {
   async publish(gameId: string, dto: ContentPublishDto) {
     const game = await this.gameDefinitionsRepository.getById(gameId);
     if (!game) return { error: 'game_not_found' };
-    const errors = validateGameDefinition(game);
-    if (errors.length) return { error: 'publish_validation_failed', errors };
+
+    const validation = validateGameDefinition(game);
+    if (!validation.publishable || validation.errors.length > 0) {
+      return {
+        published: false,
+        validation: {
+          valid: validation.valid,
+          publishable: validation.publishable,
+          errors: validation.errors,
+          warnings: validation.warnings
+        }
+      };
+    }
+
     const before = { status: game.status };
     const updated: GameDefinitionEntity = {
       ...game,
@@ -41,7 +56,17 @@ class ContentPublishService {
         note: dto.note
       })
     );
-    return mapGameDefinitionToResponse(updated);
+
+    return {
+      published: true,
+      game: mapGameDefinitionToResponse(updated),
+      validation: {
+        valid: validation.valid,
+        publishable: validation.publishable,
+        errors: validation.errors,
+        warnings: validation.warnings
+      }
+    };
   }
 
   async rollback(gameId: string, dto: ContentPublishDto) {
@@ -77,6 +102,44 @@ class ContentPublishController {
   @Post(':gameId/rollback')
   async rollback(@Param('gameId') gameId: string, @Body() dto: ContentPublishDto) {
     return this.service.rollback(gameId, dto);
+  }
+
+  @Get('templates')
+  async templates() {
+    const templates = Object.values(TEMPLATE_REGISTRY).map((meta) => ({
+      template: meta.template,
+      label: meta.label,
+      supportLevel: meta.supportLevel,
+      categoryCompatibility: meta.categoryCompatibility,
+      mechanics: meta.mechanics,
+      requiredCapabilities: meta.requiredCapabilities,
+      supportedMotions: meta.supportedMotions,
+      requiresCamera: meta.requiresCamera,
+      allowedCameraRequirements: meta.allowedCameraRequirements,
+      supportsAudio: meta.supportsAudio,
+      requiredImageAssetKeys: meta.requiredImageAssetKeys,
+      optionalImageAssetKeys: meta.optionalImageAssetKeys,
+      minRuntimeVersion: meta.minRuntimeVersion
+    }));
+    return { templates };
+  }
+
+  @Post('validate')
+  async validate(@Body() body: { gameDefinition: GameDefinitionEntity }) {
+    const { gameDefinition } = body;
+    if (!gameDefinition) return { error: 'missing gameDefinition' };
+
+    const validation = validateGameDefinition(gameDefinition);
+    return {
+      valid: validation.valid,
+      publishable: validation.publishable,
+      errors: validation.errors,
+      warnings: validation.warnings,
+      summary: {
+        errorCount: validation.errors.length,
+        warningCount: validation.warnings.length
+      }
+    };
   }
 }
 

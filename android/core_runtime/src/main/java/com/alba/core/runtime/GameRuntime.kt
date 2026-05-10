@@ -8,12 +8,36 @@ import kotlin.math.max
 import kotlin.random.Random
 
 enum class GameTemplate {
-    TARGET_HIT,
-    ENDLESS_RUNNER,
+    // Mevcut runtime
     FRUIT_SLASH,
     DODGE_RUN,
     FIT_CHALLENGE,
-    SCENE_PLAY
+    SCENE_PLAY,
+    TARGET_HIT,
+    ENDLESS_RUNNER,
+    // Kamera üstü arcade / motion
+    WHACK_A_MOLE,
+    POSE_CONTACT_TARGETS,
+    CAMERA_ARCADE_OVERLAY,
+    RHYTHM_MOTION,
+    POSE_HOLD,
+    REP_COUNTER,
+    MOTION_SEQUENCE,
+    INTERVAL_WORKOUT,
+    // Eğitim
+    QUIZ,
+    FLASHCARD,
+    MEMORY_MATCH,
+    TRUE_FALSE,
+    MATCH_PAIRS,
+    // Eğlence / aktivite
+    REACTION,
+    CATCH_FALLING,
+    AVOID_OBSTACLE,
+    COLLECT_ITEMS,
+    // Hibrit
+    PROGRAM_FLOW,
+    HYBRID_SCENE
 }
 
 enum class PublishStatus {
@@ -38,7 +62,9 @@ enum class CameraRequirement {
 enum class GameCategory {
     SPORT,
     FUN,
-    EDUCATION
+    EDUCATION;
+
+    fun displayRank(): Int = ordinal
 }
 
 enum class ProgramStepType {
@@ -188,10 +214,18 @@ data class GameDefinition(
     val tags: List<String> = emptyList(),
     val orientation: GameOrientation = GameOrientation.PORTRAIT,
     val cameraRequirement: CameraRequirement = CameraRequirement.FULL_BODY,
+    val supportLevel: TemplateSupportLevel = TemplateSupportLevel.ANDROID_SUPPORTED,
     val supportedMotions: List<MotionType>,
+    val mechanics: List<String> = emptyList(),
     val levels: List<GameLevelDefinition>,
     val assets: AssetManifest
 )
+
+enum class TemplateSupportLevel {
+    ANDROID_SUPPORTED,
+    WEB_PREVIEW_ONLY,
+    EXPERIMENTAL
+}
 
 enum class GameSessionStatus {
     READY,
@@ -284,6 +318,33 @@ data class ScenePlaySceneState(
     val missedCount: Int = 0,
     val prompt: String = "Hazir",
     val nextSpawnAtMs: Long = 0L
+) : GameSceneState
+
+// WHACK_A_MOLE / POSE_CONTACT_TARGETS scene state
+data class WhackAMoleTarget(
+    val targetId: String,
+    val x: Float,          // normalized 0..1
+    val y: Float,          // normalized 0..1
+    val radius: Float,     // normalized hit radius
+    val assetKey: String,
+    val hitBy: List<String>, // keypoint names e.g. ["LEFT_WRIST", "RIGHT_WRIST"]
+    val points: Int,
+    val active: Boolean = false,
+    val spawnedAtMs: Long = 0L,
+    val lastHitAtMs: Long = 0L
+)
+
+data class WhackAMoleSceneState(
+    val targets: List<WhackAMoleTarget> = emptyList(),
+    val activeTargetIds: Set<String> = emptySet(),
+    val lives: Int = 3,
+    val maxActiveTargets: Int = 2,
+    val spawnIntervalMs: Long = 900L,
+    val visibleMs: Long = 1400L,
+    val lastSpawnAtMs: Long = 0L,
+    val hitCount: Int = 0,
+    val missCount: Int = 0,
+    val hitCooldownMs: Long = 300L
 ) : GameSceneState
 
 data class GameRuntimeState(
@@ -493,8 +554,10 @@ class GameRuntime(
                     GameTemplate.DODGE_RUN -> tickDodgeRun(nextState, nowMs)
                     GameTemplate.FIT_CHALLENGE -> nextState
                     GameTemplate.SCENE_PLAY -> tickScenePlay(nextState, nowMs)
-                    GameTemplate.TARGET_HIT,
-                    GameTemplate.ENDLESS_RUNNER -> nextState
+                    GameTemplate.WHACK_A_MOLE,
+                    GameTemplate.POSE_CONTACT_TARGETS,
+                    GameTemplate.CAMERA_ARCADE_OVERLAY -> tickWhackAMole(nextState, nowMs)
+                    else -> nextState
                 }
             }
         }
@@ -647,8 +710,12 @@ class GameRuntime(
             GameTemplate.DODGE_RUN -> handleDodgeRunEvent(event)
             GameTemplate.FIT_CHALLENGE -> handleFitChallengeEvent(event)
             GameTemplate.SCENE_PLAY -> handleScenePlayEvent(event)
+            GameTemplate.WHACK_A_MOLE,
+            GameTemplate.POSE_CONTACT_TARGETS,
+            GameTemplate.CAMERA_ARCADE_OVERLAY -> handleWhackAMoleEvent(event)
             GameTemplate.TARGET_HIT,
             GameTemplate.ENDLESS_RUNNER -> handleLegacyEvent(event)
+            else -> handleLegacyEvent(event)
         }
         return state
     }
@@ -973,8 +1040,12 @@ class GameRuntime(
             GameTemplate.DODGE_RUN -> initialDodgeScene(nowMs)
             GameTemplate.FIT_CHALLENGE -> initialFitScene()
             GameTemplate.SCENE_PLAY -> initialScenePlay(nowMs)
+            GameTemplate.WHACK_A_MOLE,
+            GameTemplate.POSE_CONTACT_TARGETS,
+            GameTemplate.CAMERA_ARCADE_OVERLAY -> initialWhackAMoleScene(nowMs)
             GameTemplate.TARGET_HIT,
             GameTemplate.ENDLESS_RUNNER -> IdleSceneState
+            else -> IdleSceneState
         }
     }
 
@@ -1004,6 +1075,83 @@ class GameRuntime(
             nextSpawnAtMs = nowMs,
             prompt = "Hazir"
         )
+    }
+
+    private fun initialWhackAMoleScene(nowMs: Long): WhackAMoleSceneState {
+        val targets = level.sceneConfig.listValue("targets")?.mapNotNull { targetMap ->
+            val map = targetMap as? Map<*, *> ?: return@mapNotNull null
+            WhackAMoleTarget(
+                targetId = map["targetId"] as? String ?: "",
+                x = (map["x"] as? Number)?.toFloat() ?: 0.5f,
+                y = (map["y"] as? Number)?.toFloat() ?: 0.5f,
+                radius = (map["radius"] as? Number)?.toFloat() ?: 0.1f,
+                assetKey = map["assetKey"] as? String ?: "",
+                hitBy = (map["hitBy"] as? List<*>)?.mapNotNull { it as? String } ?: listOf("LEFT_WRIST", "RIGHT_WRIST"),
+                points = (map["points"] as? Number)?.toInt() ?: 10
+            )
+        } ?: emptyList()
+
+        return WhackAMoleSceneState(
+            targets = targets,
+            lives = level.config.intValue("lives", 3),
+            maxActiveTargets = level.config.intValue("maxActiveTargets", 2),
+            spawnIntervalMs = level.config.longValue("spawnIntervalMs", 900L),
+            visibleMs = level.config.longValue("visibleMs", 1400L),
+            lastSpawnAtMs = nowMs
+        )
+    }
+
+    private fun tickWhackAMole(currentState: GameRuntimeState, nowMs: Long): GameRuntimeState {
+        val scene = currentState.sceneState as? WhackAMoleSceneState ?: return currentState
+        var nextScene = scene
+
+        // Deactivate expired targets
+        val expiredIds = scene.targets
+            .filter { it.active && nowMs - it.spawnedAtMs > scene.visibleMs }
+            .map { it.targetId }
+            .toSet()
+        if (expiredIds.isNotEmpty()) {
+            nextScene = nextScene.copy(
+                activeTargetIds = nextScene.activeTargetIds - expiredIds,
+                missCount = nextScene.missCount + expiredIds.size,
+                lives = if (level.config.booleanValue("loseLifeOnTimeout", true))
+                    nextScene.lives - expiredIds.size else nextScene.lives
+            )
+        }
+
+        // Spawn new targets
+        val canSpawn = nextScene.activeTargetIds.size < nextScene.maxActiveTargets &&
+            nowMs - nextScene.lastSpawnAtMs >= nextScene.spawnIntervalMs
+        if (canSpawn) {
+            val inactiveTargets = nextScene.targets.filter { !it.active }
+            if (inactiveTargets.isNotEmpty()) {
+                val targetToSpawn = inactiveTargets.random()
+                nextScene = nextScene.copy(
+                    activeTargetIds = nextScene.activeTargetIds + targetToSpawn.targetId,
+                    lastSpawnAtMs = nowMs
+                )
+                nextScene = nextScene.copy(
+                    targets = nextScene.targets.map {
+                        if (it.targetId == targetToSpawn.targetId)
+                            it.copy(active = true, spawnedAtMs = nowMs)
+                        else it
+                    }
+                )
+            }
+        }
+
+        return currentState.copy(
+            sceneState = nextScene
+        )
+    }
+
+    private fun handleWhackAMoleEvent(event: MotionEvent): GameRuntimeState {
+        val scene = state.sceneState as? WhackAMoleSceneState ?: return state
+        if (event.type == MotionEventType.BAD_FORM || event.type == MotionEventType.USER_OUT_OF_FRAME) {
+            val nextScene = scene.copy(lives = (scene.lives - 1).coerceAtLeast(0))
+            return state.copy(sceneState = nextScene)
+        }
+        return state
     }
 
     private fun tickFruitSlash(currentState: GameRuntimeState, nowMs: Long): GameRuntimeState {
@@ -1298,6 +1446,10 @@ private fun Map<String, Any>.booleanValue(key: String, default: Boolean = false)
 private fun Map<String, Any>.stringValue(key: String, default: String = ""): String {
     val value = this[key] ?: return default
     return value.toString().takeIf { it.isNotBlank() } ?: default
+}
+
+private fun Map<String, Any>.listValue(key: String): List<*>? {
+    return (this[key] as? List<*>)
 }
 
 private fun Map<String, Any>.sceneObjectDefinitions(): List<Map<String, Any>> {

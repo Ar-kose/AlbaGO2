@@ -1,13 +1,18 @@
-export type MotionType = 'SQUAT' | 'JUMPING_JACK' | 'JUMP_ROPE';
+export type MotionType =
+  | 'SQUAT' | 'JUMPING_JACK' | 'JUMP_ROPE'
+  | 'PLANK_HOLD' | 'LEFT_HAND_HIT' | 'RIGHT_HAND_HIT'
+  | 'BOTH_HANDS_UP' | 'BALANCE' | 'POSE_STABLE' | 'POSE_LOST';
 export type PublishStatus = 'DRAFT' | 'REVIEW' | 'SCHEDULED' | 'PUBLISHED' | 'ARCHIVED';
 export type GameTemplate =
-  | 'TARGET_HIT'
-  | 'ENDLESS_RUNNER'
-  | 'FRUIT_SLASH'
-  | 'DODGE_RUN'
-  | 'FIT_CHALLENGE'
-  | 'SCENE_PLAY';
-export type PublicDemoTemplate = 'FRUIT_SLASH' | 'DODGE_RUN' | 'FIT_CHALLENGE' | 'SCENE_PLAY';
+  | 'FRUIT_SLASH' | 'DODGE_RUN' | 'FIT_CHALLENGE' | 'SCENE_PLAY'
+  | 'TARGET_HIT' | 'ENDLESS_RUNNER'
+  | 'WHACK_A_MOLE' | 'POSE_CONTACT_TARGETS' | 'CAMERA_ARCADE_OVERLAY'
+  | 'RHYTHM_MOTION' | 'POSE_HOLD' | 'REP_COUNTER'
+  | 'MOTION_SEQUENCE' | 'INTERVAL_WORKOUT'
+  | 'QUIZ' | 'FLASHCARD' | 'MEMORY_MATCH' | 'TRUE_FALSE' | 'MATCH_PAIRS'
+  | 'REACTION' | 'CATCH_FALLING' | 'AVOID_OBSTACLE' | 'COLLECT_ITEMS'
+  | 'PROGRAM_FLOW' | 'HYBRID_SCENE';
+export type PublicDemoTemplate = 'FRUIT_SLASH' | 'DODGE_RUN' | 'FIT_CHALLENGE' | 'SCENE_PLAY' | 'WHACK_A_MOLE' | 'POSE_CONTACT_TARGETS';
 export type GameOrientation = 'PORTRAIT' | 'LANDSCAPE';
 export type CameraRequirement = 'FULL_BODY' | 'UPPER_BODY' | 'HAND_TARGET';
 export type GameCategory = 'SPORT' | 'FUN' | 'EDUCATION';
@@ -249,13 +254,34 @@ export async function updateGameDefinition(
   );
 }
 
-export async function publishGameDefinition(id: string, actorId: string): Promise<GameDefinitionDto> {
-  return normalizeGameDefinition(
-    await request(`/internal/game-definitions/${encodeURIComponent(id)}/publish`, {
-      method: 'POST',
-      body: JSON.stringify({ actorId })
-    })
-  );
+export type PublishResult = {
+  published: boolean;
+  game?: GameDefinitionDto;
+  validation?: {
+    valid: boolean;
+    publishable: boolean;
+    errors: Array<{ severity: string; scope: string; code: string; path: string; message: string }>;
+    warnings: Array<{ severity: string; scope: string; code: string; path: string; message: string }>;
+  };
+  error?: string;
+};
+
+export async function publishGameDefinition(id: string, actorId: string): Promise<PublishResult> {
+  const result = await request<any>(`/internal/game-definitions/${encodeURIComponent(id)}/publish`, {
+    method: 'POST',
+    body: JSON.stringify({ actorId })
+  });
+  if (result.published === true && result.game) {
+    return { published: true, game: normalizeGameDefinition(result.game), validation: result.validation };
+  }
+  return result as PublishResult;
+}
+
+export async function validateGameDraft(draft: any): Promise<any> {
+  return request('/internal/game-definitions/validate', {
+    method: 'POST',
+    body: JSON.stringify({ gameDefinition: draft })
+  });
 }
 
 export async function rollbackGameDefinition(id: string, actorId: string): Promise<GameDefinitionDto> {
@@ -333,19 +359,29 @@ export function isPublicDemoTemplate(template: GameTemplate): template is Public
     template === 'FRUIT_SLASH' ||
     template === 'DODGE_RUN' ||
     template === 'FIT_CHALLENGE' ||
-    template === 'SCENE_PLAY'
+    template === 'SCENE_PLAY' ||
+    template === 'WHACK_A_MOLE' ||
+    template === 'POSE_CONTACT_TARGETS'
   );
 }
 
+const TEMPLATE_LABELS: Record<GameTemplate, string> = {
+  FRUIT_SLASH: 'Meyve Kesme', DODGE_RUN: 'Engelden Kacis',
+  FIT_CHALLENGE: 'Spor Mucadelesi', SCENE_PLAY: 'Scene Play / No-code',
+  TARGET_HIT: 'Target Hit', ENDLESS_RUNNER: 'Endless Runner',
+  WHACK_A_MOLE: 'Whack-a-Mole', POSE_CONTACT_TARGETS: 'Pose Contact',
+  CAMERA_ARCADE_OVERLAY: 'Camera Arcade', RHYTHM_MOTION: 'Ritim',
+  POSE_HOLD: 'Pose Hold', REP_COUNTER: 'Rep Counter',
+  MOTION_SEQUENCE: 'Motion Sequence', INTERVAL_WORKOUT: 'Interval Workout',
+  QUIZ: 'Quiz', FLASHCARD: 'Flash Card', MEMORY_MATCH: 'Hafiza',
+  TRUE_FALSE: 'Dogru-Yanlis', MATCH_PAIRS: 'Esleme',
+  REACTION: 'Refleks', CATCH_FALLING: 'Yakala',
+  AVOID_OBSTACLE: 'Engelden Kac', COLLECT_ITEMS: 'Topla',
+  PROGRAM_FLOW: 'Program Akisi', HYBRID_SCENE: 'Hibrit'
+};
+
 export function templateLabel(template: GameTemplate): string {
-  return {
-    TARGET_HIT: 'Target Hit',
-    ENDLESS_RUNNER: 'Endless Runner',
-    FRUIT_SLASH: 'Meyve Kesme',
-    DODGE_RUN: 'Engelden Kacis',
-    FIT_CHALLENGE: 'Spor Mucadelesi',
-    SCENE_PLAY: 'Scene Play / No-code'
-  }[template];
+  return TEMPLATE_LABELS[template] ?? template;
 }
 
 export function buildDemoDraft(template: PublicDemoTemplate): GameDefinitionDraft {
@@ -519,6 +555,64 @@ export function buildDemoDraft(template: PublicDemoTemplate): GameDefinitionDraf
     };
   }
 
+  if (template === 'WHACK_A_MOLE' || template === 'POSE_CONTACT_TARGETS') {
+    return {
+      ...shared,
+      gameKey: 'whack_a_mole_demo',
+      template,
+      title: 'Orman Refleks Oyunu',
+      description: 'Cikan karakterlere elinle dokun. Bileklerini hedef noktasina getir, skor yap.',
+      category: 'FUN',
+      tags: ['reflex', 'arcade', 'hand-target', 'whack'],
+      orientation: 'LANDSCAPE',
+      cameraRequirement: 'UPPER_BODY',
+      supportedMotions: ['LEFT_HAND_HIT', 'RIGHT_HAND_HIT'],
+      levels: [
+        {
+          levelId: 'whack_level_1',
+          durationSec: 60,
+          targetScore: 200,
+          difficulty: 'EASY',
+          motionRules: [
+            { motion: 'LEFT_HAND_HIT', event: 'REP_COUNTED', points: 10, cooldownMs: 300 },
+            { motion: 'RIGHT_HAND_HIT', event: 'REP_COUNTED', points: 10, cooldownMs: 300 }
+          ],
+          rewardRules: [{ rewardType: 'STAR', amount: 1, minimumScore: 100 }],
+          config: { spawnIntervalMs: 900, visibleMs: 1400, lives: 3, maxActiveTargets: 2, loseLifeOnTimeout: true },
+          sceneConfig: {
+            type: 'OBJECT_SPAWN',
+            maxObjects: 3,
+            spawnRateMs: 900,
+            objects: [
+              { objectId: 'hole_left', label: 'Sol Hedef', assetKey: 'mole_green', requiredMotion: 'LEFT_HAND_HIT', lifeMs: 1400, points: 10, x: 0.14, y: 0.78, radius: 0.10, hitBy: ['LEFT_WRIST', 'RIGHT_WRIST'] },
+              { objectId: 'hole_center', label: 'Orta Hedef', assetKey: 'mole_green', requiredMotion: 'RIGHT_HAND_HIT', lifeMs: 1400, points: 10, x: 0.50, y: 0.78, radius: 0.10, hitBy: ['LEFT_WRIST', 'RIGHT_WRIST'] },
+              { objectId: 'hole_right', label: 'Sag Hedef', assetKey: 'mole_green', requiredMotion: 'LEFT_HAND_HIT', lifeMs: 1400, points: 10, x: 0.86, y: 0.78, radius: 0.10, hitBy: ['LEFT_WRIST', 'RIGHT_WRIST'] }
+            ]
+          },
+          interactionRules: [
+            { input: 'POSE_CONTACT', targetObjectType: 'hole_left', keypoints: ['LEFT_WRIST', 'RIGHT_WRIST'], action: 'REMOVE_OBJECT', points: 10, cooldownMs: 300 },
+            { input: 'POSE_CONTACT', targetObjectType: 'hole_center', keypoints: ['LEFT_WRIST', 'RIGHT_WRIST'], action: 'REMOVE_OBJECT', points: 10, cooldownMs: 300 },
+            { input: 'POSE_CONTACT', targetObjectType: 'hole_right', keypoints: ['LEFT_WRIST', 'RIGHT_WRIST'], action: 'REMOVE_OBJECT', points: 10, cooldownMs: 300 },
+            { input: 'MOTION_EVENT', event: 'BAD_FORM', action: 'DECREASE_LIFE', points: 0, cooldownMs: 1000 },
+            { input: 'MOTION_EVENT', event: 'USER_OUT_OF_FRAME', action: 'PAUSE_GAME', points: 0, cooldownMs: 500 }
+          ],
+          tasks: [],
+          programSteps: []
+        }
+      ],
+      assets: {
+        background: 'local://whack-a-mole/forest-bg',
+        character: 'local://whack-a-mole/mole',
+        soundtrack: '',
+        items: demoAssetItems('whack-a-mole', [
+          ['forest_background', 'local://whack-a-mole/forest-bg'],
+          ['mole_green', 'local://whack-a-mole/mole-green'],
+          ['hit_sfx', 'local://whack-a-mole/hit']
+        ])
+      }
+    };
+  }
+
   return {
     ...shared,
     gameKey: 'deve_cuce_demo',
@@ -577,7 +671,9 @@ export const publicDemoTemplates: PublicDemoTemplate[] = [
   'SCENE_PLAY',
   'FRUIT_SLASH',
   'DODGE_RUN',
-  'FIT_CHALLENGE'
+  'FIT_CHALLENGE',
+  'WHACK_A_MOLE',
+  'POSE_CONTACT_TARGETS'
 ];
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {

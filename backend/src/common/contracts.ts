@@ -4,16 +4,85 @@ export type Platform = 'ANDROID';
 export type SessionSource = 'CAMERA';
 export type SessionStatus = 'READY' | 'COUNTDOWN' | 'ACTIVE' | 'PAUSED' | 'FINISHED';
 export type PublishStatus = 'DRAFT' | 'REVIEW' | 'SCHEDULED' | 'PUBLISHED' | 'ARCHIVED';
-export type MotionType = 'SQUAT' | 'JUMPING_JACK' | 'JUMP_ROPE';
+export type MotionType =
+  | 'SQUAT'
+  | 'JUMPING_JACK'
+  | 'JUMP_ROPE'
+  | 'PLANK_HOLD'
+  | 'LEFT_HAND_HIT'
+  | 'RIGHT_HAND_HIT'
+  | 'BOTH_HANDS_UP'
+  | 'BALANCE'
+  | 'POSE_STABLE'
+  | 'POSE_LOST';
 export type ScopeType = 'GLOBAL' | 'FRIENDS';
 export type PeriodType = 'DAILY' | 'WEEKLY';
 export type GameTemplateKey =
-  | 'TARGET_HIT'
-  | 'ENDLESS_RUNNER'
+  // Mevcut runtime
   | 'FRUIT_SLASH'
   | 'DODGE_RUN'
   | 'FIT_CHALLENGE'
-  | 'SCENE_PLAY';
+  | 'SCENE_PLAY'
+  | 'TARGET_HIT'
+  | 'ENDLESS_RUNNER'
+  // Kamera üstü arcade / motion oyunları
+  | 'WHACK_A_MOLE'
+  | 'POSE_CONTACT_TARGETS'
+  | 'CAMERA_ARCADE_OVERLAY'
+  | 'RHYTHM_MOTION'
+  | 'POSE_HOLD'
+  | 'REP_COUNTER'
+  | 'MOTION_SEQUENCE'
+  | 'INTERVAL_WORKOUT'
+  // Eğitim
+  | 'QUIZ'
+  | 'FLASHCARD'
+  | 'MEMORY_MATCH'
+  | 'TRUE_FALSE'
+  | 'MATCH_PAIRS'
+  // Eğlence / aktivite
+  | 'REACTION'
+  | 'CATCH_FALLING'
+  | 'AVOID_OBSTACLE'
+  | 'COLLECT_ITEMS'
+  // Hibrit
+  | 'PROGRAM_FLOW'
+  | 'HYBRID_SCENE';
+export type TemplateSupportLevel =
+  | 'ANDROID_SUPPORTED'
+  | 'WEB_PREVIEW_ONLY'
+  | 'EXPERIMENTAL';
+
+export type GameplayMechanic =
+  | 'TARGET_HIT'
+  | 'WHACK_A_MOLE'
+  | 'POSE_CONTACT_TARGETS'
+  | 'CAMERA_ARCADE_OVERLAY'
+  | 'LANE_DODGE'
+  | 'RHYTHM_SYNC'
+  | 'POSE_HOLD'
+  | 'REP_COUNTER'
+  | 'REACTION'
+  | 'COLLECT'
+  | 'AVOID'
+  | 'TIMING_WINDOW'
+  | 'SEQUENCE_MEMORY'
+  | 'QUIZ_SELECT'
+  | 'MATCH_PAIRS'
+  | 'PROGRAM_FLOW';
+
+export type GameTheme =
+  | 'FOREST'
+  | 'SPACE'
+  | 'NINJA'
+  | 'SPORT'
+  | 'SCHOOL'
+  | 'ANIMALS'
+  | 'MUSIC'
+  | 'FITNESS'
+  | 'UNDERWATER'
+  | 'CUSTOM';
+
 export type GameOrientation = 'PORTRAIT' | 'LANDSCAPE';
 export type CameraRequirement = 'FULL_BODY' | 'UPPER_BODY' | 'HAND_TARGET';
 export type GameCategory = 'SPORT' | 'FUN' | 'EDUCATION';
@@ -23,12 +92,20 @@ export type GameAssetFormat = 'PNG' | 'WEBP' | 'SVG' | 'MP3';
 export type GameActionType =
   | 'ADD_SCORE'
   | 'REMOVE_OBJECT'
+  | 'SPAWN_OBJECT'
   | 'RESET_COMBO'
+  | 'ADD_COMBO'
   | 'DECREASE_LIFE'
+  | 'INCREASE_LIFE'
   | 'PROGRESS_TASK'
   | 'PAUSE_GAME'
+  | 'RESUME_GAME'
+  | 'COMPLETE_LEVEL'
+  | 'ADVANCE_STEP'
+  | 'PLAY_SOUND'
   | 'SHOW_EFFECT'
-  | 'COMPLETE_LEVEL';
+  | 'SHOW_MESSAGE'
+  | 'GRANT_REWARD_REQUEST';
 
 export interface UserEntity {
   id: string;

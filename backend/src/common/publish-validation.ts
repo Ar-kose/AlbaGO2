@@ -1,12 +1,14 @@
 import { GameDefinitionEntity, GameTemplateKey, createId } from './contracts';
 
 const allowedTemplates = new Set<GameTemplateKey>([
-  'TARGET_HIT',
-  'ENDLESS_RUNNER',
-  'FRUIT_SLASH',
-  'DODGE_RUN',
-  'FIT_CHALLENGE',
-  'SCENE_PLAY'
+  'FRUIT_SLASH', 'DODGE_RUN', 'FIT_CHALLENGE', 'SCENE_PLAY',
+  'TARGET_HIT', 'ENDLESS_RUNNER',
+  'WHACK_A_MOLE', 'POSE_CONTACT_TARGETS', 'CAMERA_ARCADE_OVERLAY',
+  'RHYTHM_MOTION', 'POSE_HOLD', 'REP_COUNTER',
+  'MOTION_SEQUENCE', 'INTERVAL_WORKOUT',
+  'QUIZ', 'FLASHCARD', 'MEMORY_MATCH', 'TRUE_FALSE', 'MATCH_PAIRS',
+  'REACTION', 'CATCH_FALLING', 'AVOID_OBSTACLE', 'COLLECT_ITEMS',
+  'PROGRAM_FLOW', 'HYBRID_SCENE'
 ]);
 const allowedOrientations = new Set(['PORTRAIT', 'LANDSCAPE']);
 const allowedCameraRequirements = new Set(['FULL_BODY', 'UPPER_BODY', 'HAND_TARGET']);

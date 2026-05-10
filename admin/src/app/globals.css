@@ -5,6 +5,7 @@
   --panel-3: rgba(22, 17, 36, 0.86);
   --line: rgba(255, 255, 255, 0.12);
   --line-hot: rgba(255, 21, 147, 0.42);
+  --stroke: rgba(255, 255, 255, 0.14);
   --ink: #f8f7ff;
   --muted: rgba(248, 247, 255, 0.62);
   --muted-2: rgba(248, 247, 255, 0.42);
@@ -602,5 +603,98 @@ section.panel,
   .panel-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Loading, Empty, Error States */
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 0;
+}
+
+.loading-spinner::after {
+  content: '';
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--stroke);
+  border-top-color: var(--hot);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  gap: 0.75rem;
+}
+
+.status-draft {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+/* Sidebar active state enhancement */
+.nav-item-active {
+  background: rgba(255, 21, 147, 0.12) !important;
+  border-left: 3px solid var(--hot);
+  color: var(--ink) !important;
+}
+
+/* Status table */
+.status-ready {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+/* Field input fixes */
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--stroke);
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--hot);
+  box-shadow: 0 0 0 3px rgba(255, 21, 147, 0.15);
+}
+
+.field span {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
