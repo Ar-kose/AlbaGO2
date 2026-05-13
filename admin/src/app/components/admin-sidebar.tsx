@@ -7,6 +7,7 @@ const navItems = [
   { label: 'Genel Bakis', href: '/', icon: '◇' },
   { label: 'Game Studio', href: '/games', icon: '◆' },
   { label: 'Yeni Oyun', href: '/games/new', icon: '✦' },
+  { label: 'Paket İçe Aktar', href: '/games/import', icon: '◆' },
   { label: 'Sablonlar', href: '/templates', icon: '◈' },
   { label: 'Kategoriler', href: '/categories', icon: '◇' },
   { label: 'Varliklar', href: '/assets', icon: '◇' },

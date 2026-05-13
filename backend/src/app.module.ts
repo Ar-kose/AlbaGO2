@@ -5,6 +5,7 @@ import { AuditLogsModule } from './audit-logs/audit-logs.module';
 import { AuthModule } from './auth/auth.module';
 import { ContentPublishModule } from './content-publish/content-publish.module';
 import { DevicesConsentsModule } from './devices-consents/devices-consents.module';
+import { GamePackagesModule } from './game-packages/game-packages.module';
 import { GameSessionsModule } from './game-sessions/game-sessions.module';
 import { GamesModule } from './games/games.module';
 import { LeaderboardsModule } from './leaderboards/leaderboards.module';
@@ -24,6 +25,7 @@ import { PersistenceModule } from './persistence/persistence.module';
     MotionsModule,
     WorkoutsModule,
     GamesModule,
+    GamePackagesModule,
     GameSessionsModule,
     RewardsModule,
     LeaderboardsModule,
