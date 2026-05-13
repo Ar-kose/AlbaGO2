@@ -69,8 +69,9 @@ export function validateGamePackage(pkg: unknown): PackageValidationResult {
     errors.push({ code: 'missing_game_title', field: '$.game.title', message: 'Oyun başlığı zorunludur.' });
   }
 
-  // template
-  const template = String(game.template ?? '');
+  // template — also check runtimeTarget.template (AI agent format)
+  const rt = p.runtimeTarget as Record<string, unknown> | undefined;
+  const template = String(game.template || rt?.template || '');
   if (!SUPPORTED_TEMPLATES.includes(template)) {
     errors.push({
       code: 'unsupported_template', field: '$.game.template',
@@ -137,7 +138,7 @@ export function validateGamePackage(pkg: unknown): PackageValidationResult {
       errors.push(...validateAssetUrl(bg, '$.assets.background'));
     }
 
-    // items
+    // items (standard format: { key, uri, kind, format })
     const items = assets.items as Array<Record<string, unknown>> | undefined;
     if (items && Array.isArray(items)) {
       items.forEach((item, i) => {
@@ -146,24 +147,34 @@ export function validateGamePackage(pkg: unknown): PackageValidationResult {
         }
       });
     }
+
+    // targets (AI agent format: { key, url, label, role })
+    const targets = assets.targets as Array<Record<string, unknown>> | undefined;
+    if (targets && Array.isArray(targets)) {
+      targets.forEach((t, i) => {
+        if (t.url) {
+          errors.push(...validateAssetUrl(String(t.url), `$.assets.targets[${i}].url`));
+        }
+      });
+    }
   }
 
-  // rules
-  const rules = p.rules as Array<Record<string, unknown>> | undefined;
-  if (rules && Array.isArray(rules)) {
-    rules.forEach((rule, i) => {
+  // rules — accept both flat array (standard) and { motionBindings: [...] } (AI agent format)
+  const rulesObj = p.rules as Record<string, unknown> | undefined;
+  const motionBindings = (rulesObj?.motionBindings as Array<Record<string, unknown>> | undefined)
+    || (Array.isArray(p.rules) ? p.rules as Array<Record<string, unknown>> : undefined);
+
+  if (motionBindings && Array.isArray(motionBindings)) {
+    motionBindings.forEach((rule, i) => {
       const motion = String(rule.motion ?? '');
+      if (motion === 'BAD_FORM') {
+        // BAD_FORM is a valid penalty binding, not a motion error
+        return;
+      }
       if (motion && !SUPPORTED_MOTIONS.includes(motion)) {
         errors.push({
-          code: 'unsupported_motion', field: `$.rules[${i}].motion`,
+          code: 'unsupported_motion', field: `$.rules.motionBindings[${i}].motion`,
           message: `Hareket "${motion}" desteklenmiyor. Destekli: ${SUPPORTED_MOTIONS.join(', ')}.`
-        });
-      }
-      const event = String(rule.event ?? '');
-      if (event && !SUPPORTED_EVENTS.includes(event)) {
-        errors.push({
-          code: 'unsupported_event', field: `$.rules[${i}].event`,
-          message: `Event "${event}" desteklenmiyor.`
         });
       }
     });
