@@ -28,7 +28,7 @@ import {
   createId
 } from '../common/contracts';
 import { validateGameDefinitionV3 } from '../common/game-definition-v3';
-import { createAuditEntry, validateGameAccess, validateGameDefinition } from '../common/publish-validation';
+import { createAuditEntry, validateCoverAsset, validateGameAccess, validateGameDefinition } from '../common/publish-validation';
 import { AuditLogsRepository } from '../persistence/audit-logs.repository';
 import { GameDefinitionsRepository } from '../persistence/game-definitions.repository';
 import { TEMPLATE_REGISTRY } from '../common/game-validation/game-template-registry';
@@ -300,6 +300,10 @@ class GameAssetDto {
 }
 
 class AssetsDto {
+  @IsOptional()
+  @IsString()
+  cover?: string;
+
   @IsString()
   background!: string;
 
@@ -549,9 +553,11 @@ class GamesService {
   async validation(id: string) {
     const game = await this.gameDefinitionsRepository.getById(id);
     if (!game) return { error: 'game_not_found' };
+    const baseErrors = validateGameDefinition(game);
+    const coverErrors = validateCoverAsset(game.assets);
     return {
       id,
-      errors: validateGameDefinition(game)
+      errors: [...baseErrors, ...coverErrors]
     };
   }
 }

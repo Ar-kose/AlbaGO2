@@ -30,6 +30,8 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import com.alba.core.motion.SquatDetectorV1
 import com.alba.core.data.local.AlbaDatabase
@@ -49,6 +51,7 @@ import com.alba.core.runtime.GameCategory
 import com.alba.core.runtime.GameDefinition
 import com.alba.core.runtime.GameLevelDefinition
 import com.alba.core.runtime.GameOrientation
+import com.alba.core.runtime.IdleSceneState
 import com.alba.core.runtime.GameRuntime
 import com.alba.core.runtime.GameSessionResult
 import com.alba.core.runtime.GameSessionStatus
@@ -278,8 +281,11 @@ class AlbaMotionController(
         pendingGameResult = null
         gameMotionCounts.clear()
         val runtime = GameRuntime(definition)
-        val state = runtime.start(System.currentTimeMillis())
         gameRuntime = runtime
+        // P32: Body gate + countdown only for camera-requiring games
+        val requiresCamera = definition.cameraRequirement != CameraRequirement.HAND_TARGET
+        val initialStatus = if (requiresCamera) GameSessionStatus.WAITING_FOR_BODY else GameSessionStatus.ACTIVE
+        val initialState = if (requiresCamera) null else runtime.start(System.currentTimeMillis())
         _uiState.value = _uiState.value.copy(
             activeGameDefinition = definition,
             activeGameId = definition.gameId,
@@ -293,14 +299,14 @@ class AlbaMotionController(
                 gameId = definition.gameId,
                 template = definition.template,
                 title = definition.title,
-                status = state.status,
-                score = state.score,
-                combo = state.combo,
-                comboMax = state.comboMax,
-                accuracy = state.accuracy,
-                remainingMs = state.remainingMs,
+                status = initialStatus,
+                score = initialState?.score ?: 0,
+                combo = initialState?.combo ?: 0,
+                comboMax = initialState?.comboMax ?: 0,
+                accuracy = initialState?.accuracy ?: 1f,
+                remainingMs = initialState?.remainingMs ?: (definition.levels.firstOrNull()?.durationSec ?: 60) * 1000L,
                 motionCounts = emptyMap(),
-                sceneState = state.sceneState,
+                sceneState = initialState?.sceneState ?: IdleSceneState,
                 syncMessage = "Idle",
                 syncStatus = SyncStatus.IDLE,
                 syncError = null,
@@ -311,6 +317,23 @@ class AlbaMotionController(
         scope.launch {
             createGameSessionRemote(sessionKey, definition.gameId)
         }
+    }
+
+    fun finalizeGameStart() {
+        val runtime = gameRuntime ?: return
+        if (_uiState.value.game.status != GameSessionStatus.WAITING_FOR_BODY) return
+        val state = runtime.start(System.currentTimeMillis())
+        _uiState.value = _uiState.value.copy(
+            game = _uiState.value.game.copy(
+                status = state.status,
+                score = state.score,
+                combo = state.combo,
+                comboMax = state.comboMax,
+                accuracy = state.accuracy,
+                remainingMs = state.remainingMs,
+                sceneState = state.sceneState
+            )
+        )
     }
 
     fun finishGame() {
@@ -597,6 +620,8 @@ class AlbaMotionController(
             }
         }
         gameRuntime?.let { runtime ->
+            val status = _uiState.value.game.status
+            if (status != GameSessionStatus.ACTIVE && status != GameSessionStatus.PAUSED) return@let
             val state = runtime.tick(nowMs)
             _uiState.value = _uiState.value.copy(
                 game = gameStateFromRuntime(state, _uiState.value.game.clientSessionKey, gameRemoteId)
@@ -757,9 +782,21 @@ class AlbaMotionController(
         }
         if (levels.isEmpty()) return null
 
+        val rawAssets = game.metadata?.get("assets")?.jsonObject
         val assets = AssetManifest(
-            background = "local://${game.gameKey}/background",
-            character = "local://${game.gameKey}/hero"
+            cover = rawAssets?.get("cover")?.jsonPrimitive?.content?.takeIf { it.isNotBlank() },
+            background = rawAssets?.get("background")?.jsonPrimitive?.content ?: "local://${game.gameKey}/background",
+            character = rawAssets?.get("character")?.jsonPrimitive?.content ?: "local://${game.gameKey}/hero",
+            soundtrack = rawAssets?.get("soundtrack")?.jsonPrimitive?.content,
+            items = rawAssets?.get("items")?.jsonArray?.mapNotNull { item: JsonElement ->
+                val obj = item.jsonObject
+                GameAsset(
+                    key = obj["key"]?.jsonPrimitive?.content ?: return@mapNotNull null,
+                    kind = obj["kind"]?.jsonPrimitive?.content ?: "IMAGE",
+                    format = obj["format"]?.jsonPrimitive?.content ?: "PNG",
+                    uri = obj["uri"]?.jsonPrimitive?.content ?: return@mapNotNull null
+                )
+            } ?: emptyList()
         )
 
         return GameDefinition(

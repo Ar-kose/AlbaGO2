@@ -1,0 +1,32 @@
+# AlbaGo Asset Server — Main .htaccess
+# LiteSpeed compatible
+
+RewriteEngine On
+
+# ── ASSET_TOKEN (Yontem 1: SetEnv) ─────────────────────────
+# Bu satiri aktif et ve kendi token'ini yaz:
+#SetEnv ASSET_TOKEN "YOUR_SECRET_TOKEN_HERE"
+# SetEnv calismazsa Yontem 2'yi kullan: data/asset-secret.php
+
+# ── Block direct access to sensitive files ─────────────────---
+<Files "config.php">
+    Require all denied
+</Files>
+
+<FilesMatch "^api/.*\.php$">
+    Require all denied
+</FilesMatch>
+
+# ── /api/* → index.php (router) ─────────────────────────────-
+# API endpoint'leri index.php tarafindan include edilir, dogrudan erisilmez.
+RewriteRule ^api/(.*)$ index.php [L,QSA]
+
+# ── /assets/ — serve static files with cache headers ───────---
+<IfModule mod_headers.c>
+    <FilesMatch "\.(webp|png|jpg|jpeg)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
+# ── Disable directory listing ─────────────────────────────-----
+Options -Indexes

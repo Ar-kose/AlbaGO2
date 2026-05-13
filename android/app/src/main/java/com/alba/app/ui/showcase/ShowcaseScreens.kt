@@ -42,6 +42,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import kotlinx.coroutines.delay
@@ -62,6 +63,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
+import coil.compose.AsyncImage
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -75,6 +77,7 @@ import com.alba.app.R
 import com.alba.app.ui.theme.AlbaColors
 import com.alba.core.data.MotionUiState
 import com.alba.core.data.local.GameSessionRepository
+import com.alba.core.runtime.GameOrientation
 
 enum class ShowcaseTab {
     HOME,
@@ -120,6 +123,7 @@ private data class GameCardUi(
     val subtitle: String,
     val meta: String,
     val imageRes: Int,
+    val imageUrl: String? = null,
     val accent: Color,
     val gameId: String? = null
 )
@@ -412,8 +416,37 @@ fun SportModeShowcaseScreen(
     onEducation: () -> Unit,
     onEntertainment: () -> Unit,
     onDemos: () -> Unit,
-    onProfile: () -> Unit
+    onProfile: () -> Unit,
+    uiState: MotionUiState? = null,
+    onGameSelected: (String) -> Unit = {}
 ) {
+    val sportGames = remember(uiState?.availableGames) {
+        uiState?.availableGames?.filter { it.category.name == "SPORT" } ?: emptyList()
+    }
+    val sportCards = remember(sportGames) {
+        if (sportGames.isNotEmpty()) {
+            sportGames.take(3).map { game ->
+                val level = game.levels.firstOrNull()
+                val mins = (level?.durationSec ?: 60) / 60
+                GameCardUi(
+                    title = game.title.replace(" ", "\n"),
+                    subtitle = game.category.name.lowercase().replaceFirstChar { it.uppercase() },
+                    meta = "${mins} dk",
+                    imageRes = R.drawable.demo_fruit_slash,
+                    imageUrl = game.assets.cover,
+                    accent = HotPink,
+                    gameId = game.gameId
+                )
+            }
+        } else {
+            listOf(
+                GameCardUi("Zıplama\nŞampiyonası", "Enerji", "15 dk", R.drawable.game_ziplama_sampiyonasi, accent = HotPink),
+                GameCardUi("Esneklik\nUstası", "Denge", "12 dk", R.drawable.game_esneklik_ustasi, accent = Cyan),
+                GameCardUi("Ritim\nBoksu", "Kardiyo", "10 dk", R.drawable.game_ritim_boksu, accent = Purple)
+            )
+        }
+    }
+
     NeonScreen(
         selectedTab = ShowcaseTab.SPORT,
         onHome = onHome,
@@ -430,12 +463,11 @@ fun SportModeShowcaseScreen(
         SportHero(onClick = onDemos)
         SectionLabel(title = "Önerilen Oyunlar", trailing = "Tümünü Gör >")
         HorizontalGameCards(
-            cards = listOf(
-                GameCardUi("Zıplama\nŞampiyonası", "Enerji", "15 dk", R.drawable.game_ziplama_sampiyonasi, HotPink),
-                GameCardUi("Esneklik\nUstası", "Denge", "12 dk", R.drawable.game_esneklik_ustasi, Cyan),
-                GameCardUi("Ritim\nBoksu", "Kardiyo", "10 dk", R.drawable.game_ritim_boksu, Purple)
-            ),
-            onClick = onDemos
+            cards = sportCards,
+            onClick = onDemos,
+            onCardClick = { card ->
+                card.gameId?.let { onGameSelected(it) }
+            }
         )
         DailyGoalWideCard(
             percent = 0.76f,
@@ -452,8 +484,14 @@ fun EducationModeShowcaseScreen(
     onSport: () -> Unit,
     onEntertainment: () -> Unit,
     onDemos: () -> Unit,
-    onProfile: () -> Unit
+    onProfile: () -> Unit,
+    uiState: MotionUiState? = null,
+    onGameSelected: (String) -> Unit = {}
 ) {
+    val educationGames = remember(uiState?.availableGames) {
+        uiState?.availableGames?.filter { it.category.name == "EDUCATION" } ?: emptyList()
+    }
+
     NeonScreen(
         selectedTab = ShowcaseTab.EDUCATION,
         onHome = onHome,
@@ -469,27 +507,42 @@ fun EducationModeShowcaseScreen(
         )
         SegmentRow(items = listOf("Tümü", "Matematik", "Dil Bilgisi", "Mantık", "Fen Bilimleri"))
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            LearningListCard(
-                imageRes = R.drawable.game_matematik_macerasi,
-                title = "Matematik Macerası",
-                meta = "8-12 Yaş    15 dk",
-                accent = HotPink,
-                onClick = onDemos
-            )
-            LearningListCard(
-                imageRes = R.drawable.game_kelime_avcisi,
-                title = "Kelime Avcısı",
-                meta = "8-13 Yaş    10 dk",
-                accent = HotPink,
-                onClick = onDemos
-            )
-            LearningListCard(
-                imageRes = R.drawable.game_bilim_kasifleri,
-                title = "Bilim Kaşifleri",
-                meta = "8-14 Yaş    15 dk",
-                accent = HotPink,
-                onClick = onDemos
-            )
+            if (educationGames.isNotEmpty()) {
+                educationGames.forEach { game ->
+                    val level = game.levels.firstOrNull()
+                    val mins = (level?.durationSec ?: 60) / 60
+                    LearningListCard(
+                        imageRes = R.drawable.demo_fruit_slash,
+                        imageUrl = game.assets.cover,
+                        title = game.title,
+                        meta = "${mins} dk  ${level?.difficulty ?: "EASY"}",
+                        accent = Cyan,
+                        onClick = { onGameSelected(game.gameId) }
+                    )
+                }
+            } else {
+                LearningListCard(
+                    imageRes = R.drawable.game_matematik_macerasi,
+                    title = "Matematik Macerası",
+                    meta = "8-12 Yaş    15 dk",
+                    accent = HotPink,
+                    onClick = onDemos
+                )
+                LearningListCard(
+                    imageRes = R.drawable.game_kelime_avcisi,
+                    title = "Kelime Avcısı",
+                    meta = "8-13 Yaş    10 dk",
+                    accent = HotPink,
+                    onClick = onDemos
+                )
+                LearningListCard(
+                    imageRes = R.drawable.game_bilim_kasifleri,
+                    title = "Bilim Kaşifleri",
+                    meta = "8-14 Yaş    15 dk",
+                    accent = HotPink,
+                    onClick = onDemos
+                )
+            }
         }
         DailyGoalWideCard(
             percent = 0.71f,
@@ -510,11 +563,12 @@ fun EntertainmentModeShowcaseScreen(
     uiState: MotionUiState? = null,
     onGameSelected: (String) -> Unit = {}
 ) {
-    // Build game cards from real available games, fall back to hardcoded
+    // Build game cards from real available games filtered to FUN, fall back to hardcoded
     val availableGames = uiState?.availableGames ?: emptyList()
     val featuredCards = remember(availableGames) {
-        if (availableGames.isNotEmpty()) {
-            availableGames.take(6).map { game ->
+        val funGames = availableGames.filter { it.category.name == "FUN" }
+        if (funGames.isNotEmpty()) {
+            funGames.take(6).map { game ->
                 val level = game.levels.firstOrNull()
                 val mins = (level?.durationSec ?: 60) / 60
                 GameCardUi(
@@ -532,9 +586,9 @@ fun EntertainmentModeShowcaseScreen(
             }
         } else {
             listOf(
-                GameCardUi("Dans\nSavaşı", "Parti", "8 dk", R.drawable.game_dans_savasi, HotPink),
-                GameCardUi("Neon\nKoşu", "Refleks", "10 dk", R.drawable.game_neon_kosu, Cyan),
-                GameCardUi("Ritmik\nVuruş", "Ritim", "9 dk", R.drawable.game_ritmik_vurus, Purple)
+                GameCardUi("Dans\nSavaşı", "Parti", "8 dk", R.drawable.game_dans_savasi, accent = HotPink),
+                GameCardUi("Neon\nKoşu", "Refleks", "10 dk", R.drawable.game_neon_kosu, accent = Cyan),
+                GameCardUi("Ritmik\nVuruş", "Ritim", "9 dk", R.drawable.game_ritmik_vurus, accent = Purple)
             )
         }
     }
@@ -589,6 +643,7 @@ fun EntertainmentModeShowcaseScreen(
 
 private data class DemoGameCard(
     val imageRes: Int,
+    val imageUrl: String? = null,
     val title: String,
     val category: String,
     val description: String,
@@ -605,10 +660,11 @@ fun DemoCatalogShowcaseScreen(
     onEntertainment: () -> Unit,
     onProfile: () -> Unit,
     onGameSelected: (String) -> Unit = {},
-    uiState: MotionUiState? = null
+    uiState: MotionUiState? = null,
+    preselectedCategory: String? = null
 ) {
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
-    var selectedCategory by remember { mutableStateOf<String?>(null) }
+    var selectedCategory by rememberSaveable(preselectedCategory) { mutableStateOf(preselectedCategory) }
 
     val demoGames = remember(uiState?.availableGames) {
         val realGames = uiState?.availableGames
@@ -616,7 +672,8 @@ fun DemoCatalogShowcaseScreen(
             realGames.map { game ->
                 val level = game.levels.firstOrNull()
                 DemoGameCard(
-                    imageRes = R.drawable.demo_fruit_slash, // placeholder for real games
+                    imageRes = R.drawable.demo_fruit_slash,
+                    imageUrl = game.assets.cover,
                     title = game.title,
                     category = "${game.category.name.lowercase().replaceFirstChar { it.uppercase() }} · ${level?.durationSec ?: 60}s · ${level?.difficulty ?: "EASY"}",
                     description = game.description,
@@ -627,9 +684,9 @@ fun DemoCatalogShowcaseScreen(
             }
         } else {
             listOf(
-                DemoGameCard(R.drawable.demo_fruit_slash, "Meyve Kesme", "Eğlence · 60s · EASY", "Jumping jack ile meyveleri kes, squat ile güçlü hedefi patlat!", HotPink, "fruit_slash_demo", "FUN"),
-                DemoGameCard(R.drawable.demo_dodge_run, "Engelden Kaçış", "Spor · 60s · MEDIUM", "Engeller akar; squat ile alttan geç, jumping jack ile zıpla!", Orange, "dodge_run_demo", "SPORT"),
-                DemoGameCard(R.drawable.demo_fit_challenge, "Spor Mücadelesi", "Spor · 120s · CHALLENGE", "Squat, jumping jack, jump rope ve plank — 4 aşamalı program.", Cyan, "fit_challenge_demo", "SPORT")
+                DemoGameCard(R.drawable.demo_fruit_slash, title = "Meyve Kesme", category = "Eğlence · 60s · EASY", description = "Jumping jack ile meyveleri kes, squat ile güçlü hedefi patlat!", accent = HotPink, gameId = "fruit_slash_demo", categoryKey = "FUN"),
+                DemoGameCard(R.drawable.demo_dodge_run, title = "Engelden Kaçış", category = "Spor · 60s · MEDIUM", description = "Engeller akar; squat ile alttan geç, jumping jack ile zıpla!", accent = Orange, gameId = "dodge_run_demo", categoryKey = "SPORT"),
+                DemoGameCard(R.drawable.demo_fit_challenge, title = "Spor Mücadelesi", category = "Spor · 120s · CHALLENGE", description = "Squat, jumping jack, jump rope ve plank — 4 aşamalı program.", accent = Cyan, gameId = "fit_challenge_demo", categoryKey = "SPORT")
             )
         }
     }
@@ -645,8 +702,21 @@ fun DemoCatalogShowcaseScreen(
         else demoGames.filter { it.categoryKey == selectedCategory }
     }
 
+    val titleText = if (preselectedCategory != null) {
+        "${categoryLabels[preselectedCategory] ?: preselectedCategory} Oyunları"
+    } else "Oyun Kataloğu"
+
+    val subtitleText = "Seç, hazırlan ve oynamaya başla!"
+
+    val selectedTabForNeon = when (preselectedCategory) {
+        "SPORT" -> ShowcaseTab.SPORT
+        "EDUCATION" -> ShowcaseTab.EDUCATION
+        "FUN" -> ShowcaseTab.ENTERTAINMENT
+        else -> ShowcaseTab.DEMOS
+    }
+
     NeonScreen(
-        selectedTab = ShowcaseTab.DEMOS,
+        selectedTab = selectedTabForNeon,
         onHome = onHome,
         onSport = onSport,
         onEducation = onEducation,
@@ -656,16 +726,18 @@ fun DemoCatalogShowcaseScreen(
         snackbarMessage = snackbarMessage
     ) {
         CenteredTitle(
-            title = "Demo Oyunlar",
-            subtitle = "Seç, hazırlan ve oynamaya başla!"
+            title = titleText,
+            subtitle = subtitleText
         )
-        SegmentRow(
-            items = listOf("Tumu") + availableCategories.map { categoryLabels[it] ?: it },
-            selectedIndex = if (selectedCategory == null) 0 else availableCategories.indexOf(selectedCategory) + 1,
-            onSelect = { index ->
-                selectedCategory = if (index == 0) null else availableCategories.getOrNull(index - 1)
-            }
-        )
+        if (availableCategories.size > 1) {
+            SegmentRow(
+                items = listOf("Tumu") + availableCategories.map { categoryLabels[it] ?: it },
+                selectedIndex = if (selectedCategory == null) 0 else availableCategories.indexOf(selectedCategory) + 1,
+                onSelect = { index ->
+                    selectedCategory = if (index == 0) null else availableCategories.getOrNull(index - 1)
+                }
+            )
+        }
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (filteredGames.isEmpty()) {
                 Surface(
@@ -674,8 +746,13 @@ fun DemoCatalogShowcaseScreen(
                     shape = RoundedCornerShape(14.dp),
                     border = androidx.compose.foundation.BorderStroke(1.dp, StrokeLine)
                 ) {
+                    val emptyText = if (selectedCategory != null) {
+                        "Bu kategoride henüz oyun yok"
+                    } else {
+                        "Henüz oyun bulunmuyor"
+                    }
                     Text(
-                        "Eğitim oyunu yakında",
+                        emptyText,
                         modifier = Modifier.padding(24.dp),
                         color = SoftWhite.copy(alpha = 0.6f),
                         fontSize = 13.sp,
@@ -687,6 +764,7 @@ fun DemoCatalogShowcaseScreen(
                 filteredGames.forEach { game ->
                     DemoListCard(
                         imageRes = game.imageRes,
+                        imageUrl = game.imageUrl,
                         title = game.title,
                         category = game.category,
                         description = game.description,
@@ -755,6 +833,14 @@ fun NeonGamePrepScreen(
             InfoChip(difficulty, Orange)
             InfoChip("Hedef $targetScore", Cyan)
             InfoChip(game.category.name, Purple)
+            InfoChip(
+                when (game.orientation) {
+                    GameOrientation.LANDSCAPE -> "Yatay"
+                    GameOrientation.AUTO -> "Otomatik"
+                    else -> "Dikey"
+                },
+                Amber
+            )
         }
 
         // Motion tags
@@ -1310,12 +1396,23 @@ private fun HorizontalGameCards(cards: List<GameCardUi>, onClick: () -> Unit, on
                     .border(1.dp, card.accent.copy(alpha = 0.48f), RoundedCornerShape(13.dp))
                     .clickable(onClick = { if (card.gameId != null) onCardClick(card) else onClick() })
             ) {
-                Image(
-                    painter = painterResource(id = card.imageRes),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+                if (card.imageUrl != null && (card.imageUrl.startsWith("https://") || card.imageUrl.startsWith("http://"))) {
+                    AsyncImage(
+                        model = card.imageUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(card.imageRes),
+                        error = painterResource(card.imageRes)
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = card.imageRes),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -1339,6 +1436,7 @@ private fun HorizontalGameCards(cards: List<GameCardUi>, onClick: () -> Unit, on
 @Composable
 private fun LearningListCard(
     imageRes: Int,
+    imageUrl: String? = null,
     title: String,
     meta: String,
     accent: Color,
@@ -1358,14 +1456,27 @@ private fun LearningListCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(74.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
-            )
+            if (imageUrl != null && (imageUrl.startsWith("https://") || imageUrl.startsWith("http://"))) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(74.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(imageRes),
+                    error = painterResource(imageRes)
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = imageRes),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(74.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text(title, color = SoftWhite, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 Text(meta, color = SoftWhite.copy(alpha = 0.62f), fontSize = 10.sp)
@@ -1452,6 +1563,7 @@ private fun WeeklyEventCard(onClick: () -> Unit) {
 @Composable
 private fun DemoListCard(
     imageRes: Int,
+    imageUrl: String? = null,
     title: String,
     category: String,
     description: String,
@@ -1471,14 +1583,27 @@ private fun DemoListCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(84.dp)
-                    .clip(RoundedCornerShape(13.dp)),
-                contentScale = ContentScale.Crop
-            )
+            if (imageUrl != null && (imageUrl.startsWith("https://") || imageUrl.startsWith("http://"))) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(84.dp)
+                        .clip(RoundedCornerShape(13.dp)),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(imageRes),
+                    error = painterResource(imageRes)
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = imageRes),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(84.dp)
+                        .clip(RoundedCornerShape(13.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(title, color = SoftWhite, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 Text(category, color = accent, fontWeight = FontWeight.Bold, fontSize = 10.sp)

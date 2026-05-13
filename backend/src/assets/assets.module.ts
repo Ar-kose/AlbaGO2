@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, Module, NotFoundException, Param, Post, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Module, NotFoundException, Param, Post, Query, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AdminTokenGuard } from '../common/admin-token.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
@@ -27,6 +27,16 @@ interface UploadedAssetDto {
   createdAt: string;
 }
 
+// PHP proxy yapilandirmasi (env'den okunur, tanimli degilse local disk kullanilir)
+function getPhpProxyConfig(): { serverUrl: string; token: string } | null {
+  const serverUrl = process.env.PHP_ASSET_SERVER_URL;
+  const token = process.env.PHP_ASSET_TOKEN;
+  if (!serverUrl || !token || serverUrl === '' || token === '') {
+    return null;
+  }
+  return { serverUrl: serverUrl.replace(/\/$/, ''), token };
+}
+
 @ApiTags('assets')
 @Controller('internal/assets')
 @UseGuards(AdminTokenGuard)
@@ -36,10 +46,18 @@ class InternalAssetsController {
   @Post()
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_ASSET_BYTES } }))
-  upload(@UploadedFile() file: any): UploadedAssetDto {
+  async upload(@UploadedFile() file: any, @Body() body: any): Promise<UploadedAssetDto | any> {
     if (!file) {
       throw new BadRequestException('file_required');
     }
+
+    // PHP proxy modu
+    const php = getPhpProxyConfig();
+    if (php) {
+      return this.proxyUploadToPhp(file, body, php);
+    }
+
+    // Local disk modu (development, PHP sunucu yokken)
     const allowed = allowedMimeTypes[file.mimetype];
     if (!allowed) {
       throw new BadRequestException('unsupported_asset_type');
@@ -73,6 +91,63 @@ class InternalAssetsController {
     };
     this.assets.set(id, asset);
     return asset;
+  }
+
+  @Get('list')
+  async listAssets(@Query() query: any): Promise<any> {
+    const php = getPhpProxyConfig();
+    if (!php) {
+      throw new BadRequestException('php_proxy_not_configured');
+    }
+    const params = new URLSearchParams();
+    if (query.category) params.set('category', query.category);
+    if (query.search) params.set('search', query.search);
+    if (query.page) params.set('page', query.page);
+    if (query.perPage) params.set('perPage', query.perPage);
+
+    const url = `${php.serverUrl}/api/assets?${params.toString()}`;
+    const response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${php.token}` }
+    });
+    return response.json();
+  }
+
+  @Post(':id/archive')
+  async archiveAsset(@Param('id') id: string): Promise<any> {
+    const php = getPhpProxyConfig();
+    if (!php) {
+      throw new BadRequestException('php_proxy_not_configured');
+    }
+    const url = `${php.serverUrl}/api/assets/${encodeURIComponent(id)}/archive`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${php.token}` }
+    });
+    return response.json();
+  }
+
+  private async proxyUploadToPhp(file: any, body: any, php: { serverUrl: string; token: string }): Promise<any> {
+    const category = (body?.category && typeof body.category === 'string') ? body.category : 'covers';
+
+    // Node.js 20+ built-in FormData + fetch
+    const formData = new FormData();
+    formData.append('file', new Blob([file.buffer], { type: file.mimetype ?? 'application/octet-stream' }), file.originalname ?? 'asset');
+    formData.append('category', category);
+
+    const response = await fetch(`${php.serverUrl}/api/assets/upload`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${php.token}` },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      let parsed: any;
+      try { parsed = JSON.parse(errorBody); } catch { parsed = { error: 'proxy_error', detail: errorBody }; }
+      throw new BadRequestException(parsed.error ?? 'proxy_error');
+    }
+
+    return response.json();
   }
 }
 

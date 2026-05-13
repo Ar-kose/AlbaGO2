@@ -1,0 +1,26 @@
+# AlbaGo Asset Server — Assets directory
+# Static files only. No PHP execution. No directory listing.
+
+# Disable PHP execution
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+# LiteSpeed LSAPI: disable script execution
+<IfModule mod_lsapi.c>
+    lsapi_php_flag engine off
+</IfModule>
+
+# Deny access to any file that isn't an image
+<FilesMatch "\.(php|phtml|php3|php4|php5|phar|pl|py|cgi|sh)$">
+    Require all denied
+</FilesMatch>
+
+# Disable directory listing
+Options -Indexes

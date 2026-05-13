@@ -83,7 +83,7 @@ export type GameTheme =
   | 'UNDERWATER'
   | 'CUSTOM';
 
-export type GameOrientation = 'PORTRAIT' | 'LANDSCAPE';
+export type GameOrientation = 'PORTRAIT' | 'LANDSCAPE' | 'AUTO';
 export type CameraRequirement = 'FULL_BODY' | 'UPPER_BODY' | 'HAND_TARGET';
 export type GameCategory = 'SPORT' | 'FUN' | 'EDUCATION';
 export type ProgramStepType = 'PLAY_GAME' | 'MOTION_REPS' | 'HOLD_POSE' | 'REST' | 'INSTRUCTION';
@@ -240,6 +240,7 @@ export interface GameAssetEntity {
 }
 
 export interface AssetManifestEntity {
+  cover?: string;
   background: string;
   character: string;
   soundtrack?: string;
@@ -660,7 +661,7 @@ export const seededGames: GameDefinitionEntity[] = [
     minAppVersion: '0.1.0',
     orientation: 'LANDSCAPE',
     cameraRequirement: 'FULL_BODY',
-    segmentRuleJson: { audience: 'kids', internalOnly: false, engine: 'scene_rule_v1', category: 'EDUCATION', tags: ['kids', 'command', 'deve-cuce'] },
+    segmentRuleJson: { audience: 'kids', internalOnly: false, engine: 'scene_rule_v1', category: 'FUN', tags: ['kids', 'command', 'deve-cuce'] },
     supportedMotions: ['SQUAT', 'JUMPING_JACK'],
     levels: [
       {

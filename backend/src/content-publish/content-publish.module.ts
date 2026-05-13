@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Injectable, Module, Param, Post, UseGuards } from '@nestjs/common';
 import { AdminTokenGuard } from '../common/admin-token.guard';
+import { RolesGuard, Roles } from '../common/roles.guard';
 import { ApiTags } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 import { GameDefinitionEntity } from '../common/contracts';
@@ -90,16 +91,18 @@ class ContentPublishService {
 
 @ApiTags('content-publish')
 @Controller('internal/game-definitions')
-@UseGuards(AdminTokenGuard)
+@UseGuards(AdminTokenGuard, RolesGuard)
 class ContentPublishController {
   constructor(private readonly service: ContentPublishService) {}
 
   @Post(':gameId/publish')
+  @Roles('admin')
   async publish(@Param('gameId') gameId: string, @Body() dto: ContentPublishDto) {
     return this.service.publish(gameId, dto);
   }
 
   @Post(':gameId/rollback')
+  @Roles('admin')
   async rollback(@Param('gameId') gameId: string, @Body() dto: ContentPublishDto) {
     return this.service.rollback(gameId, dto);
   }
@@ -145,7 +148,7 @@ class ContentPublishController {
 
 @Module({
   controllers: [ContentPublishController],
-  providers: [ContentPublishService]
+  providers: [ContentPublishService, RolesGuard]
 })
 export class ContentPublishModule {}
 

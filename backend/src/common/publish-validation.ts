@@ -10,7 +10,7 @@ const allowedTemplates = new Set<GameTemplateKey>([
   'REACTION', 'CATCH_FALLING', 'AVOID_OBSTACLE', 'COLLECT_ITEMS',
   'PROGRAM_FLOW', 'HYBRID_SCENE'
 ]);
-const allowedOrientations = new Set(['PORTRAIT', 'LANDSCAPE']);
+const allowedOrientations = new Set(['PORTRAIT', 'LANDSCAPE', 'AUTO']);
 const allowedCameraRequirements = new Set(['FULL_BODY', 'UPPER_BODY', 'HAND_TARGET']);
 
 export function compareVersions(left: string, right: string): number {
@@ -29,11 +29,17 @@ export function compareVersions(left: string, right: string): number {
   return 0;
 }
 
+const allowedCategories = new Set(['SPORT', 'FUN', 'EDUCATION']);
+
 export function validateGameDefinition(game: GameDefinitionEntity): string[] {
   const errors: string[] = [];
 
   if (!allowedTemplates.has(game.templateKey)) {
     errors.push('unsupported_template');
+  }
+  const category = (game.segmentRuleJson as Record<string, unknown>)?.category as string | undefined;
+  if (!category || !allowedCategories.has(category)) {
+    errors.push('missing_or_invalid_category');
   }
   if (!allowedOrientations.has(game.orientation)) {
     errors.push('invalid_orientation');
@@ -100,6 +106,75 @@ export function validateGameDefinition(game: GameDefinitionEntity): string[] {
   }
 
   return errors;
+}
+
+export function validateCoverAsset(assets: GameDefinitionEntity['assets']): string[] {
+  const errors: string[] = [];
+  const cover = assets.cover;
+
+  if (!cover || cover.trim().length === 0) {
+    errors.push('cover_missing');
+    return errors;
+  }
+
+  if (cover.startsWith('local://')) {
+    errors.push('cover_local_uri');
+    return errors;
+  }
+
+  if (cover.startsWith('file://')) {
+    errors.push('cover_file_uri');
+    return errors;
+  }
+
+  const urlResult = parsePublicUrl(cover);
+  if (!urlResult.ok) {
+    errors.push(urlResult.code);
+    return errors;
+  }
+
+  // SSRF: block private/localhost IP ranges
+  const hostname = urlResult.url.hostname.toLowerCase();
+  if (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '0.0.0.0' ||
+    hostname === '[::1]' ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('10.') ||
+    hostname.startsWith('172.16.')
+  ) {
+    errors.push('cover_private_ip');
+    return errors;
+  }
+
+  return errors;
+}
+
+interface UrlParseOk {
+  ok: true;
+  url: URL;
+}
+
+interface UrlParseFail {
+  ok: false;
+  code: string;
+}
+
+function parsePublicUrl(value: string): UrlParseOk | UrlParseFail {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+      return { ok: false, code: 'cover_invalid_url' };
+    }
+    return { ok: true, url };
+  } catch {
+    // No protocol at all → relative path or malformed
+    if (value.startsWith('/') || value.startsWith('.') || value.startsWith('\\')) {
+      return { ok: false, code: 'cover_relative_path' };
+    }
+    return { ok: false, code: 'cover_invalid_url' };
+  }
 }
 
 function hasRequiredAssets(game: GameDefinitionEntity): boolean {

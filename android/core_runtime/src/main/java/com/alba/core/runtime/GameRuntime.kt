@@ -50,7 +50,8 @@ enum class PublishStatus {
 
 enum class GameOrientation {
     PORTRAIT,
-    LANDSCAPE
+    LANDSCAPE,
+    AUTO
 }
 
 enum class CameraRequirement {
@@ -196,6 +197,7 @@ data class GameAsset(
 )
 
 data class AssetManifest(
+    val cover: String? = null,
     val background: String,
     val character: String,
     val soundtrack: String? = null,
@@ -229,6 +231,7 @@ enum class TemplateSupportLevel {
 
 enum class GameSessionStatus {
     READY,
+    WAITING_FOR_BODY,
     ACTIVE,
     PAUSED,
     FINISHED

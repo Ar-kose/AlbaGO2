@@ -4,7 +4,7 @@ import { GameValidationResult, mergeResults, okResult } from './validation-resul
 import { validateCommon } from './validators/common-validator';
 import { validateWhackAMole } from './validators/whack-a-mole-validator';
 import { validatePoseContactTargets, validatePoseHold, validateRhythmMotion, validateQuiz, validateFlashcard, validateMemoryMatch } from './validators/template-validators';
-import { collectAssetKeys, validateAssets, validateAudioConfig } from './validators/asset-validator';
+import { collectAssetKeys, validateAssets, validateAudioConfig, validateCoverAsset } from './validators/asset-validator';
 
 type JsonObject = Record<string, unknown>;
 
@@ -13,6 +13,9 @@ export function validateGameDefinition(game: GameDefinitionEntity): GameValidati
 
   // Common validation (all templates)
   results.push(validateCommon(game));
+
+  // Cover asset validation (publish gate — mobile catalog display)
+  results.push(validateCoverAsset(game.assets as { cover?: string } | undefined));
 
   const template = game.templateKey as GameTemplateKey;
   const meta = getTemplateMeta(template);

@@ -3,9 +3,13 @@ package com.alba.app
 import android.Manifest
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
+import androidx.core.app.ActivityCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -69,6 +73,7 @@ import com.alba.core.data.AlbaMotionController
 import com.alba.core.data.MotionDebugConfig
 import com.alba.core.data.MotionUiState
 import com.alba.core.motion.MotionType
+import kotlinx.coroutines.delay
 import com.alba.core.runtime.DodgeObstacle
 import com.alba.core.runtime.DodgeObstacleType
 import com.alba.core.runtime.DodgeRunSceneState
@@ -79,6 +84,8 @@ import com.alba.core.runtime.FruitSlashSceneState
 import com.alba.core.runtime.GameSceneState
 import com.alba.core.runtime.GameSessionStatus
 import com.alba.core.runtime.GameOrientation
+import com.alba.core.runtime.ScenePlayObject
+import com.alba.core.runtime.ScenePlaySceneState
 import com.alba.app.ui.showcase.CameraPermissionShowcaseScreen
 import com.alba.app.ui.showcase.DemoCatalogShowcaseScreen
 import com.alba.app.ui.showcase.EducationModeShowcaseScreen
@@ -95,7 +102,25 @@ import com.alba.app.ui.splash.SplashScreen
 import com.alba.app.ui.theme.AlbaTheme
 import com.alba.app.ui.theme.AlbaColors
 import com.alba.feature.workout.WorkoutHomeScreen
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.draw.scale
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+
+private val HotPink = Color(0xFFFF1593)
+private val SoftWhite = Color(0xFFF8F7FF)
+private val Panel = Color(0xD90B1020)
+private val StrokeLine = Color(0x25FFFFFF)
+private val Cyan = Color(0xFF11D7F4)
+private val Purple = Color(0xFF9B4DFF)
+private val Orange = Color(0xFFFF8A1C)
+private val Amber = Color(0xFFFFB020)
 
 class AlbaApplication : Application()
 
@@ -155,12 +180,16 @@ private fun AlbaRoot(
         onDispose { controller.close() }
     }
 
+    val onboardingStore = remember { AppOnboardingStore(context) }
+
     var destination by rememberSaveable {
         mutableStateOf(
-            AlbaDestination.values().firstOrNull { it.name == initialDestinationName } ?: AlbaDestination.SPLASH
+            AlbaDestination.values().firstOrNull { it.name == initialDestinationName }
+                ?: if (onboardingStore.onboardingCompleted) AlbaDestination.HOME else AlbaDestination.SPLASH
         )
     }
     var previousDestination by rememberSaveable { mutableStateOf<AlbaDestination?>(null) }
+    var activeCategory by rememberSaveable { mutableStateOf<String?>(null) }
     val uiState by controller.uiState.collectAsState()
     var autoStarted by rememberSaveable(autoStartGameId) { mutableStateOf(false) }
 
@@ -174,12 +203,20 @@ private fun AlbaRoot(
         previousDestination = null
     }
 
-    LaunchedEffect(uiState.game.status, uiState.activeGameDefinition?.orientation) {
+    fun navigateToCategoryCatalog(category: String) {
+        activeCategory = category
+        navigate(AlbaDestination.DEMO_CATALOG)
+    }
+
+    // P28: Orientation lock only applied inside GameExperienceShell during active gameplay.
+    // This LaunchedEffect is a safety net that resets to PORTRAIT whenever the game is not running.
+    LaunchedEffect(uiState.game.status) {
         val activity = context as? ComponentActivity ?: return@LaunchedEffect
         val isGameRunning = uiState.game.status == GameSessionStatus.ACTIVE ||
             uiState.game.status == GameSessionStatus.PAUSED
-        // P13G: Beta portrait lock — landscape support deferred to P14/P15 responsive shell
-        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        if (!isGameRunning) {
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
     }
 
     LaunchedEffect(autoStartGameId, autoMockMotionName, uiState.availableGames) {
@@ -214,9 +251,18 @@ private fun AlbaRoot(
 
             AlbaDestination.ONBOARDING_MODES -> OnboardingModesScreen(
                 onNext = { navigate(AlbaDestination.ONBOARDING_CAMERA) },
-                onSport = { navigate(AlbaDestination.SPORT_MODE) },
-                onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
-                onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) }
+                onSport = {
+                    onboardingStore.onboardingCompleted = true
+                    navigate(AlbaDestination.SPORT_MODE)
+                },
+                onEducation = {
+                    onboardingStore.onboardingCompleted = true
+                    navigate(AlbaDestination.EDUCATION_MODE)
+                },
+                onEntertainment = {
+                    onboardingStore.onboardingCompleted = true
+                    navigate(AlbaDestination.ENTERTAINMENT_MODE)
+                }
             )
 
             AlbaDestination.ONBOARDING_CAMERA -> OnboardingCameraWorldScreen(
@@ -224,7 +270,10 @@ private fun AlbaRoot(
             )
 
             AlbaDestination.CAMERA_PERMISSION -> CameraPermissionShowcaseScreen(
-                onFinished = { navigate(AlbaDestination.HOME) }
+                onFinished = {
+                    onboardingStore.onboardingCompleted = true
+                    navigate(AlbaDestination.HOME)
+                }
             )
 
             AlbaDestination.HOME -> HomeShowcaseScreen(
@@ -232,7 +281,7 @@ private fun AlbaRoot(
                 onOpenSport = { navigate(AlbaDestination.SPORT_MODE) },
                 onOpenEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
                 onOpenEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
-                onOpenDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
+                onOpenDemos = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
                 onOpenProfile = { navigate(AlbaDestination.PROFILE) },
                 onProfile = { navigate(AlbaDestination.PROFILE) }
             )
@@ -241,23 +290,33 @@ private fun AlbaRoot(
                 onHome = { navigate(AlbaDestination.HOME) },
                 onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
                 onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
-                onDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
-                onProfile = { navigate(AlbaDestination.PROFILE) }
+                onDemos = {},
+                onProfile = { navigate(AlbaDestination.PROFILE) },
+                uiState = uiState,
+                onGameSelected = { gameId ->
+                    controller.selectGameDefinition(gameId)
+                    navigate(AlbaDestination.GAME_PREP)
+                }
             )
 
             AlbaDestination.EDUCATION_MODE -> EducationModeShowcaseScreen(
                 onHome = { navigate(AlbaDestination.HOME) },
                 onSport = { navigate(AlbaDestination.SPORT_MODE) },
                 onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
-                onDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
-                onProfile = { navigate(AlbaDestination.PROFILE) }
+                onDemos = {},
+                onProfile = { navigate(AlbaDestination.PROFILE) },
+                uiState = uiState,
+                onGameSelected = { gameId ->
+                    controller.selectGameDefinition(gameId)
+                    navigate(AlbaDestination.GAME_PREP)
+                }
             )
 
             AlbaDestination.ENTERTAINMENT_MODE -> EntertainmentModeShowcaseScreen(
                 onHome = { navigate(AlbaDestination.HOME) },
                 onSport = { navigate(AlbaDestination.SPORT_MODE) },
                 onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
-                onDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
+                onDemos = {},
                 onProfile = { navigate(AlbaDestination.PROFILE) },
                 uiState = uiState,
                 onGameSelected = { gameId ->
@@ -273,6 +332,7 @@ private fun AlbaRoot(
                 onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
                 onProfile = { navigate(AlbaDestination.PROFILE) },
                 uiState = uiState,
+                preselectedCategory = activeCategory,
                 onGameSelected = { gameId ->
                     controller.selectGameDefinition(gameId)
                     navigate(AlbaDestination.GAME_PREP)
@@ -285,7 +345,15 @@ private fun AlbaRoot(
                     controller.startGame()
                     navigate(AlbaDestination.GAMES)
                 },
-                onBackToCatalog = { navigate(AlbaDestination.DEMO_CATALOG) },
+                onBackToCatalog = {
+                    val gameCategory = uiState.activeGameDefinition?.category?.name
+                    when (gameCategory) {
+                        "SPORT" -> navigate(AlbaDestination.SPORT_MODE)
+                        "EDUCATION" -> navigate(AlbaDestination.EDUCATION_MODE)
+                        "FUN" -> navigate(AlbaDestination.ENTERTAINMENT_MODE)
+                        else -> navigate(AlbaDestination.HOME)
+                    }
+                },
                 onHome = { navigate(AlbaDestination.HOME) },
                 onProfile = { navigate(AlbaDestination.PROFILE) }
             )
@@ -353,7 +421,7 @@ private fun AlbaRoot(
                 onSport = { navigate(AlbaDestination.SPORT_MODE) },
                 onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
                 onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
-                onDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
+                onDemos = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
                 onProfile = { }
             )
         }
@@ -739,14 +807,80 @@ private fun GameExperienceShell(
 ) {
     var qaExpanded by rememberSaveable { mutableStateOf(false) }
     val gameRunning = uiState.game.status == GameSessionStatus.ACTIVE || uiState.game.status == GameSessionStatus.PAUSED
+    val waitingForBody = uiState.game.status == GameSessionStatus.WAITING_FOR_BODY
+    val showCamera = gameRunning || waitingForBody
+
+    // P32: Countdown state for body gate
+    var countdownValue by remember { mutableStateOf(0) }
+    var bodyStableMs by remember { mutableStateOf(0L) }
+
+    LaunchedEffect(waitingForBody, uiState.isUserInFrame) {
+        if (!waitingForBody) {
+            countdownValue = 0
+            bodyStableMs = 0L
+            return@LaunchedEffect
+        }
+        if (!uiState.isUserInFrame) {
+            countdownValue = 0
+            bodyStableMs = 0L
+            return@LaunchedEffect
+        }
+        // Body visible — accumulate stable time
+        val now = System.currentTimeMillis()
+        if (bodyStableMs == 0L) {
+            bodyStableMs = now
+        }
+        val stableDuration = now - bodyStableMs
+        if (stableDuration >= 1200L && countdownValue == 0) {
+            countdownValue = 3
+        }
+    }
+
+    // P32: Run countdown ticks
+    LaunchedEffect(countdownValue) {
+        if (countdownValue <= 0) return@LaunchedEffect
+        delay(1000L)
+        if (countdownValue > 1) {
+            countdownValue = countdownValue - 1
+        } else {
+            // Countdown complete
+            countdownValue = 0
+            controller.finalizeGameStart()
+        }
+    }
+
+    // P28: Apply orientation during gameplay, immersive mode, reset on exit
+    val context = LocalContext.current
+    DisposableEffect(showCamera, uiState.activeGameDefinition?.orientation) {
+        val activity = context as? ComponentActivity
+        if (showCamera && activity != null) {
+            val orientation = when (uiState.activeGameDefinition?.orientation) {
+                GameOrientation.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                GameOrientation.AUTO -> ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+                else -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
+            activity.requestedOrientation = orientation
+            WindowCompat.getInsetsController(activity.window, activity.window.decorView).apply {
+                hide(WindowInsetsCompat.Type.systemBars())
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        }
+        onDispose {
+            activity?.let {
+                WindowCompat.getInsetsController(it.window, it.window.decorView).apply {
+                    show(WindowInsetsCompat.Type.systemBars())
+                }
+                it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
+        }
+    }
 
     BackHandler(onBack = onNavigateBack)
 
-    if (gameRunning) {
+    if (showCamera) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(contentPadding)
                 .background(Color.Black)
         ) {
             MotionCameraStage(
@@ -756,14 +890,19 @@ private fun GameExperienceShell(
                 modifier = Modifier.fillMaxSize(),
                 rounded = false
             )
-            ImmersiveGameOverlay(
-                uiState = uiState,
-                qaEnabled = qaEnabled,
-                qaExpanded = qaExpanded,
-                onToggleQa = { qaExpanded = !qaExpanded },
-                onFinishGame = controller::finishGame,
-                onNavigateBack = onNavigateBack
-            )
+            if (waitingForBody) {
+                BodyGateOverlay(
+                    uiState = uiState,
+                    countdownValue = countdownValue,
+                    onCancel = onNavigateBack
+                )
+            } else {
+                ImmersiveGameOverlay(
+                    uiState = uiState,
+                    onFinishGame = controller::finishGame,
+                    onNavigateBack = onNavigateBack
+                )
+            }
             if (qaEnabled && qaExpanded) {
                 Box(
                     modifier = Modifier
@@ -828,107 +967,292 @@ private fun GameExperienceShell(
 }
 
 @Composable
-private fun ImmersiveGameOverlay(
+private fun BodyGateOverlay(
     uiState: MotionUiState,
-    qaEnabled: Boolean,
-    qaExpanded: Boolean,
-    onToggleQa: () -> Unit,
-    onFinishGame: () -> Unit,
-    onNavigateBack: () -> Unit
+    countdownValue: Int,
+    onCancel: () -> Unit
 ) {
+    val isUserInFrame = uiState.isUserInFrame
+    val title = uiState.game.title.ifBlank { "AlbaGo Oyunu" }
+
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
+        // Top scrim bar
+        Row(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .background(
                     Brush.verticalGradient(
-                        listOf(Color(0xF20B1020), Color(0xCC0B1020), Color.Transparent)
+                        listOf(Color(0xCC0B1020), Color(0x880B1020), Color.Transparent)
                     )
                 )
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+            Surface(
+                onClick = onCancel,
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White.copy(alpha = 0.14f)
             ) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text(
-                        uiState.game.title.ifBlank { "AlbaGo Oyunu" },
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        scenePrompt(uiState.game.sceneState, uiState.selectedMotionType),
-                        color = Color.White.copy(alpha = 0.76f)
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (qaEnabled) {
-                        OutlinedButton(onClick = onToggleQa) {
-                            Text(if (qaExpanded) "QA gizle" else "QA")
-                        }
-                    }
-                    OutlinedButton(onClick = onNavigateBack) {
-                        Text("Çık")
-                    }
-                }
+                Text(
+                    "X",
+                    color = Color.White.copy(alpha = 0.78f),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 13.dp, vertical = 10.dp)
+                )
             }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OverlayMetric(
-                    modifier = Modifier.weight(1f),
-                    label = "Skor",
-                    value = uiState.game.score.toString(),
-                    accent = Color(0xFFFFC857)
-                )
-                OverlayMetric(
-                    modifier = Modifier.weight(1f),
-                    label = "Süre",
-                    value = "${(uiState.game.remainingMs / 1000L).coerceAtLeast(0L)}s",
-                    accent = Color(0xFF38BDF8)
-                )
-                OverlayMetric(
-                    modifier = Modifier.weight(1f),
-                    label = "Combo",
-                    value = "x${uiState.game.combo}",
-                    accent = Color(0xFF53F2B5)
-                )
+            Text(
+                title,
+                color = Color.White.copy(alpha = 0.94f),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        // Center — body gate status
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            if (countdownValue > 0) {
+                // Countdown display
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color(0xFFFFC857).copy(alpha = 0.22f)
+                ) {
+                    Text(
+                        countdownValue.toString(),
+                        color = Color(0xFFFFC857),
+                        fontSize = 72.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 36.dp, vertical = 18.dp)
+                    )
+                }
+            } else if (isUserInFrame && countdownValue == 0) {
+                // Body detected, stabilizing
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xFF53F2B5).copy(alpha = 0.18f)
+                ) {
+                    Text(
+                        "Hazirlan...",
+                        color = Color(0xFF53F2B5),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+                    )
+                }
+            } else {
+                // Body not detected
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xFF0B1020).copy(alpha = 0.80f)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 28.dp, vertical = 18.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            "Tum vucudunu kadraja al",
+                            color = Color.White.copy(alpha = 0.90f),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "Kameradan bir adim uzaklas ve bedenini gorunur tut.",
+                            color = Color.White.copy(alpha = 0.65f),
+                            fontSize = 13.sp
+                        )
+                    }
+                }
             }
         }
 
-        GameObjectLayer(
-            uiState = uiState,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .fillMaxSize()
-                .padding(top = 190.dp, bottom = 206.dp, start = 16.dp, end = 16.dp)
-        )
-
-        Column(
+        // Bottom scrim bar
+        Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .background(
                     Brush.verticalGradient(
-                        listOf(Color.Transparent, Color(0xCC0B1020), Color(0xF20B1020))
+                        listOf(Color.Transparent, Color(0x880B1020), Color(0xCC0B1020))
                     )
                 )
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            GameSceneMiniPanel(uiState = uiState)
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(modifier = Modifier.weight(1f), onClick = onFinishGame) {
-                    Text("Oyunu bitir")
-                }
-                OutlinedButton(modifier = Modifier.weight(1f), onClick = onNavigateBack) {
-                    Text("Ana ekran")
-                }
+            Text(
+                if (!isUserInFrame) "Kamera bedenini algilayana kadar bekleniyor..."
+                else if (countdownValue > 0) "Sayim sirasinda kadrajdan cikma"
+                else "Beden algilandi, geri sayim basliyor...",
+                color = Color.White.copy(alpha = 0.78f),
+                fontSize = 13.sp,
+                modifier = Modifier.weight(1f)
+            )
+            Surface(
+                onClick = onCancel,
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFEF4444).copy(alpha = 0.22f)
+            ) {
+                Text(
+                    "Iptal",
+                    color = Color(0xFFFCA5A5),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun ImmersiveGameOverlay(
+    uiState: MotionUiState,
+    onFinishGame: () -> Unit,
+    onNavigateBack: () -> Unit
+) {
+    val title = uiState.game.title.ifBlank { "AlbaGo Oyunu" }
+    val remainingSec = (uiState.game.remainingMs / 1000L).coerceAtLeast(0L)
+    val prompt = scenePrompt(uiState.game.sceneState, uiState.selectedMotionType)
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Top bar — scrim overlay for readability
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color(0xCC0B1020), Color(0x880B1020), Color.Transparent)
+                    )
+                )
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // X exit — 48dp touch target
+            Surface(
+                onClick = onNavigateBack,
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White.copy(alpha = 0.14f)
+            ) {
+                Text(
+                    "✕",
+                    color = Color.White.copy(alpha = 0.78f),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 13.dp, vertical = 10.dp)
+                )
+            }
+            // Game title
+            Text(
+                title,
+                color = Color.White.copy(alpha = 0.94f),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                modifier = Modifier.weight(1f)
+            )
+            // Timer chip
+            RuntimeChip(
+                label = "${remainingSec}s",
+                accent = Color(0xFF38BDF8)
+            )
+            // Score chip
+            RuntimeChip(
+                label = "Skor ${uiState.game.score}",
+                accent = Color(0xFFFFC857)
+            )
+        }
+
+        // Game objects in center — maximum space with safe zone margins
+        GameObjectLayer(
+            uiState = uiState,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxSize()
+                .padding(top = 54.dp, bottom = 54.dp, start = 8.dp, end = 8.dp)
+        )
+
+        // Bottom bar — scrim overlay for readability
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color.Transparent, Color(0x880B1020), Color(0xCC0B1020))
+                    )
+                )
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Combo indicator
+            if (uiState.game.combo > 1) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFF53F2B5).copy(alpha = 0.20f)
+                ) {
+                    Text(
+                        "x${uiState.game.combo}",
+                        color = Color(0xFF53F2B5),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    )
+                }
+            }
+            // Instruction text — better contrast
+            Text(
+                prompt,
+                color = Color.White.copy(alpha = 0.85f),
+                fontSize = 14.sp,
+                maxLines = 1,
+                modifier = Modifier.weight(1f)
+            )
+            // Finish button — 44dp+ height, better contrast
+            Surface(
+                onClick = onFinishGame,
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFEF4444).copy(alpha = 0.22f)
+            ) {
+                Text(
+                    "Bitir",
+                    color = Color(0xFFFCA5A5),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RuntimeChip(
+    label: String,
+    accent: Color
+) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = accent.copy(alpha = 0.20f)
+    ) {
+        Text(
+            label,
+            color = accent,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+        )
     }
 }
 
@@ -941,6 +1265,7 @@ private fun GameObjectLayer(
         is FruitSlashSceneState -> FruitSlashObjectLayer(uiState = uiState, sceneState = sceneState, modifier = modifier)
         is DodgeRunSceneState -> DodgeRunObjectLayer(uiState = uiState, sceneState = sceneState, modifier = modifier)
         is FitChallengeSceneState -> FitChallengeObjectLayer(sceneState = sceneState, modifier = modifier)
+        is ScenePlaySceneState -> ScenePlayObjectLayer(uiState = uiState, sceneState = sceneState, modifier = modifier)
         else -> Unit
     }
 }
@@ -1027,6 +1352,136 @@ private fun FruitTargetBubble(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(if (target.penaltyObject) "!" else fruitGlyph(target), color = accentColor, fontWeight = FontWeight.Black)
                     Text(label, color = Color.White, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScenePlayObjectLayer(
+    uiState: MotionUiState,
+    sceneState: ScenePlaySceneState,
+    modifier: Modifier = Modifier
+) {
+    BoxWithConstraints(modifier = modifier) {
+        val activeObject = sceneState.objects.firstOrNull()
+        if (activeObject == null) {
+            SceneHintCard(
+                modifier = Modifier.align(Alignment.Center),
+                title = sceneState.prompt.ifBlank { "Hazırlan" },
+                body = "Doğru hareketi yap ve komutu temizle!"
+            )
+        } else {
+            // Command card with prompt label and required motion
+            val motionLabel = when (activeObject.requiredMotion) {
+                MotionType.SQUAT -> "Squat"
+                MotionType.JUMPING_JACK -> "Jumping Jack"
+                MotionType.JUMP_ROPE -> "Jump Rope"
+                else -> activeObject.requiredMotion.name.lowercase().replaceFirstChar { it.uppercase() }
+            }
+            val ageMs = (System.currentTimeMillis() - activeObject.spawnedAtMs).coerceAtLeast(0L)
+            val progress = (ageMs.toFloat() / activeObject.lifeMs.toFloat()).coerceIn(0f, 1f)
+            val urgency = progress > 0.65f
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .widthIn(max = 280.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Lives indicator
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    repeat(sceneState.lives.coerceAtMost(5)) {
+                        Surface(
+                            modifier = Modifier.size(10.dp),
+                            shape = CircleShape,
+                            color = HotPink
+                        ) {}
+                    }
+                    repeat((3 - sceneState.lives).coerceAtLeast(0)) {
+                        Surface(
+                            modifier = Modifier.size(10.dp),
+                            shape = CircleShape,
+                            color = SoftWhite.copy(alpha = 0.3f)
+                        ) {}
+                    }
+                }
+
+                // Command prompt card
+                Surface(
+                    modifier = Modifier
+                        .animateContentSize()
+                        .then(
+                            if (urgency) Modifier.scale(1.05f + (progress - 0.65f) * 0.15f)
+                            else Modifier
+                        ),
+                    color = if (urgency) HotPink.copy(alpha = 0.25f) else Panel,
+                    shape = RoundedCornerShape(20.dp),
+                    border = androidx.compose.foundation.BorderStroke(
+                        2.dp,
+                        if (urgency) HotPink else Cyan.copy(alpha = 0.6f)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            activeObject.label.uppercase(),
+                            color = SoftWhite,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            motionLabel,
+                            color = if (urgency) HotPink else Cyan,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // Timer bar
+                Box(
+                    modifier = Modifier
+                        .width(200.dp)
+                        .height(4.dp)
+                        .background(StrokeLine, RoundedCornerShape(2.dp))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(200.dp * (1f - progress))
+                            .height(4.dp)
+                            .background(
+                                if (urgency) HotPink else Cyan,
+                                RoundedCornerShape(2.dp)
+                            )
+                            .align(Alignment.CenterStart)
+                    )
+                }
+
+                // Score summary
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    Text(
+                        "Temiz: ${sceneState.clearedCount}",
+                        color = Cyan,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        "Kaçan: ${sceneState.missedCount}",
+                        color = Orange,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
         }
@@ -1301,6 +1756,7 @@ private fun sceneTitle(sceneState: GameSceneState): String = when (sceneState) {
     is FruitSlashSceneState -> "Meyveleri kes"
     is DodgeRunSceneState -> "Engelden kaç"
     is FitChallengeSceneState -> "Görevi tamamla"
+    is ScenePlaySceneState -> sceneState.prompt.ifBlank { "Komutu bekle" }
     else -> "Hazırlan"
 }
 
@@ -1311,6 +1767,10 @@ private fun scenePrompt(sceneState: GameSceneState, fallbackMotion: MotionType):
         val task = sceneState.tasks.getOrNull(sceneState.activeTaskIndex)
         if (task != null) "${motionLabel(task.motion)} görevini tamamla." else "Sıradaki göreve hazırlan."
     }
+    is ScenePlaySceneState -> {
+        val obj = sceneState.objects.firstOrNull()
+        if (obj != null) "Komut: ${obj.label} — ${motionLabel(obj.requiredMotion)} yap" else sceneState.prompt.ifBlank { "Yeni komut bekleniyor" }
+    }
     else -> "${motionLabel(fallbackMotion)} için hazır ol."
 }
 
@@ -1320,6 +1780,9 @@ private fun sceneSummary(sceneState: GameSceneState, uiState: MotionUiState): St
 
     is DodgeRunSceneState ->
         "Can ${sceneState.lives} • Mesafe ${sceneState.distance} • Enerji ${sceneState.energy}"
+
+    is ScenePlaySceneState ->
+        "Can ${sceneState.lives} • Temiz ${sceneState.clearedCount} • Kaçan ${sceneState.missedCount}"
 
     is FitChallengeSceneState -> {
         val task = sceneState.tasks.getOrNull(sceneState.activeTaskIndex)
@@ -1357,6 +1820,7 @@ private fun MotionCameraStage(
             implementationMode = PreviewView.ImplementationMode.COMPATIBLE
         }
     }
+    val onboardingStore = remember { AppOnboardingStore(context) }
     var hasCameraPermission by remember {
         mutableStateOf(context.hasPermission(Manifest.permission.CAMERA))
     }
@@ -1364,9 +1828,15 @@ private fun MotionCameraStage(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         hasCameraPermission = granted
+        onboardingStore.cameraPermissionEverRequested = true
     }
 
     if (!hasCameraPermission) {
+        val activity = context as? ComponentActivity
+        val neverAsked = !onboardingStore.cameraPermissionEverRequested
+        val permanentlyDenied = !neverAsked && activity != null &&
+            !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA)
+
         Card(
             modifier = modifier,
             colors = CardDefaults.cardColors(containerColor = Color(0xFF111827))
@@ -1379,11 +1849,27 @@ private fun MotionCameraStage(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    "AlbaGo kamera izni olmadan hareket algılama yapamaz.",
-                    color = Color.White
+                    if (permanentlyDenied)
+                        "Kamera izni kapalı.\nBu oyunu oynamak icin telefon ayarlarindan kamera iznini acmalisin."
+                    else
+                        "Bu oyun hareketlerini algilamak icin kamerayi kullanir.\nOynamak icin kamera izni gerekiyor.",
+                    color = Color.White.copy(alpha = 0.90f),
+                    style = MaterialTheme.typography.bodyMedium
                 )
-                Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
-                    Text("Kamera izni ver")
+                Spacer(modifier = Modifier.height(18.dp))
+                if (permanentlyDenied) {
+                    Button(onClick = {
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.parse("package:${context.packageName}")
+                        }
+                        context.startActivity(intent)
+                    }) {
+                        Text("Ayarlari Ac")
+                    }
+                } else {
+                    Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
+                        Text("Kamera Izni Ver")
+                    }
                 }
             }
         }

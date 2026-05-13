@@ -129,6 +129,32 @@ export class GameSessionsRepository {
     return mapPersistedGameSession(created);
   }
 
+  async findAll(): Promise<GameSessionEntity[]> {
+    if (!this.prisma.client) {
+      return [...this.store.gameSessions];
+    }
+    const rows = await this.prisma.client.gameSession.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 200
+    });
+    return rows.map(mapPersistedGameSession);
+  }
+
+  async findByGameDefinitionId(gameDefinitionId: string): Promise<GameSessionEntity[]> {
+    if (!this.prisma.client) {
+      return this.store.gameSessions.filter(
+        (session) => session.gameDefinitionId === gameDefinitionId
+      );
+    }
+
+    const rows = await this.prisma.client.gameSession.findMany({
+      where: { gameDefinitionId },
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    });
+    return rows.map(mapPersistedGameSession);
+  }
+
   async updateLegacy(id: string, patch: Partial<GameSessionEntity>): Promise<GameSessionEntity | undefined> {
     if (!this.prisma.client) {
       const item = this.store.gameSessions.find((entry) => entry.id === id);

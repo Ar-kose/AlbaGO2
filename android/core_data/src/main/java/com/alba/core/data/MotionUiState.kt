@@ -59,7 +59,8 @@ data class GameUiState(
     val syncMessage: String = "Idle",
     val syncStatus: SyncStatus = SyncStatus.IDLE,
     val syncError: String? = null,
-    val serverSessionId: String? = null
+    val serverSessionId: String? = null,
+    val countdownValue: Int = 0
 )
 
 data class MotionUiState(

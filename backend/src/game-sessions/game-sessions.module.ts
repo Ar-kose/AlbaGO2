@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Injectable, Module, Param, Patch, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Injectable, Module, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { IsInt, IsNotEmpty, IsObject, IsOptional, IsString, Min } from 'class-validator';
 import {
@@ -127,6 +127,44 @@ export class GameSessionsService {
     };
   }
 
+  async listByGame(gameDefinitionId: string) {
+    const sessions = await this.repository.findByGameDefinitionId(gameDefinitionId);
+    return sessions.map(mapSessionToResponse);
+  }
+
+  async getSummary() {
+    const all = await this.repository.findAll();
+    const sessions = all.map(mapSessionToResponse);
+    const totalSessions = sessions.length;
+    const totalScore = sessions.reduce((sum, s) => sum + (s.score ?? 0), 0);
+    const totalDuration = sessions.reduce((sum, s) => sum + (s.durationSec ?? 0), 0);
+    const avgScore = totalSessions > 0 ? Math.round(totalScore / totalSessions) : 0;
+    const avgDuration = totalSessions > 0 ? Math.round(totalDuration / totalSessions) : 0;
+    const completionRate = totalSessions > 0
+      ? Math.round((sessions.filter(s => s.status === 'completed').length / totalSessions) * 100)
+      : 0;
+
+    // Per-game aggregation
+    const byGame = new Map<string, { title: string; sessions: number; totalScore: number }>();
+    for (const s of sessions) {
+      const key = s.gameKey ?? 'unknown';
+      const entry = byGame.get(key) ?? { title: key, sessions: 0, totalScore: 0 };
+      entry.sessions += 1;
+      entry.totalScore += s.score ?? 0;
+      byGame.set(key, entry);
+    }
+
+    return {
+      totalSessions,
+      totalScore,
+      totalDurationSec: totalDuration,
+      avgScore,
+      avgDurationSec: avgDuration,
+      completionRate,
+      perGame: Array.from(byGame.values()).sort((a, b) => b.sessions - a.sessions)
+    };
+  }
+
   async update(id: string, dto: UpdateGameSessionDto) {
     const existingStartedAt = undefined;
     if (dto.score !== undefined && dto.endedAt && existingStartedAt) {
@@ -165,6 +203,19 @@ export class GameSessionsService {
 @Controller('game-sessions')
 class GameSessionsController {
   constructor(private readonly service: GameSessionsService) {}
+
+  @Get('summary')
+  async summary() {
+    return this.service.getSummary();
+  }
+
+  @Get()
+  async list(@Query('gameDefinitionId') gameDefinitionId?: string) {
+    const items = gameDefinitionId
+      ? await this.service.listByGame(gameDefinitionId)
+      : [];
+    return { items };
+  }
 
   @Post()
   submit(@Body() dto: CreateGameSessionDto) {
@@ -250,4 +301,25 @@ function assertIsoDate(field: string, value?: string) {
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
+}
+
+function mapSessionToResponse(session: GameSessionEntity) {
+  return {
+    id: session.id,
+    clientSessionKey: session.clientSessionKey,
+    gameDefinitionId: session.gameDefinitionId,
+    gameKey: session.gameKey,
+    gameDefinitionVersion: session.gameDefinitionVersion,
+    deviceId: session.deviceId,
+    status: session.status,
+    startedAt: session.startedAt,
+    endedAt: session.endedAt,
+    durationSec: session.durationSec,
+    score: session.score,
+    combo: session.combo,
+    accuracy: session.accuracy,
+    calories: session.calories,
+    result: session.result,
+    createdAt: session.createdAt
+  };
 }

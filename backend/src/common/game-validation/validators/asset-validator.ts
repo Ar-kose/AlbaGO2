@@ -81,6 +81,102 @@ export function validateAssets(
   return errors.length === 0 ? okResult(warnings) : failResult(errors, warnings);
 }
 
+export function validateCoverAsset(assets: { cover?: string } | undefined): GameValidationResult {
+  const errors: GameValidationIssue[] = [];
+  const cover = assets?.cover;
+
+  if (!cover || cover.trim().length === 0) {
+    errors.push({
+      code: 'COVER_MISSING',
+      severity: 'ERROR',
+      scope: 'ASSET',
+      path: '$.assets.cover',
+      message: 'Kapak görseli eksik. Asset Library\'den bir kapak görseli seçmeden oyunu yayınlayamazsın.'
+    });
+    return failResult(errors);
+  }
+
+  if (cover.startsWith('local://')) {
+    errors.push({
+      code: 'COVER_LOCAL_URI',
+      severity: 'ERROR',
+      scope: 'ASSET',
+      path: '$.assets.cover',
+      message: 'Kapak görseli local:// ile başlayamaz. Mobil uygulamanın erişebileceği public HTTPS URL seç.'
+    });
+    return failResult(errors);
+  }
+
+  if (cover.startsWith('file://')) {
+    errors.push({
+      code: 'COVER_FILE_URI',
+      severity: 'ERROR',
+      scope: 'ASSET',
+      path: '$.assets.cover',
+      message: 'Kapak görseli file:// ile başlayamaz. Public HTTPS URL kullan.'
+    });
+    return failResult(errors);
+  }
+
+  let hostname = '';
+  try {
+    const url = new URL(cover);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+      errors.push({
+        code: 'COVER_INVALID_URL',
+        severity: 'ERROR',
+        scope: 'ASSET',
+        path: '$.assets.cover',
+        message: 'Kapak görseli http/https URL olmalıdır.'
+      });
+      return failResult(errors);
+    }
+    hostname = url.hostname.toLowerCase();
+  } catch {
+    // Relative path or malformed
+    if (cover.startsWith('/') || cover.startsWith('.') || cover.startsWith('\\')) {
+      errors.push({
+        code: 'COVER_RELATIVE_PATH',
+        severity: 'ERROR',
+        scope: 'ASSET',
+        path: '$.assets.cover',
+        message: 'Kapak görseli dosya yolu olamaz. Public HTTPS URL kullan.'
+      });
+    } else {
+      errors.push({
+        code: 'COVER_INVALID_URL',
+        severity: 'ERROR',
+        scope: 'ASSET',
+        path: '$.assets.cover',
+        message: 'Kapak görseli geçersiz URL formatında. Düzeltip tekrar dene.'
+      });
+    }
+    return failResult(errors);
+  }
+
+  // SSRF protection: block private/localhost IPs
+  if (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '0.0.0.0' ||
+    hostname === '[::1]' ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('10.') ||
+    hostname.startsWith('172.16.')
+  ) {
+    errors.push({
+      code: 'COVER_PRIVATE_IP',
+      severity: 'ERROR',
+      scope: 'SECURITY',
+      path: '$.assets.cover',
+      message: 'Kapak görseli private/localhost adresine işaret edemez.'
+    });
+    return failResult(errors);
+  }
+
+  return okResult();
+}
+
 export function validateAudioConfig(
   audio: JsonObject | undefined,
   assetKeys: Set<string>

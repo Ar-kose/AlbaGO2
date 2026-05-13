@@ -4,14 +4,16 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const navItems = [
-  { label: 'Genel Bakis', href: '/', icon: '1' },
-  { label: 'Oyunlar', href: '/games', icon: '2' },
-  { label: 'Sablonlar', href: '/templates', icon: '3' },
-  { label: 'Kategoriler', href: '/categories', icon: '4' },
-  { label: 'Medya', href: '/media', icon: '5' },
-  { label: 'Yayinlar', href: '/publications', icon: '6' },
-  { label: 'Analitik', href: '/analytics', icon: '7' },
-  { label: 'Audit Log', href: '/audit', icon: '8' }
+  { label: 'Genel Bakis', href: '/', icon: '◇' },
+  { label: 'Game Studio', href: '/games', icon: '◆' },
+  { label: 'Yeni Oyun', href: '/games/new', icon: '✦' },
+  { label: 'Sablonlar', href: '/templates', icon: '◈' },
+  { label: 'Kategoriler', href: '/categories', icon: '◇' },
+  { label: 'Varliklar', href: '/assets', icon: '◇' },
+  { label: 'Medya', href: '/media', icon: '◇' },
+  { label: 'Yayinlar', href: '/publications', icon: '◇' },
+  { label: 'Analitik', href: '/analytics', icon: '◇' },
+  { label: 'Audit Log', href: '/audit', icon: '◇' }
 ];
 
 export function AdminSidebar() {
@@ -40,7 +42,7 @@ export function AdminSidebar() {
           );
         })}
       </nav>
-      <p className="muted">AlbaGO Admin v2</p>
+      <div className="sidebar-footer">AlbaGo Admin v2</div>
     </aside>
   );
 }

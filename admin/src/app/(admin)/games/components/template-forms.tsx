@@ -346,3 +346,305 @@ export function PoseHoldPreview({ config }: { config: JsonObject }) {
     </div>
   );
 }
+
+// ─── Gameplay Previews ───────────────────────────────────────────
+
+export function FruitSlashPreview({ draft }: { draft: any }) {
+  const level = draft.levels?.[0] ?? {};
+  const spawnRate = level.config?.spawnRateMs ?? 900;
+  const objectLife = level.sceneConfig?.defaultObjectLifeMs ?? 2600;
+  const penalty = level.config?.penaltyPoints ?? 10;
+  const targetScore = level.targetScore ?? 420;
+
+  const fruits = [
+    { key: 'fruit', label: '🍎', color: '#ef4444', x: 20, y: 22, delay: 0 },
+    { key: 'bonus', label: '🍋', color: '#eab308', x: 55, y: 14, delay: 0.6 },
+    { key: 'fruit', label: '🍊', color: '#f97316', x: 78, y: 26, delay: 1.1 },
+    { key: 'bomb', label: '💣', color: '#6b7280', x: 42, y: 10, delay: 1.7 },
+    { key: 'fruit', label: '🍇', color: '#a855f7', x: 65, y: 20, delay: 2.2 },
+  ];
+
+  return (
+    <div style={{
+      position: 'relative', width: '100%', minHeight: 200,
+      background: 'linear-gradient(180deg, #0a0e1a 0%, #0f1426 50%, #1a1030 100%)',
+      borderRadius: 16, border: '1px solid var(--border-subtle)', overflow: 'hidden'
+    }}>
+      {/* Game area decorative elements */}
+      <div style={{ position: 'absolute', inset: 0, opacity: 0.08, background: 'radial-gradient(circle at 30% 40%, #ec0fa7, transparent 50%), radial-gradient(circle at 70% 30%, #22d3ee, transparent 40%)' }} />
+
+      {/* Header */}
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <span style={{ color: 'var(--accent-pink)', fontSize: '0.7rem', fontWeight: 700 }}>PREVIEW — FRUIT SLASH</span>
+        <div style={{ display: 'flex', gap: 14 }}>
+          <span style={{ color: 'var(--accent-emerald)', fontSize: '0.7rem', fontWeight: 600 }}>Score: 0/{targetScore}</span>
+          <span style={{ color: 'var(--accent-cyan)', fontSize: '0.7rem' }}>Penalty: -{penalty}</span>
+        </div>
+      </div>
+
+      {/* Fruit objects */}
+      <div style={{ position: 'relative', height: 140, overflow: 'hidden' }}>
+        {fruits.map((f, i) => (
+          <div key={i} style={{
+            position: 'absolute', left: `${f.x}%`, top: `${f.y}%`,
+            fontSize: '1.6rem', transform: 'translate(-50%, -50%)',
+            filter: f.key === 'bomb' ? 'grayscale(0.6)' : 'none',
+            opacity: 0.85,
+            animation: `fruitFloat ${(objectLife / 1000).toFixed(1)}s ease-in ${f.delay}s infinite`
+          }}>
+            {f.label}
+          </div>
+        ))}
+
+        {/* Hand target indicators */}
+        <div style={{
+          position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)',
+          display: 'flex', gap: 18, opacity: 0.5
+        }}>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px dashed rgba(236,15,167,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '0.55rem', color: 'var(--accent-pink)' }}>L</span>
+          </div>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px dashed rgba(236,15,167,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '0.55rem', color: 'var(--accent-pink)' }}>R</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Info bar */}
+      <div style={{ display: 'flex', gap: 12, padding: '8px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>Spawn: {spawnRate}ms</span>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>Life: {objectLife}ms</span>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>Motions: {draft.supportedMotions?.join(', ') || 'SQUAT, JUMPING_JACK'}</span>
+      </div>
+    </div>
+  );
+}
+
+export function ScenePlayPreview({ draft }: { draft: any }) {
+  const level = draft.levels?.[0] ?? {};
+  const objects = (Array.isArray(level.sceneConfig?.objects) ? level.sceneConfig.objects : []) as any[];
+  const spawnRate = level.config?.spawnRateMs ?? 1800;
+  const lives = level.config?.lives ?? 3;
+
+  const motionLabels: Record<string, string> = {
+    SQUAT: 'Cuce', JUMPING_JACK: 'Deve', JUMP_ROPE: 'Ip Atlama'
+  };
+
+  return (
+    <div style={{
+      background: 'linear-gradient(180deg, #080b18 0%, #0c1020 100%)',
+      borderRadius: 16, border: '1px solid var(--border-subtle)', overflow: 'hidden'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <span style={{ color: 'var(--accent-cyan)', fontSize: '0.7rem', fontWeight: 700 }}>PREVIEW — SCENE PLAY</span>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <span style={{ color: 'var(--accent-danger)', fontSize: '0.68rem' }}>Lives: {lives}</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem' }}>Spawn: {spawnRate}ms</span>
+        </div>
+      </div>
+
+      {/* Scene stage */}
+      <div style={{ position: 'relative', minHeight: 140, padding: 12 }}>
+        {objects.length === 0 ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 120 }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+              Scene objesi ekleyin. Komutlar sirayla gelir, dogru hareketle temizlenir.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            {objects.slice(0, 6).map((obj: any, i: number) => {
+              const motion = obj.requiredMotion ?? 'SQUAT';
+              const isEven = i % 2 === 0;
+              return (
+                <div key={i} style={{
+                  flex: '0 0 auto',
+                  minWidth: 100,
+                  padding: '10px 14px',
+                  background: isEven ? 'rgba(236,15,167,0.08)' : 'rgba(34,211,238,0.06)',
+                  borderRadius: 12,
+                  border: `1px solid ${isEven ? 'rgba(236,15,167,0.2)' : 'rgba(34,211,238,0.15)'}`,
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+                    {obj.label ?? obj.objectType ?? `Obj ${i + 1}`}
+                  </div>
+                  <div style={{ fontSize: '0.6rem', color: 'var(--accent-pink)' }}>
+                    {motionLabels[motion] ?? motion}
+                  </div>
+                  <div style={{ fontSize: '0.6rem', color: 'var(--accent-emerald)', marginTop: 2 }}>
+                    +{obj.points ?? 10} pts
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Flow indicator */}
+      {objects.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem' }}>Akis:</span>
+          {objects.slice(0, 4).map((obj: any, i: number) => (
+            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: '0.6rem', color: 'var(--accent-cyan)' }}>
+              {obj.label ?? obj.objectType}
+              {i < Math.min(objects.length, 4) - 1 && <span style={{ color: 'var(--text-muted)' }}>→</span>}
+            </span>
+          ))}
+          {objects.length > 4 && <span style={{ color: 'var(--text-muted)', fontSize: '0.58rem' }}>+{objects.length - 4} more</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function DodgeRunPreview({ draft }: { draft: any }) {
+  const level = draft.levels?.[0] ?? {};
+  const lives = level.config?.lives ?? 3;
+  const obstacleSpawn = level.config?.obstacleSpawnMs ?? 1400;
+  const travelSpeed = level.sceneConfig?.travelMs ?? 2100;
+  const damage = level.config?.damageOnMiss ?? 1;
+
+  const laneObstacles = [
+    { lane: 'left', y: 15, color: '#ef4444', label: '▣' },
+    { lane: 'center', y: 40, color: '#f97316', label: '▣' },
+    { lane: 'right', y: 18, color: '#eab308', label: '▣' },
+    { lane: 'center', y: 62, color: '#ef4444', label: '▣' },
+    { lane: 'left', y: 55, color: '#f97316', label: '▤' },
+  ];
+
+  return (
+    <div style={{
+      background: 'linear-gradient(180deg, #0a0f1e 0%, #0f1528 100%)',
+      borderRadius: 16, border: '1px solid var(--border-subtle)', overflow: 'hidden', position: 'relative'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <span style={{ color: 'var(--accent-amber)', fontSize: '0.7rem', fontWeight: 700 }}>PREVIEW — DODGE RUN</span>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <span style={{ color: 'var(--accent-danger)', fontSize: '0.68rem' }}>Lives: {lives}</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem' }}>Travel: {travelSpeed}ms</span>
+        </div>
+      </div>
+
+      {/* Lane track */}
+      <div style={{ position: 'relative', height: 140, display: 'flex' }}>
+        {/* Lane dividers */}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>
+          <div style={{ flex: 1, borderRight: '1px dashed rgba(255,255,255,0.04)' }} />
+          <div style={{ flex: 1, borderRight: '1px dashed rgba(255,255,255,0.04)' }} />
+          <div style={{ flex: 1 }} />
+        </div>
+
+        {/* Obstacles */}
+        {laneObstacles.map((obs, i) => {
+          const laneX = obs.lane === 'left' ? '16%' : obs.lane === 'center' ? '50%' : '83%';
+          return (
+            <div key={i} style={{
+              position: 'absolute', left: laneX, top: `${obs.y}%`,
+              transform: 'translate(-50%, -50%)',
+              color: obs.color, fontSize: '1.3rem', opacity: 0.7
+            }}>
+              {obs.label}
+            </div>
+          );
+        })}
+
+        {/* Player indicator */}
+        <div style={{
+          position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
+          width: 22, height: 22, borderRadius: '50%',
+          background: 'var(--accent-cyan)', boxShadow: '0 0 16px rgba(34,211,238,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          <span style={{ fontSize: '0.55rem', color: '#000', fontWeight: 700 }}>P</span>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 12, padding: '8px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>Spawn: {obstacleSpawn}ms</span>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>Damage: -{damage}</span>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>Lanes: 3</span>
+      </div>
+    </div>
+  );
+}
+
+export function FitChallengePreview({ draft }: { draft: any }) {
+  const level = draft.levels?.[0] ?? {};
+  const tasks = (level.tasks ?? []) as any[];
+  const targetScore = level.targetScore ?? 420;
+  const duration = level.durationSec ?? 60;
+
+  const taskIcons: Record<string, string> = {
+    SQUAT: '🏋️', JUMPING_JACK: '⭐', JUMP_ROPE: '🪢'
+  };
+
+  return (
+    <div style={{
+      background: 'linear-gradient(180deg, #0c0f1a 0%, #101528 100%)',
+      borderRadius: 16, border: '1px solid var(--border-subtle)', overflow: 'hidden'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <span style={{ color: 'var(--accent-emerald)', fontSize: '0.7rem', fontWeight: 700 }}>PREVIEW — FIT CHALLENGE</span>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <span style={{ color: 'var(--accent-emerald)', fontSize: '0.68rem' }}>Target: {targetScore}</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem' }}>{duration}s</span>
+        </div>
+      </div>
+
+      {/* Workout display */}
+      <div style={{ padding: 14 }}>
+        {tasks.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', margin: 0 }}>
+              Squat, Jumping Jack, Jump Rope hareketleriyle spor akisi.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {tasks.slice(0, 4).map((task: any, i: number) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '8px 12px',
+                background: 'rgba(255,255,255,0.03)',
+                borderRadius: 10,
+                border: '1px solid rgba(255,255,255,0.05)'
+              }}>
+                <span style={{ fontSize: '1.2rem' }}>{taskIcons[task.motion] ?? '🎯'}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: 'var(--text-primary)', fontSize: '0.75rem', fontWeight: 600 }}>
+                    {task.motion?.replace(/_/g, ' ') ?? 'Exercise'}
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}>
+                    {task.targetCount ?? '—'} reps
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ color: 'var(--accent-emerald)', fontSize: '0.75rem', fontWeight: 700 }}>
+                    +{task.pointsPerRep ?? '?'}
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.6rem' }}>per rep</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ margin: '0 14px 12px', height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{
+          width: '35%', height: '100%',
+          background: 'linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan))',
+          borderRadius: 2
+        }} />
+      </div>
+
+      <div style={{ display: 'flex', gap: 12, padding: '8px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>{tasks.length} exercises</span>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>Category: {draft.category ?? 'SPORT'}</span>
+      </div>
+    </div>
+  );
+}

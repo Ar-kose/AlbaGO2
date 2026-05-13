@@ -13,7 +13,7 @@ export type GameTemplate =
   | 'REACTION' | 'CATCH_FALLING' | 'AVOID_OBSTACLE' | 'COLLECT_ITEMS'
   | 'PROGRAM_FLOW' | 'HYBRID_SCENE';
 export type PublicDemoTemplate = 'FRUIT_SLASH' | 'DODGE_RUN' | 'FIT_CHALLENGE' | 'SCENE_PLAY' | 'WHACK_A_MOLE' | 'POSE_CONTACT_TARGETS';
-export type GameOrientation = 'PORTRAIT' | 'LANDSCAPE';
+export type GameOrientation = 'PORTRAIT' | 'LANDSCAPE' | 'AUTO';
 export type CameraRequirement = 'FULL_BODY' | 'UPPER_BODY' | 'HAND_TARGET';
 export type GameCategory = 'SPORT' | 'FUN' | 'EDUCATION';
 export type ProgramStepType = 'MOTION_REPS' | 'HOLD_POSE' | 'REST' | 'INSTRUCTION' | 'PLAY_GAME';
@@ -102,6 +102,7 @@ export interface GameAssetDto {
 }
 
 export interface AssetDto {
+  cover?: string;
   background: string;
   character: string;
   soundtrack?: string;
@@ -168,7 +169,7 @@ export interface GameDefinitionV3Payload {
   tags: string[];
   minAppVersion: string;
   minRuntimeVersion: string;
-  orientation: 'portrait' | 'landscape';
+  orientation: 'portrait' | 'landscape' | 'auto';
   cameraRequirement: 'full_body' | 'upper_body' | 'hand_target';
   capabilities: string[];
   supportedMotions: MotionType[];
@@ -291,6 +292,39 @@ export async function rollbackGameDefinition(id: string, actorId: string): Promi
       body: JSON.stringify({ actorId })
     })
   );
+}
+
+// Temporary: fetches all games and filters by ID since no single-GET endpoint exists yet.
+// Replace with GET /internal/game-definitions/:id when backend adds it.
+export async function getGameDefinitionById(id: string): Promise<GameDefinitionDto | null> {
+  const all = await listGameDefinitions();
+  return all.find((g) => g.id === id) ?? null;
+}
+
+export interface GameSessionResultSummary {
+  id: string;
+  clientSessionKey?: string;
+  gameDefinitionId?: string;
+  gameKey?: string;
+  gameDefinitionVersion?: number;
+  deviceId?: string;
+  status?: string;
+  startedAt?: string;
+  endedAt?: string;
+  durationSec?: number;
+  score?: number;
+  combo?: number;
+  accuracy?: number;
+  calories?: number;
+  result?: string;
+  createdAt?: string;
+}
+
+export async function listGameSessionsByGame(gameDefinitionId: string): Promise<GameSessionResultSummary[]> {
+  const response = await request<{ items: GameSessionResultSummary[] }>(
+    `/game-sessions?gameDefinitionId=${encodeURIComponent(gameDefinitionId)}`
+  );
+  return response.items ?? [];
 }
 
 export async function listAuditLogs(): Promise<AuditLogDto[]> {
@@ -753,6 +787,7 @@ function normalizeLevel(raw: unknown): GameLevelDto {
 function normalizeAssets(raw: unknown): AssetDto {
   const assets = isObject(raw) ? raw as Partial<AssetDto> : {};
   return {
+    cover: typeof assets.cover === 'string' ? assets.cover : undefined,
     background: String(assets.background ?? ''),
     character: String(assets.character ?? ''),
     soundtrack: assets.soundtrack,
@@ -778,7 +813,10 @@ function normalizeCategory(value: unknown): GameCategory {
 }
 
 function normalizeOrientation(value: unknown): GameOrientation {
-  return String(value ?? 'PORTRAIT').toUpperCase() === 'LANDSCAPE' ? 'LANDSCAPE' : 'PORTRAIT';
+  const text = String(value ?? 'PORTRAIT').toUpperCase();
+  if (text === 'LANDSCAPE') return 'LANDSCAPE';
+  if (text === 'AUTO') return 'AUTO';
+  return 'PORTRAIT';
 }
 
 function normalizeCameraRequirement(value: unknown): CameraRequirement {
