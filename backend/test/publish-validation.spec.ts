@@ -88,7 +88,7 @@ describe('publish validation helpers', () => {
     const definition: GameDefinitionEntity = {
       ...minimalValidScenePlay(),
       status: 'PUBLISHED',
-      segmentRuleJson: { internalOnly: true, audience: 'internal' }
+      segmentRuleJson: { internalOnly: true, audience: 'internal', category: 'FUN' }
     };
     const errors = validateGameAccess(definition, '0.1.0');
     expect(errors).toEqual([]);
