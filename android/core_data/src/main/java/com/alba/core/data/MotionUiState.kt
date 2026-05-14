@@ -22,7 +22,7 @@ enum class SyncStatus {
         LOCAL_SAVED -> "Bu cihazda kaydedildi"
         SYNCING -> "Sunucuya kaydediliyor..."
         SYNCED -> "Sunucuya kaydedildi"
-        FAILED -> "Sunucu kaydi basarisiz"
+        FAILED -> "Sunucu kaydı başarısız"
     }
 }
 

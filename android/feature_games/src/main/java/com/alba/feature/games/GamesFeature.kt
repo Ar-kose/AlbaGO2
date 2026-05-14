@@ -69,6 +69,7 @@ fun GamesHomeScreen(
     contentPadding: PaddingValues,
     uiState: MotionUiState,
     onNavigateBack: () -> Unit,
+    onNavigateHome: () -> Unit,
     onStartGame: (String) -> Unit,
     onFinishGame: () -> Unit,
     onRefreshGames: () -> Unit,
@@ -136,9 +137,9 @@ fun GamesHomeScreen(
                         gameDefinition = activeDefinition,
                         onFinishGame = onFinishGame,
                         onReplay = { onStartGame(activeDefinition.gameId) },
-                        onBrowseGames = onNavigateBack,
+                        onBrowseGames = { stage = GameFlowStage.LIST },
                         onRefreshGames = onRefreshGames,
-                        onNavigateBack = onNavigateBack
+                        onNavigateBack = onNavigateHome
                     )
                 } else {
                     EmptyCatalogCard(
@@ -439,7 +440,7 @@ private fun CatalogStateCard(
             "Oyunlar yükleniyor..."
 
         uiState.backendStatus.contains("Yerel demo", ignoreCase = true) ->
-            "Baglanti kurulamadi. Cevrimdisi oyun gosterilemiyor."
+            "Bağlantı kurulamadı. Çevrimdışı oyun gösterilemiyor."
 
         uiState.backendStatus.contains("Önbellek", ignoreCase = true) ->
             "Son yayınlanan oyunlar cihaz önbelleğinden gösteriliyor."
@@ -637,7 +638,7 @@ private fun GameHudCard(
                 Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text("Combo x${game.combo}", color = Color(0xFFFFC857))
                     Text("En iyi x${game.comboMax}", color = Color(0xFF90CDF4))
-                    Text("Durum ${game.status}", color = Color.White.copy(alpha = 0.8f))
+                    Text(gameStatusLabel(game.status), color = Color.White.copy(alpha = 0.8f))
                 }
             }
 
@@ -655,7 +656,7 @@ private fun GameHudCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 StatusPill(label = "${game.remainingMs / 1000}s", color = Color(0xFF38BDF8))
-                StatusPill(label = "Accuracy ${(game.accuracy * 100).toInt()}%", color = Color(0xFF34D399))
+                StatusPill(label = "Doğruluk ${percentLabel(game.accuracy)}", color = Color(0xFF34D399))
                 StatusPill(label = "Aktif ${motionLabel(motionType)}", color = Color(0xFFF97316))
                 game.motionCounts.forEach { (motion, count) ->
                     StatusPill(label = "${motion.shortLabel()} x$count", color = Color(0xFF64748B))
@@ -678,25 +679,25 @@ private fun SceneStateCard(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text("Sahne", style = MaterialTheme.typography.titleMedium)
+            Text("Sahne", style = MaterialTheme.typography.titleMedium, color = Color.White)
             when (sceneState) {
                 is FruitSlashSceneState -> FruitSlashScene(sceneState)
                 is DodgeRunSceneState -> DodgeRunScene(sceneState)
                 is FitChallengeSceneState -> FitChallengeScene(sceneState)
                 is ScenePlaySceneState -> ScenePlayScene(sceneState)
                 is WhackAMoleSceneState -> WhackAMoleScene(sceneState)
-                IdleSceneState -> Text("Oyun hazırlanıyor...")
-                else -> Text("Oyun hazırlanıyor...")
+                IdleSceneState -> Text("Oyun hazırlanıyor...", color = Color.White.copy(alpha = 0.76f))
+                else -> Text("Oyun hazırlanıyor...", color = Color.White.copy(alpha = 0.76f))
             }
             Text(
-                "Combo x$combo${if (!lastEffect.isNullOrBlank()) " • $lastEffect" else ""}",
-                color = Color(0xFF475569)
+                "Kombo x$combo${if (!lastEffect.isNullOrBlank()) " • $lastEffect" else ""}",
+                color = Color.White.copy(alpha = 0.72f)
             )
             if (template == GameTemplate.DODGE_RUN) {
                 Text(
                     "Not: Kadrajdan çıkarsan oyun otomatik duraklar.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF64748B)
+                    color = Color.White.copy(alpha = 0.62f)
                 )
             }
         }
@@ -718,7 +719,7 @@ private fun FruitSlashScene(sceneState: FruitSlashSceneState) {
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Lane ${lane + 1}", style = MaterialTheme.typography.labelMedium)
+                    Text("Koridor ${lane + 1}", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.68f))
                     val targets = sceneState.targets.filter { it.lane == lane }
                     if (targets.isEmpty()) {
                         Box(
@@ -759,7 +760,7 @@ private fun DodgeRunScene(sceneState: DodgeRunSceneState) {
             SceneMetric("Mesafe", sceneState.distance.toString(), Color(0xFF0EA5E9))
             SceneMetric("Enerji", sceneState.energy.toString(), Color(0xFF8B5CF6))
         }
-        Text("Görev: ${sceneState.prompt}", fontWeight = FontWeight.SemiBold)
+        Text("Görev: ${sceneState.prompt}", fontWeight = FontWeight.SemiBold, color = Color.White)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -786,7 +787,7 @@ private fun DodgeRunScene(sceneState: DodgeRunSceneState) {
                     )
                 }
                 if (sceneState.obstacles.isEmpty()) {
-                    Text("Yeni engel geliyor...", color = Color(0xFF64748B))
+                    Text("Yeni engel geliyor...", color = Color.White.copy(alpha = 0.62f))
                 }
             }
         }
@@ -799,18 +800,18 @@ private fun FitChallengeScene(sceneState: FitChallengeSceneState) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SceneMetric("Kalite", "${sceneState.qualityScore}%", Color(0xFF10B981))
         activeTask?.let { task ->
-            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9))) {
+            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF10221B))) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Aktif görev", style = MaterialTheme.typography.titleMedium)
-                    Text("${motionLabel(task.motion)} • ${task.currentCount}/${task.targetCount}")
+                    Text("Aktif görev", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                    Text("${motionLabel(task.motion)} • ${task.currentCount}/${task.targetCount}", color = Color.White.copy(alpha = 0.78f))
                     LinearProgressIndicator(
                         progress = { task.currentCount.toFloat() / task.targetCount.toFloat().coerceAtLeast(1f) },
                         modifier = Modifier.fillMaxWidth().height(10.dp),
                         color = Color(0xFF22C55E),
-                        trackColor = Color(0xFFD1FAE5)
+                        trackColor = Color(0xFF1E3A2F)
                     )
                 }
             }
@@ -828,8 +829,12 @@ private fun FitChallengeScene(sceneState: FitChallengeSceneState) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(motionLabel(task.motion), fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium)
-                        Text("${task.currentCount}/${task.targetCount} tekrar")
+                        Text(
+                            motionLabel(task.motion),
+                            color = Color.White,
+                            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium
+                        )
+                        Text("${task.currentCount}/${task.targetCount} tekrar", color = Color.White.copy(alpha = 0.68f))
                     }
                     StatusPill(
                         label = if (task.currentCount >= task.targetCount) "Tamam" else "+${task.pointsPerRep}",
@@ -846,10 +851,10 @@ private fun ScenePlayScene(sceneState: ScenePlaySceneState) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             SceneMetric("Can", sceneState.lives.toString(), Color(0xFFEF4444))
-            SceneMetric("Dogru", sceneState.clearedCount.toString(), Color(0xFF22C55E))
-            SceneMetric("Kacan", sceneState.missedCount.toString(), Color(0xFFF97316))
+            SceneMetric("Doğru", sceneState.clearedCount.toString(), Color(0xFF22C55E))
+            SceneMetric("Kaçan", sceneState.missedCount.toString(), Color(0xFFF97316))
         }
-        Text("Komut: ${sceneState.prompt}", fontWeight = FontWeight.SemiBold)
+        Text("Komut: ${sceneState.prompt}", fontWeight = FontWeight.SemiBold, color = Color.White)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             if (sceneState.objects.isEmpty()) {
                 Box(
@@ -889,7 +894,7 @@ private fun WhackAMoleScene(sceneState: WhackAMoleSceneState) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             SceneMetric("Vurulan", sceneState.hitCount.toString(), Color(0xFF20E99A))
-            SceneMetric("Kacan", sceneState.missCount.toString(), Color(0xFFEF4444))
+            SceneMetric("Kaçan", sceneState.missCount.toString(), Color(0xFFEF4444))
             SceneMetric("Can", sceneState.lives.toString(), Color(0xFFFF1593))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -923,59 +928,48 @@ private fun GameResultScreen(
     onBackToGames: () -> Unit,
     onHome: () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF05060E)),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF1593).copy(alpha = 0.7f))
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF07111F)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF1593).copy(alpha = 0.55f))
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text("Oyun tamamlandi", style = MaterialTheme.typography.labelLarge, color = Color(0xFFFF1593), fontWeight = FontWeight.Bold)
+                StatusPill(label = "Oyun tamamlandı", color = Color(0xFFFF1593))
                 Text(gameTitle, style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    StatusPill(label = templateLabel(template), color = templateAccent(template))
-                    StatusPill(label = "Skor ${game.score}", color = Color(0xFFFFB020))
-                    StatusPill(label = "Combo max ${game.comboMax}", color = Color(0xFF11D7F4))
-                    StatusPill(label = "Accuracy ${(game.accuracy * 100).toInt()}%", color = Color(0xFF22C55E))
+                Text(templateLabel(template), color = Color.White.copy(alpha = 0.72f))
+
+                ResultScoreBlock(score = game.score)
+
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                    ResultMetricTile("Süre", formattedDuration(game.elapsedMs), Color(0xFF38BDF8), Modifier.weight(1f))
+                    ResultMetricTile("Kombo", "x${game.comboMax}", Color(0xFF53F2B5), Modifier.weight(1f))
                 }
-                Text(
-                    "Sure ${(game.elapsedMs / 1000L)}s",
-                    color = Color.White.copy(alpha = 0.9f)
-                )
-                Text(
-                    "Bu cihazda kaydedildi",
-                    color = Color(0xFF22C55E),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                val syncBadge = when (game.syncStatus) {
-                    SyncStatus.SYNCED -> null
-                    SyncStatus.SYNCING -> "Sunucuya gonderiliyor"
-                    SyncStatus.FAILED -> "Cevrimdisi — sonra gonderilecek"
-                    else -> null
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                    ResultMetricTile("Doğruluk", percentLabel(game.accuracy), Color(0xFF22C55E), Modifier.weight(1f))
+                    ResultMetricTile("Sonuç", gameStatusLabel(game.status), Color(0xFFFFB020), Modifier.weight(1f))
                 }
-                if (syncBadge != null) {
-                    Text(
-                        syncBadge,
-                        color = Color.White.copy(alpha = 0.45f),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    game.motionCounts.forEach { (motion, count) ->
-                        StatusPill(label = "${motion.shortLabel()} x$count", color = Color(0xFF8B5CF6))
+
+                SyncStatusPanel(game.syncStatus)
+
+                if (game.motionCounts.isNotEmpty()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Hareket özeti", color = Color.White, fontWeight = FontWeight.SemiBold)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            game.motionCounts.forEach { (motion, count) ->
+                                StatusPill(label = "${motionLabel(motion)} x$count", color = Color(0xFF8B5CF6))
+                            }
+                        }
                     }
+                } else {
+                    Text("Bu turda hareket kaydı oluşmadı.", color = Color.White.copy(alpha = 0.62f))
                 }
             }
         }
@@ -989,12 +983,77 @@ private fun GameResultScreen(
                 Text("Tekrar oyna")
             }
             OutlinedButton(modifier = Modifier.fillMaxWidth(), onClick = onBackToGames) {
-                Text("Oyunlara dön")
+                Text("Kataloğa dön")
             }
             OutlinedButton(modifier = Modifier.fillMaxWidth(), onClick = onHome) {
                 Text("Ana sayfa")
             }
         }
+    }
+}
+
+@Composable
+private fun ResultScoreBlock(score: Int) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        color = Color(0xFFFFB020).copy(alpha = 0.14f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFB020).copy(alpha = 0.34f))
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text("Toplam skor", color = Color.White.copy(alpha = 0.68f), style = MaterialTheme.typography.labelLarge)
+            Text(score.toString(), color = Color(0xFFFFB020), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun ResultMetricTile(
+    label: String,
+    value: String,
+    accent: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White.copy(alpha = 0.08f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, accent.copy(alpha = 0.28f))
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(label, color = Color.White.copy(alpha = 0.64f), style = MaterialTheme.typography.labelMedium)
+            Text(value, color = accent, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Composable
+private fun SyncStatusPanel(syncStatus: SyncStatus) {
+    val (message, color) = when (syncStatus) {
+        SyncStatus.IDLE -> "Sonuç bu cihazda hazır." to Color(0xFF94A3B8)
+        SyncStatus.LOCAL_SAVED -> "Cihaza kaydedildi. Bağlantı gelince sunucuya gönderilecek." to Color(0xFF22C55E)
+        SyncStatus.SYNCING -> "Sunucuya kaydediliyor..." to Color(0xFF38BDF8)
+        SyncStatus.SYNCED -> "Sunucuya kaydedildi." to Color(0xFF22C55E)
+        SyncStatus.FAILED -> "Sunucu kaydı başarısız. Sonuç cihazda korunuyor." to Color(0xFFF97316)
+    }
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = color.copy(alpha = 0.12f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.28f))
+    ) {
+        Text(
+            message,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            color = Color.White.copy(alpha = 0.84f),
+            style = MaterialTheme.typography.bodySmall
+        )
     }
 }
 
@@ -1034,7 +1093,7 @@ private fun SceneMetric(
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(title, color = color, style = MaterialTheme.typography.labelMedium)
-            Text(value, fontWeight = FontWeight.Bold)
+            Text(value, color = Color.White, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -1062,13 +1121,13 @@ private fun templateLabel(template: GameTemplate): String {
         GameTemplate.FRUIT_SLASH -> "Meyve Kesme"
         GameTemplate.DODGE_RUN -> "Engelden Kaçış"
         GameTemplate.FIT_CHALLENGE -> "Spor Mücadelesi"
-        GameTemplate.SCENE_PLAY -> "Scene Play"
-        GameTemplate.TARGET_HIT -> "Target Hit"
+        GameTemplate.SCENE_PLAY -> "Sahne Oyunu"
+        GameTemplate.TARGET_HIT -> "Hedef Vuruşu"
         GameTemplate.ENDLESS_RUNNER -> "Endless Runner"
         GameTemplate.WHACK_A_MOLE -> "Whack-a-Mole"
         GameTemplate.POSE_CONTACT_TARGETS -> "Pose Contact"
         GameTemplate.QUIZ -> "Quiz"
-        GameTemplate.MEMORY_MATCH -> "Hafiza"
+        GameTemplate.MEMORY_MATCH -> "Hafıza"
         GameTemplate.FLASHCARD -> "Flash Card"
         GameTemplate.POSE_HOLD -> "Pose Hold"
         GameTemplate.RHYTHM_MOTION -> "Ritim"
@@ -1093,8 +1152,8 @@ private fun templateAccent(template: GameTemplate): Color {
 private fun categoryLabel(category: GameCategory): String {
     return when (category) {
         GameCategory.SPORT -> "Spor"
-        GameCategory.FUN -> "Eglence"
-        GameCategory.EDUCATION -> "Egitim"
+        GameCategory.FUN -> "Eğlence"
+        GameCategory.EDUCATION -> "Eğitim"
     }
 }
 
@@ -1108,16 +1167,35 @@ private fun categoryAccent(category: GameCategory): Color {
 
 private fun howToPlay(template: GameTemplate): String {
     return when (template) {
-        GameTemplate.FRUIT_SLASH -> "Jumping jack meyveleri keser, squat bonus hedefleri patlatir. Bad form combo'yu sifirlar."
+        GameTemplate.FRUIT_SLASH -> "Jumping jack meyveleri keser, squat bonus hedefleri patlatır. Hatalı form kombo serisini sıfırlar."
         GameTemplate.DODGE_RUN -> "Squat ile alttan geç, jumping jack ile zıpla, jump rope ile enerji topla. Kadrajdan çıkarsan oyun duraklar."
         GameTemplate.FIT_CHALLENGE -> "Aktif görev kartındaki hareketi tamamla. Görev bitince sıradaki hedef otomatik açılır."
         GameTemplate.TARGET_HIT -> "Doğru hareket hedefi vurur."
         GameTemplate.SCENE_PLAY -> "Panelden gelen komutu oku; istenen hareketi yaparak obje/komutu temizle."
         GameTemplate.ENDLESS_RUNNER -> "Ritmini koruyarak ilerle."
         GameTemplate.WHACK_A_MOLE,
-        GameTemplate.POSE_CONTACT_TARGETS -> "Cikan hedeflere elinle dokun. Bileklerini hedef noktasina getir, skor yap."
+        GameTemplate.POSE_CONTACT_TARGETS -> "Çıkan hedeflere elinle dokun. Bileklerini hedef noktasına getir, skor yap."
         else -> "Hareketlerini kullanarak hedefleri tamamla."
     }
+}
+
+private fun gameStatusLabel(status: GameSessionStatus): String {
+    return when (status) {
+        GameSessionStatus.READY -> "Hazır"
+        GameSessionStatus.WAITING_FOR_BODY -> "Kadraj bekleniyor"
+        GameSessionStatus.ACTIVE -> "Devam ediyor"
+        GameSessionStatus.PAUSED -> "Duraklatıldı"
+        GameSessionStatus.FINISHED -> "Tamamlandı"
+    }
+}
+
+private fun percentLabel(value: Float): String = "${(value.coerceIn(0f, 1f) * 100).toInt()}%"
+
+private fun formattedDuration(elapsedMs: Long): String {
+    val totalSeconds = (elapsedMs / 1000L).coerceAtLeast(0L)
+    val minutes = totalSeconds / 60L
+    val seconds = totalSeconds % 60L
+    return if (minutes > 0L) "${minutes}dk ${seconds}sn" else "${seconds}sn"
 }
 
 private fun obstacleColor(type: DodgeObstacleType): Color {
@@ -1154,9 +1232,9 @@ private fun GameDefinition.isPlayableCatalogItem(): Boolean {
 @Composable
 fun CameraReadinessCard(cameraRequirement: CameraRequirement) {
     val (title, guidance) = when (cameraRequirement) {
-        CameraRequirement.FULL_BODY -> "Tam Vucut" to "Tum vucudun kamerada gorundugunden emin ol. Bir adim geri at, ayaklarini ve dizlerini kadrajda tut."
-        CameraRequirement.UPPER_BODY -> "Ust Vucut" to "Govden ve kollarin kamerada gorunmeli. Ellerinin kadraj disinda kalmadigindan emin ol."
-        CameraRequirement.HAND_TARGET -> "El Hedefi" to "Ellerin ve bileklerin kamerada net gorunmeli. Hedef temasini algilamak icin yeterli isik oldugundan emin ol."
+        CameraRequirement.FULL_BODY -> "Tam Vücut" to "Tüm vücudunun kamerada göründüğünden emin ol. Bir adım geri at, ayaklarını ve dizlerini kadrajda tut."
+        CameraRequirement.UPPER_BODY -> "Üst Vücut" to "Gövden ve kolların kamerada görünmeli. Ellerinin kadraj dışında kalmadığından emin ol."
+        CameraRequirement.HAND_TARGET -> "El Hedefi" to "Ellerin ve bileklerin kamerada net görünmeli. Hedef temasını algılamak için yeterli ışık olduğundan emin ol."
     }
 
     Card(

@@ -430,7 +430,7 @@ fun SportModeShowcaseScreen(
                 val mins = (level?.durationSec ?: 60) / 60
                 GameCardUi(
                     title = game.title.replace(" ", "\n"),
-                    subtitle = game.category.name.lowercase().replaceFirstChar { it.uppercase() },
+                    subtitle = categoryDisplayName(game.category.name),
                     meta = "${mins} dk",
                     imageRes = R.drawable.demo_fruit_slash,
                     imageUrl = game.assets.cover,
@@ -573,7 +573,7 @@ fun EntertainmentModeShowcaseScreen(
                 val mins = (level?.durationSec ?: 60) / 60
                 GameCardUi(
                     title = game.title.replace(" ", "\n"),
-                    subtitle = game.category.name.lowercase().replaceFirstChar { it.uppercase() },
+                    subtitle = categoryDisplayName(game.category.name),
                     meta = "${mins} dk",
                     imageRes = R.drawable.demo_fruit_slash, // placeholder
                     accent = when (game.category.name) {
@@ -675,7 +675,7 @@ fun DemoCatalogShowcaseScreen(
                     imageRes = R.drawable.demo_fruit_slash,
                     imageUrl = game.assets.cover,
                     title = game.title,
-                    category = "${game.category.name.lowercase().replaceFirstChar { it.uppercase() }} · ${level?.durationSec ?: 60}s · ${level?.difficulty ?: "EASY"}",
+                    category = "${categoryDisplayName(game.category.name)} · ${level?.durationSec ?: 60}s · ${level?.difficulty ?: "EASY"}",
                     description = game.description,
                     accent = when (game.category.name) { "SPORT" -> HotPink; "EDUCATION" -> Cyan; else -> Purple },
                     gameId = game.gameId,
@@ -695,7 +695,7 @@ fun DemoCatalogShowcaseScreen(
         demoGames.map { it.categoryKey }.distinct().sorted()
     }
 
-    val categoryLabels = mapOf("SPORT" to "Spor", "FUN" to "Eglence", "EDUCATION" to "Egitim")
+    val categoryLabels = mapOf("SPORT" to "Spor", "FUN" to "Eğlence", "EDUCATION" to "Eğitim")
 
     val filteredGames = remember(selectedCategory, demoGames) {
         if (selectedCategory == null) demoGames
@@ -721,7 +721,7 @@ fun DemoCatalogShowcaseScreen(
         onSport = onSport,
         onEducation = onEducation,
         onEntertainment = onEntertainment,
-        onDemos = {},
+        onDemos = { selectedCategory = null },
         onProfile = onProfile,
         snackbarMessage = snackbarMessage
     ) {
@@ -731,7 +731,7 @@ fun DemoCatalogShowcaseScreen(
         )
         if (availableCategories.size > 1) {
             SegmentRow(
-                items = listOf("Tumu") + availableCategories.map { categoryLabels[it] ?: it },
+                items = listOf("Tümü") + availableCategories.map { categoryLabels[it] ?: it },
                 selectedIndex = if (selectedCategory == null) 0 else availableCategories.indexOf(selectedCategory) + 1,
                 onSelect = { index ->
                     selectedCategory = if (index == 0) null else availableCategories.getOrNull(index - 1)
@@ -783,6 +783,10 @@ fun NeonGamePrepScreen(
     onStartGame: () -> Unit,
     onBackToCatalog: () -> Unit,
     onHome: () -> Unit,
+    onSport: () -> Unit = {},
+    onEducation: () -> Unit = {},
+    onEntertainment: () -> Unit = {},
+    onDemos: () -> Unit = {},
     onProfile: () -> Unit
 ) {
     val game = uiState.activeGameDefinition
@@ -790,10 +794,10 @@ fun NeonGamePrepScreen(
         NeonScreen(
             selectedTab = ShowcaseTab.DEMOS,
             onHome = onHome,
-            onSport = {},
-            onEducation = {},
-            onEntertainment = {},
-            onDemos = {},
+            onSport = onSport,
+            onEducation = onEducation,
+            onEntertainment = onEntertainment,
+            onDemos = onDemos,
             onProfile = onProfile
         ) {
             CenteredTitle(
@@ -813,10 +817,10 @@ fun NeonGamePrepScreen(
     NeonScreen(
         selectedTab = ShowcaseTab.DEMOS,
         onHome = onHome,
-        onSport = {},
-        onEducation = {},
-        onEntertainment = {},
-        onDemos = {},
+        onSport = onSport,
+        onEducation = onEducation,
+        onEntertainment = onEntertainment,
+        onDemos = onDemos,
         onProfile = onProfile
     ) {
         CenteredTitle(
@@ -832,7 +836,7 @@ fun NeonGamePrepScreen(
             InfoChip(durationSec.toString() + "s", HotPink)
             InfoChip(difficulty, Orange)
             InfoChip("Hedef $targetScore", Cyan)
-            InfoChip(game.category.name, Purple)
+            InfoChip(categoryDisplayName(game.category.name), Purple)
             InfoChip(
                 when (game.orientation) {
                     GameOrientation.LANDSCAPE -> "Yatay"
@@ -856,7 +860,7 @@ fun NeonGamePrepScreen(
                     border = androidx.compose.foundation.BorderStroke(1.dp, HotPink.copy(alpha = 0.5f))
                 ) {
                     Text(
-                        motion.name.replace("_", " "),
+                        motionDisplayName(motion.name),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         color = HotPink,
                         fontSize = 11.sp,
@@ -982,6 +986,20 @@ private fun InfoChip(label: String, accent: Color) {
             fontWeight = FontWeight.Bold
         )
     }
+}
+
+private fun categoryDisplayName(category: String): String = when (category.uppercase()) {
+    "SPORT" -> "Spor"
+    "FUN" -> "Eğlence"
+    "EDUCATION" -> "Eğitim"
+    else -> category.lowercase().replaceFirstChar { it.uppercase() }
+}
+
+private fun motionDisplayName(motion: String): String = when (motion.uppercase()) {
+    "SQUAT" -> "Squat"
+    "JUMPING_JACK" -> "Jumping jack"
+    "JUMP_ROPE" -> "Jump rope"
+    else -> motion.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
 }
 
 private fun cameraLabel(requirement: String): String = when (requirement.uppercase()) {

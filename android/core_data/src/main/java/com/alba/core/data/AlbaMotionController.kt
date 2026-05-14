@@ -506,7 +506,7 @@ class AlbaMotionController(
         }
 
         if (!isGameVisible && gameRuntime != null && gameState.status == GameSessionStatus.ACTIVE) {
-            val pausedState = gameRuntime?.pause(frame.timestampMs, "Kadraja geri don") ?: gameRuntime!!.snapshot()
+            val pausedState = gameRuntime?.pause(frame.timestampMs, "Kadraja geri dön") ?: gameRuntime!!.snapshot()
             gameState = gameStateFromRuntime(pausedState, gameState.clientSessionKey, gameRemoteId)
         } else if (isGameVisible && gameRuntime != null && gameState.status == GameSessionStatus.PAUSED) {
             val resumedState = gameRuntime?.resume(frame.timestampMs, "Devam") ?: gameRuntime!!.snapshot()
@@ -753,9 +753,9 @@ class AlbaMotionController(
             activeGameTemplate = selectedDefinition?.template,
             activeGameVersion = selectedDefinition?.version,
             backendStatus = when {
-                !hasError && definitions.isNotEmpty() -> "Bagli"
-                definitions.isNotEmpty() -> "Onbellekten yuklendi"
-                else -> "Cevrimdisi — veri yuklenemedi"
+                !hasError && definitions.isNotEmpty() -> "Bağlı"
+                definitions.isNotEmpty() -> "Önbellekten yüklendi"
+                else -> "Çevrimdışı — veri yüklenemedi"
             },
             lastError = if (hasError) "Supabase bağlantısı başarısız, önbellek kullanılıyor" else null
         )
@@ -1050,7 +1050,7 @@ class AlbaMotionController(
                     comboMax = result.comboMax,
                     accuracy = result.accuracy,
                     syncStatus = SyncStatus.LOCAL_SAVED,
-                    syncMessage = "Cihaza kaydedildi — arka planda gonderilecek",
+                    syncMessage = "Cihaza kaydedildi — arka planda gönderilecek",
                     syncError = null
                 ),
                 backendStatus = "Arka plana alindi",
@@ -1280,7 +1280,7 @@ class AlbaMotionController(
                                 type = ProgramStepType.PLAY_GAME,
                                 title = "Meyveleri kes",
                                 durationSec = 60,
-                                successMessage = "Meyve turu tamamlandi."
+                                successMessage = "Meyve turu tamamlandı."
                             )
                         )
                     )
@@ -1329,7 +1329,7 @@ class AlbaMotionController(
                                 type = ProgramStepType.PLAY_GAME,
                                 title = "Engelleri gec",
                                 durationSec = 60,
-                                successMessage = "Kacis parkuru tamamlandi."
+                                successMessage = "Kaçış parkuru tamamlandı."
                             )
                         )
                     )
@@ -1382,7 +1382,7 @@ class AlbaMotionController(
                                 title = "Squat seti",
                                 motion = MotionType.SQUAT,
                                 targetCount = 10,
-                                successMessage = "Squat seti tamamlandi."
+                                successMessage = "Squat seti tamamlandı."
                             ),
                             ProgramStepDefinition(
                                 stepId = "fit_step_jumping_jack",
@@ -1390,7 +1390,7 @@ class AlbaMotionController(
                                 title = "Jumping jack seti",
                                 motion = MotionType.JUMPING_JACK,
                                 targetCount = 10,
-                                successMessage = "Ritim guzel."
+                                successMessage = "Ritim güzel."
                             ),
                             ProgramStepDefinition(
                                 stepId = "fit_step_jump_rope",
@@ -1398,14 +1398,14 @@ class AlbaMotionController(
                                 title = "Jump rope enerjisi",
                                 motion = MotionType.JUMP_ROPE,
                                 targetCount = 20,
-                                successMessage = "Enerji toplandi."
+                                successMessage = "Enerji toplandı."
                             ),
                             ProgramStepDefinition(
                                 stepId = "fit_step_plank",
                                 type = ProgramStepType.HOLD_POSE,
-                                title = "Plank tutusu",
+                                title = "Plank tutuşu",
                                 holdSec = 30,
-                                successMessage = "Tebrikler, program tamamlandi."
+                                successMessage = "Tebrikler, program tamamlandı."
                             )
                         )
                     )

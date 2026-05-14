@@ -120,7 +120,7 @@ fun ProfileScreen(
                     color = Color(0x33FFC857)
                 ) {
                     Text(
-                        "Hesap sistemi yakinda",
+                        "Hesap sistemi yakında",
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         color = Color(0xFFFFE08A),
                         style = MaterialTheme.typography.labelMedium,
@@ -141,7 +141,7 @@ fun ProfileScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Text(
-                    if (hasGames) "Bu cihazda" else "Henuz oyun kaydi yok",
+                    if (hasGames) "Bu cihazda" else "Henüz oyun kaydı yok",
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White
                 )
@@ -156,12 +156,12 @@ fun ProfileScreen(
                         accent = Color(0xFFFF7A45)
                     )
                     ProfileStat(
-                        label = "Sure",
+                        label = "Süre",
                         value = "${durationMin}dk",
                         accent = Color(0xFF10B981)
                     )
                     ProfileStat(
-                        label = "En yuksek",
+                        label = "En yüksek",
                         value = "$topScore",
                         accent = Color(0xFF06B6D4)
                     )
@@ -238,7 +238,7 @@ fun ProfileScreen(
                         color = Color(0x33FFFFFF)
                     ) {
                         Text(
-                            "Ilk oyununu oynadiginda burada gorunecek.",
+                            "İlk oyununu oynadığında burada görünecek.",
                             modifier = Modifier.padding(12.dp),
                             color = Color.White.copy(alpha = 0.68f),
                             style = MaterialTheme.typography.bodySmall
@@ -259,9 +259,9 @@ fun ProfileScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text("Veri depolama", style = MaterialTheme.typography.titleMedium, color = Color.White)
-                StorageRow("Cihazda kayitli", "Oyun sonuclarin cihazinda saklaniyor.", Color(0xFF22C55E))
-                StorageRow("Sunucuya aktariliyor", "Internet varken sonuclar otomatik yedeklenir.", Color(0xFF06B6D4))
-                StorageRow("Hesap sistemi yakinda", "Profilin kalici hesaba baglanacak.", Color(0xFF6366F1))
+                StorageRow("Cihazda kayıtlı", "Oyun sonuçların cihazında saklanıyor.", Color(0xFF22C55E))
+                StorageRow("Sunucuya aktarılıyor", "İnternet varken sonuçlar otomatik yedeklenir.", Color(0xFF06B6D4))
+                StorageRow("Hesap sistemi yakında", "Profilin kalıcı hesaba bağlanacak.", Color(0xFF6366F1))
             }
         }
 
@@ -269,7 +269,7 @@ fun ProfileScreen(
             modifier = Modifier.fillMaxWidth(),
             onClick = onNavigateHome
         ) {
-            Text("Ana ekrana don")
+            Text("Ana ekrana dön")
         }
     }
 }

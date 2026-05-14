@@ -290,7 +290,7 @@ private fun AlbaRoot(
                 onHome = { navigate(AlbaDestination.HOME) },
                 onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
                 onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
-                onDemos = {},
+                onDemos = { navigateToCategoryCatalog("SPORT") },
                 onProfile = { navigate(AlbaDestination.PROFILE) },
                 uiState = uiState,
                 onGameSelected = { gameId ->
@@ -303,7 +303,7 @@ private fun AlbaRoot(
                 onHome = { navigate(AlbaDestination.HOME) },
                 onSport = { navigate(AlbaDestination.SPORT_MODE) },
                 onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
-                onDemos = {},
+                onDemos = { navigateToCategoryCatalog("EDUCATION") },
                 onProfile = { navigate(AlbaDestination.PROFILE) },
                 uiState = uiState,
                 onGameSelected = { gameId ->
@@ -316,7 +316,7 @@ private fun AlbaRoot(
                 onHome = { navigate(AlbaDestination.HOME) },
                 onSport = { navigate(AlbaDestination.SPORT_MODE) },
                 onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
-                onDemos = {},
+                onDemos = { navigateToCategoryCatalog("FUN") },
                 onProfile = { navigate(AlbaDestination.PROFILE) },
                 uiState = uiState,
                 onGameSelected = { gameId ->
@@ -355,6 +355,10 @@ private fun AlbaRoot(
                     }
                 },
                 onHome = { navigate(AlbaDestination.HOME) },
+                onSport = { navigate(AlbaDestination.SPORT_MODE) },
+                onEducation = { navigate(AlbaDestination.EDUCATION_MODE) },
+                onEntertainment = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
+                onDemos = { navigate(AlbaDestination.DEMO_CATALOG) },
                 onProfile = { navigate(AlbaDestination.PROFILE) }
             )
 
@@ -402,6 +406,7 @@ private fun AlbaRoot(
                     contentPadding = PaddingValues(0.dp),
                     uiState = uiState,
                     onNavigateBack = { navigateBack() },
+                    onNavigateHome = { navigate(AlbaDestination.HOME) },
                     onStartGame = { gameId ->
                         controller.selectGameDefinition(gameId)
                         controller.startGame()
@@ -424,291 +429,6 @@ private fun AlbaRoot(
                 onDemos = { navigate(AlbaDestination.ENTERTAINMENT_MODE) },
                 onProfile = { }
             )
-        }
-    }
-}
-
-@Composable
-private fun HomeScreen(
-    contentPadding: PaddingValues,
-    uiState: MotionUiState,
-    debugEnabled: Boolean,
-    onOpenMotionLab: () -> Unit,
-    onOpenWorkout: () -> Unit,
-    onOpenGames: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AlbaColors.BackgroundDark)
-            .padding(contentPadding)
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        HomeHero(uiState = uiState, onOpenGames = onOpenGames)
-        HomeSummaryRow(uiState = uiState)
-        FeaturedGamesPreview(onOpenGames = onOpenGames)
-        HomeActionCard(
-            title = "Oyunları keşfet",
-            description = "Meyve kes, engelden kaç veya görevleri tamamla.",
-            accent = Color(0xFFFF7A45),
-            actionLabel = "Kataloğu aç",
-            onClick = onOpenGames
-        )
-        HomeActionCard(
-            title = "Egzersiz başlat",
-            description = "Tek hareket seç, tekrarlarını say ve sonucu gör.",
-            accent = Color(0xFF10B981),
-            actionLabel = "Başlat",
-            onClick = onOpenWorkout
-        )
-        HomeActionCard(
-            title = "Hareket testi",
-            description = "Kamerayı kur, kadrajı kontrol et ve sayımı dene.",
-            accent = Color(0xFF2563EB),
-            actionLabel = "Test et",
-            onClick = onOpenMotionLab
-        )
-        if (debugEnabled) {
-            HomeDebugCard(uiState = uiState, onOpenMotionLab = onOpenMotionLab)
-        }
-    }
-}
-
-@Composable
-private fun HomeHero(
-    uiState: MotionUiState,
-    onOpenGames: () -> Unit
-) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Box(
-            modifier = Modifier
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(Color(0xFFF20DB9), Color(0xFFFF7A45), Color(0xFF06B6D4))
-                    ),
-                    RoundedCornerShape(28.dp)
-                )
-                .padding(20.dp)
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Pill("ALBAGO", Color.White.copy(alpha = 0.22f), Color.White)
-                Text(
-                    "Hareket et. Oyna. Skor yap.",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White
-                )
-                Text(
-                    "Kameranı aç, vücudun oyunun kumandası olsun. Kısa egzersizlerle eğlenceli skorlar topla.",
-                    color = Color.White.copy(alpha = 0.88f),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = onOpenGames) {
-                        Text("Oyunları keşfet")
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(999.dp),
-                        color = Color.White.copy(alpha = 0.18f)
-                    ) {
-                        Text(
-                            "${uiState.availableGames.size} oyun hazır",
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
-                            color = Color.White,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HomeSummaryRow(uiState: MotionUiState) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        SummaryTile(
-            modifier = Modifier.fillMaxWidth(),
-            title = "Günlük hedef",
-            value = "${maxOf(0, 30 - uiState.workout.totalReps)} tekrar kaldı",
-            accent = Color(0xFFFF7A45)
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            SummaryTile(
-                modifier = Modifier.weight(1f),
-                title = "Bugün",
-                value = "${uiState.workout.totalReps} tekrar",
-                accent = Color(0xFF10B981)
-            )
-            SummaryTile(
-                modifier = Modifier.weight(1f),
-                title = "Son oyun",
-                value = "${uiState.game.score} skor",
-                accent = Color(0xFF2563EB)
-            )
-        }
-    }
-}
-
-@Composable
-private fun FeaturedGamesPreview(onOpenGames: () -> Unit) {
-    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1627))) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Öne çıkan oyunlar", style = MaterialTheme.typography.titleLarge, color = Color.White)
-                    Text("3 farklı demo, aynı hareket motoru.", color = Color.White.copy(alpha = 0.68f))
-                }
-                OutlinedButton(onClick = onOpenGames) {
-                    Text("Aç")
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                GamePreviewTile(
-                    modifier = Modifier.weight(1f),
-                    title = "Meyve",
-                    subtitle = "Kes",
-                    accent = Color(0xFFFF7A45)
-                )
-                GamePreviewTile(
-                    modifier = Modifier.weight(1f),
-                    title = "Engel",
-                    subtitle = "Kaç",
-                    accent = Color(0xFF06B6D4)
-                )
-                GamePreviewTile(
-                    modifier = Modifier.weight(1f),
-                    title = "Spor",
-                    subtitle = "Tamamla",
-                    accent = Color(0xFF10B981)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun GamePreviewTile(
-    modifier: Modifier,
-    title: String,
-    subtitle: String,
-    accent: Color
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(22.dp),
-        color = accent.copy(alpha = 0.18f)
-    ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .background(accent.copy(alpha = 0.24f), RoundedCornerShape(14.dp))
-                    .border(1.dp, accent.copy(alpha = 0.38f), RoundedCornerShape(14.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(title.first().toString(), color = accent, fontWeight = FontWeight.Bold)
-            }
-            Text(title, color = Color.White, fontWeight = FontWeight.Bold)
-            Text(subtitle, color = Color.White.copy(alpha = 0.68f), style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
-@Composable
-private fun HomeActionCard(
-    title: String,
-    description: String,
-    accent: Color,
-    actionLabel: String,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1627))
-    ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(54.dp)
-                        .background(accent.copy(alpha = 0.14f), RoundedCornerShape(18.dp))
-                        .border(1.dp, accent.copy(alpha = 0.25f), RoundedCornerShape(18.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(16.dp)
-                            .background(accent, CircleShape)
-                    )
-                }
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(5.dp)
-                ) {
-                    Text(title, style = MaterialTheme.typography.titleLarge, color = Color.White)
-                    Text(description, color = Color.White.copy(alpha = 0.70f))
-                }
-            }
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onClick
-            ) {
-                Text(actionLabel)
-            }
-        }
-    }
-}
-
-@Composable
-private fun HomeDebugCard(
-    uiState: MotionUiState,
-    onOpenMotionLab: () -> Unit
-) {
-    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEEF6FF))) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Text("Geliştirici araçları", style = MaterialTheme.typography.titleMedium)
-            Text("QA panel, mock motion ve kamera overlay kontrolleri yalnız debug build'de görünür.")
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onOpenMotionLab) {
-                    Text("QA panel")
-                }
-                Pill(
-                    label = if (uiState.overlayEnabled) "Overlay açık" else "Overlay kapalı",
-                    background = Color(0xFFDBEAFE),
-                    foreground = Color(0xFF2563EB)
-                )
-            }
         }
     }
 }
@@ -753,7 +473,7 @@ private fun MotionScreenShell(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (qaEnabled) {
                             OutlinedButton(onClick = { qaExpanded = !qaExpanded }) {
-                                Text(if (qaExpanded) "QA gizle" else "QA goster")
+                                Text(if (qaExpanded) "QA gizle" else "QA göster")
                             }
                         }
                         OutlinedButton(onClick = onNavigateBack) {
@@ -773,7 +493,7 @@ private fun MotionScreenShell(
                         foreground = Color(0xFF15803D)
                     )
                     Pill(
-                        label = if (uiState.isUserInFrame) "Kadrajda" else "Kadraja don",
+                        label = if (uiState.isUserInFrame) "Kadrajda" else "Kadraja dön",
                         background = if (uiState.isUserInFrame) Color(0xFFF1F5F9) else Color(0xFFFFEDD5),
                         foreground = if (uiState.isUserInFrame) Color(0xFF334155) else Color(0xFFC2410C)
                     )
@@ -2123,45 +1843,6 @@ private fun MotionQaPanel(
                         Text("- $line", color = Color.White.copy(alpha = 0.86f))
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SummaryTile(
-    modifier: Modifier = Modifier,
-    title: String,
-    value: String,
-    accent: Color
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF32172B))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(accent.copy(alpha = 0.18f), RoundedCornerShape(16.dp))
-                    .border(1.dp, accent.copy(alpha = 0.38f), RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .background(accent, CircleShape)
-                )
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(title, style = MaterialTheme.typography.labelLarge, color = Color.White.copy(alpha = 0.72f))
-                Text(value, fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
     }
