@@ -825,6 +825,7 @@ fun NeonGamePrepScreen(
 ) {
     val game = uiState.activeGameDefinition
     if (game == null) {
+        val hasCachedGames = uiState.availableGames.isNotEmpty()
         NeonScreen(
             selectedTab = ShowcaseTab.DEMOS,
             onHome = onHome,
@@ -835,9 +836,16 @@ fun NeonGamePrepScreen(
             onProfile = onProfile
         ) {
             CenteredTitle(
-                title = "Oyun Yükleniyor",
-                subtitle = "Oyun tanımı alınıyor..."
+                title = if (hasCachedGames) "Oyun Yükleniyor" else "Oyun Yükleniyor",
+                subtitle = if (hasCachedGames)
+                    "Oyun tanımı önbellekten alınıyor..."
+                else
+                    "Oyun tanımı alınıyor... İnternet bağlantınızı kontrol edin."
             )
+            if (hasCachedGames) {
+                Spacer(modifier = Modifier.height(20.dp))
+                OutlineNeonButton(text = "Kataloğa dön", onClick = onBackToCatalog)
+            }
         }
         return
     }

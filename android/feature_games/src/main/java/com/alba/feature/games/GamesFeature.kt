@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -169,56 +170,66 @@ private fun GameCatalogScreen(
     var selectedCategory by rememberSaveable { mutableStateOf<GameCategory?>(null) }
     val filteredGames = games.filter { selectedCategory == null || it.category == selectedCategory }
 
-    HeroCard(
-        title = "Oyunlar",
-        eyebrow = "AlbaGo",
-        description = "Kameranı aç, hareketlerinle oyna. Her oyun kısa, net ve skor odaklı.",
-        accent = Color(0xFFFF7A45)
-    )
-
-    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1627))) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 60.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Oyun vitrini", style = MaterialTheme.typography.titleLarge, color = Color.White)
-            Text(
-                "Önce oyunu incele, kameranı güvenli bir yere yerleştir, sonra hareketlerinle skor üret.",
-                color = Color.White.copy(alpha = 0.78f)
+            HeroCard(
+                title = "Oyunlar",
+                eyebrow = "AlbaGo",
+                description = "Kameranı aç, hareketlerinle oyna. Her oyun kısa, net ve skor odaklı.",
+                accent = Color(0xFFFF7A45)
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onRefreshGames) {
-                    Text("Yenile")
-                }
-                OutlinedButton(onClick = onNavigateBack) {
-                    Text("Ana ekrana dön")
+
+            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1627))) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text("Oyun vitrini", style = MaterialTheme.typography.titleLarge, color = Color.White)
+                    Text(
+                        uiState.backendStatus,
+                        color = Color.White.copy(alpha = 0.78f)
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = onRefreshGames) {
+                            Text("Yenile")
+                        }
+                        OutlinedButton(onClick = onNavigateBack) {
+                            Text("Ana ekrana dön")
+                        }
+                    }
                 }
             }
-        }
-    }
 
-    CategoryFilterRow(
-        games = games,
-        selectedCategory = selectedCategory,
-        onSelectCategory = { selectedCategory = it }
-    )
-
-    if (filteredGames.isEmpty()) {
-        EmptyCatalogCard(
-            onRefreshGames = onRefreshGames,
-            onNavigateBack = onNavigateBack
-        )
-    } else {
-        filteredGames.forEach { game ->
-            DemoGameCard(
-                definition = game,
-                selected = uiState.activeGameId == game.gameId,
-                onOpenDetail = { onOpenDetail(game.gameId) }
+            CategoryFilterRow(
+                games = games,
+                selectedCategory = selectedCategory,
+                onSelectCategory = { selectedCategory = it }
             )
+
+            if (filteredGames.isEmpty()) {
+                EmptyCatalogCard(
+                    onRefreshGames = onRefreshGames,
+                    onNavigateBack = onNavigateBack
+                )
+            } else {
+                filteredGames.forEach { game ->
+                    DemoGameCard(
+                        definition = game,
+                        selected = uiState.activeGameId == game.gameId,
+                        onOpenDetail = { onOpenDetail(game.gameId) }
+                    )
+                }
+            }
+
+            CatalogStateCard(uiState = uiState, hasGames = games.isNotEmpty(), onRefreshGames = onRefreshGames)
         }
     }
-
-    CatalogStateCard(uiState = uiState, hasGames = games.isNotEmpty(), onRefreshGames = onRefreshGames)
 }
 
 @Composable
@@ -449,14 +460,17 @@ private fun CatalogStateCard(
     onRefreshGames: () -> Unit
 ) {
     val message = when {
-        uiState.backendStatus.contains("yüklen", ignoreCase = true) && !hasGames ->
+        uiState.backendStatus.contains("yükleniyor", ignoreCase = true) && !hasGames ->
             "Oyunlar yükleniyor..."
 
-        uiState.backendStatus.contains("Yerel demo", ignoreCase = true) ->
-            "Bağlantı kurulamadı. Çevrimdışı oyun gösterilemiyor."
+        uiState.backendStatus.contains("önbellekten", ignoreCase = true) ->
+            "Son kaydedilen oyunlar gösteriliyor — güncel veri için aşağı kaydırın."
 
-        uiState.backendStatus.contains("Önbellek", ignoreCase = true) ->
-            "Son yayınlanan oyunlar cihaz önbelleğinden gösteriliyor."
+        uiState.backendStatus.contains("çevrimdışı", ignoreCase = true) ->
+            "Çevrimdışı mod. Son kaydedilen oyunlar gösteriliyor."
+
+        uiState.backendStatus.contains("bağlantı hatası", ignoreCase = true) ->
+            "Bağlantı hatası — aşağı kaydırarak yenileyin."
 
         !hasGames ->
             "Oyun kataloğu yüklenemedi. Tekrar dene."

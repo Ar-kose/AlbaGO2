@@ -49,6 +49,23 @@ class MotionDebugStore(context: Context) {
             .apply()
     }
 
+    fun cacheGamesVersionMap(map: Map<String, Int>) {
+        val payload = JSONObject().apply {
+            map.forEach { (gameId, version) -> put(gameId, version) }
+        }
+        preferences.edit()
+            .putString(KEY_GAMES_VERSION_MAP, payload.toString())
+            .apply()
+    }
+
+    fun readCachedGamesVersionMap(): Map<String, Int> {
+        val payload = preferences.getString(KEY_GAMES_VERSION_MAP, null) ?: return emptyMap()
+        return runCatching {
+            val obj = JSONObject(payload)
+            obj.keys().asSequence().associateWith { key -> obj.getInt(key) }
+        }.getOrDefault(emptyMap())
+    }
+
     fun readCachedAvailableGames(): List<GameDefinition> {
         val payload = preferences.getString(KEY_AVAILABLE_GAMES_CACHE, null) ?: return emptyList()
         return runCatching {
@@ -325,6 +342,7 @@ class MotionDebugStore(context: Context) {
     private companion object {
         const val KEY_BACKEND_BASE_URL_OVERRIDE = "backend_base_url_override"
         const val KEY_AVAILABLE_GAMES_CACHE = "available_games_cache"
+        const val KEY_GAMES_VERSION_MAP = "games_version_map"
         const val KEY_PENDING_WORKOUT_SYNCS = "pending_workout_syncs"
         const val KEY_PENDING_GAME_SYNCS = "pending_game_syncs"
     }

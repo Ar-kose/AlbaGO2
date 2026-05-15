@@ -710,7 +710,30 @@ class AlbaMotionController(
 
 
     private suspend fun refreshActiveGames() {
-        _uiState.value = _uiState.value.copy(backendStatus = "Oyunlar yükleniyor")
+        // Phase 1: Show cached games immediately for fast launch
+        val cachedDefinitions = debugStore.readCachedAvailableGames()
+            .filter { it.isPlayablePublicGame() }
+            .sortedBy { publicTemplates.indexOf(it.template) }
+
+        if (cachedDefinitions.isNotEmpty()) {
+            val currentSelectionId = _uiState.value.activeGameId
+            val cachedSelection = cachedDefinitions.firstOrNull {
+                it.gameId == currentSelectionId && it.isPlayablePublicGame()
+            } ?: cachedDefinitions.firstOrNull()
+
+            _uiState.value = _uiState.value.copy(
+                availableGames = cachedDefinitions,
+                activeGameDefinition = cachedSelection,
+                activeGameId = cachedSelection?.gameId,
+                activeGameTemplate = cachedSelection?.template,
+                activeGameVersion = cachedSelection?.version,
+                backendStatus = "Önbellekten yükleniyor..."
+            )
+        } else {
+            _uiState.value = _uiState.value.copy(backendStatus = "Oyunlar yükleniyor")
+        }
+
+        // Phase 2: Network fetch in background
         var hasError = false
         val definitions = try {
             val games = SupabaseData.getActiveGames()
@@ -724,25 +747,46 @@ class AlbaMotionController(
             emptyList()
         }
 
-        debugStore.clearAvailableGamesCache()
+        // Phase 3: Version-aware cache update
+        if (definitions.isNotEmpty()) {
+            val cacheVersions = debugStore.readCachedGamesVersionMap()
+            val newVersions = definitions.associate { it.gameId to it.version }
+            if (cacheVersions != newVersions) {
+                debugStore.cacheAvailableGames(definitions)
+                debugStore.cacheGamesVersionMap(newVersions)
+            }
 
-        val currentSelectionId = _uiState.value.activeGameId
-        val selectedDefinition = definitions.firstOrNull { it.gameId == currentSelectionId && it.isPlayablePublicGame() }
-            ?: definitions.firstOrNull { it.isPlayablePublicGame() }
+            val currentSelectionId = _uiState.value.activeGameId
+            val selectedDefinition = definitions.firstOrNull {
+                it.gameId == currentSelectionId && it.isPlayablePublicGame()
+            } ?: definitions.firstOrNull()
 
-        _uiState.value = _uiState.value.copy(
-            availableGames = definitions,
-            activeGameDefinition = selectedDefinition,
-            activeGameId = selectedDefinition?.gameId,
-            activeGameTemplate = selectedDefinition?.template,
-            activeGameVersion = selectedDefinition?.version,
-            backendStatus = when {
-                hasError -> "Bağlantı hatası — aşağı kaydırarak yenileyin"
-                definitions.isEmpty() -> "Oyun bulunamadı"
-                else -> "Bağlı"
-            },
-            lastError = if (hasError) "Backend bağlantısı başarısız. İnternet bağlantınızı ve QA Panel'deki URL'yi kontrol edin." else null
-        )
+            _uiState.value = _uiState.value.copy(
+                availableGames = definitions,
+                activeGameDefinition = selectedDefinition,
+                activeGameId = selectedDefinition?.gameId,
+                activeGameTemplate = selectedDefinition?.template,
+                activeGameVersion = selectedDefinition?.version,
+                backendStatus = if (hasError) "Bağlı (güncellenemedi)" else "Bağlı",
+                lastError = null
+            )
+        } else if (cachedDefinitions.isNotEmpty()) {
+            // Network failed or empty — keep showing cache
+            _uiState.value = _uiState.value.copy(
+                backendStatus = "Çevrimdışı — önbellekten gösteriliyor",
+                lastError = if (hasError) "Backend bağlantısı başarısız. Önbellekteki oyunlar gösteriliyor." else null
+            )
+        } else if (hasError) {
+            _uiState.value = _uiState.value.copy(
+                backendStatus = "Bağlantı hatası — aşağı kaydırarak yenileyin",
+                lastError = "Backend bağlantısı başarısız. İnternet bağlantınızı ve QA Panel'deki URL'yi kontrol edin."
+            )
+        } else {
+            _uiState.value = _uiState.value.copy(
+                backendStatus = "Oyun bulunamadı",
+                lastError = null
+            )
+        }
     }
 
     private suspend fun supabaseGameToDefinition(

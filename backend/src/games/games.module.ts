@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Injectable, Module, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Injectable, Module, Param, Patch, Post, Query, Res, UseGuards } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { AdminTokenGuard } from '../common/admin-token.guard';
 import { ApiTags } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -568,10 +569,24 @@ class GamesController {
   constructor(private readonly service: GamesService) {}
 
   @Get('active')
-  async active(@Query('appVersion') appVersion = '0.1.0') {
-    return {
-      items: await this.service.getActive(appVersion)
-    };
+  async active(
+    @Query('appVersion') appVersion = '0.1.0',
+    @Headers('If-None-Match') ifNoneMatch?: string,
+    @Res({ passthrough: true }) res?: any
+  ) {
+    const items = await this.service.getActive(appVersion);
+    const body = { items };
+    const bodyJson = JSON.stringify(body);
+    const etag = crypto.createHash('md5').update(bodyJson).digest('hex');
+
+    if (ifNoneMatch === etag) {
+      res?.status(304);
+      return;
+    }
+
+    res?.setHeader('ETag', etag);
+    res?.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    return body;
   }
 
   @Get('categories')
@@ -716,7 +731,8 @@ function mapGameDefinitionToResponse(game: GameDefinitionEntity) {
       programSteps: level.programSteps ?? readProgramSteps(level.configJson)
     })),
     assets: game.assets,
-    publishedAt: game.publishedAt
+    publishedAt: game.publishedAt,
+    updatedAt: game.publishedAt // last meaningful change timestamp for cache invalidation
   };
 }
 
