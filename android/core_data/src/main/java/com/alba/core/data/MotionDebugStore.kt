@@ -43,6 +43,12 @@ class MotionDebugStore(context: Context) {
             .apply()
     }
 
+    fun clearAvailableGamesCache() {
+        preferences.edit()
+            .remove(KEY_AVAILABLE_GAMES_CACHE)
+            .apply()
+    }
+
     fun readCachedAvailableGames(): List<GameDefinition> {
         val payload = preferences.getString(KEY_AVAILABLE_GAMES_CACHE, null) ?: return emptyList()
         return runCatching {

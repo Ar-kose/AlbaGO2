@@ -172,11 +172,7 @@ class AlbaMotionController(
     }
 
     fun selectGameDefinition(gameId: String) {
-        var definition = _uiState.value.availableGames.firstOrNull { it.gameId == gameId && it.isPlayablePublicGame() }
-        if (definition == null) {
-            // Fallback: search hardcoded demo games when backend returns UUID-based IDs
-            definition = fallbackDemoGames().firstOrNull { it.gameId == gameId }
-        }
+        val definition = _uiState.value.availableGames.firstOrNull { it.gameId == gameId && it.isPlayablePublicGame() }
         if (definition == null) return
         _uiState.value = _uiState.value.copy(
             activeGameDefinition = definition,
@@ -263,11 +259,10 @@ class AlbaMotionController(
         val definition = _uiState.value.activeGameDefinition
             ?.takeIf { it.isPlayablePublicGame() }
             ?: _uiState.value.availableGames.firstOrNull { it.isPlayablePublicGame() }
-            ?: fallbackDemoGames().firstOrNull()
             ?: run {
                 _uiState.value = _uiState.value.copy(
                     backendStatus = "Oyun kataloğu yüklenemedi",
-                    lastError = "Başlatılabilir demo oyun bulunamadı"
+                    lastError = "Başlatılabilir oyun bulunamadı"
                 )
                 return
             }
@@ -717,30 +712,19 @@ class AlbaMotionController(
     private suspend fun refreshActiveGames() {
         _uiState.value = _uiState.value.copy(backendStatus = "Oyunlar yükleniyor")
         var hasError = false
-        val gameIds = mutableListOf<String>()
         val definitions = try {
             val games = SupabaseData.getActiveGames()
             games.mapNotNull { game ->
-                gameIds.add(game.id)
                 val version = SupabaseData.getGameWithVersions(game.id).second.firstOrNull() ?: return@mapNotNull null
                 supabaseGameToDefinition(game, version)
                     ?.takeIf { it.isPlayablePublicGame() }
             }.sortedBy { publicTemplates.indexOf(it.template) }
         } catch (e: Exception) {
             hasError = true
-            val cachedGames = debugStore.readCachedAvailableGames()
-                .filter { it.isPlayablePublicGame() }
-                .sortedBy { publicTemplates.indexOf(it.template) }
-            when {
-                cachedGames.isNotEmpty() -> cachedGames
-                debugConfig.isDebugBuild -> fallbackDemoGames()
-                else -> emptyList()
-            }
+            emptyList()
         }
 
-        if (definitions.isNotEmpty() && !hasError) {
-            debugStore.cacheAvailableGames(definitions)
-        }
+        debugStore.clearAvailableGamesCache()
 
         val currentSelectionId = _uiState.value.activeGameId
         val selectedDefinition = definitions.firstOrNull { it.gameId == currentSelectionId && it.isPlayablePublicGame() }
@@ -753,11 +737,11 @@ class AlbaMotionController(
             activeGameTemplate = selectedDefinition?.template,
             activeGameVersion = selectedDefinition?.version,
             backendStatus = when {
-                !hasError && definitions.isNotEmpty() -> "Bağlı"
-                definitions.isNotEmpty() -> "Önbellekten yüklendi"
-                else -> "Çevrimdışı — veri yüklenemedi"
+                hasError -> "Bağlantı hatası — aşağı kaydırarak yenileyin"
+                definitions.isEmpty() -> "Oyun bulunamadı"
+                else -> "Bağlı"
             },
-            lastError = if (hasError) "Supabase bağlantısı başarısız, önbellek kullanılıyor" else null
+            lastError = if (hasError) "Backend bağlantısı başarısız. İnternet bağlantınızı ve QA Panel'deki URL'yi kontrol edin." else null
         )
     }
 
@@ -1243,180 +1227,7 @@ class AlbaMotionController(
     }
 
     private fun fallbackDemoGames(): List<GameDefinition> {
-        return listOf(
-            GameDefinition(
-                gameId = "fruit_slash_demo",
-                version = 1,
-                template = GameTemplate.FRUIT_SLASH,
-                title = "Meyve Kesme",
-                description = "Jumping jack ve squat ile ritimli meyve kesme demosu.",
-                status = PublishStatus.PUBLISHED,
-                minAppVersion = "0.1.0",
-                category = GameCategory.FUN,
-                tags = listOf("reflex", "arcade"),
-                supportedMotions = listOf(MotionType.SQUAT, MotionType.JUMPING_JACK),
-                levels = listOf(
-                    GameLevelDefinition(
-                        levelId = "fruit_slash_level_1",
-                        durationSec = 60,
-                        targetScore = 420,
-                        difficulty = "EASY",
-                        motionRules = listOf(
-                            MotionRule(MotionType.JUMPING_JACK, MotionEventType.REP_COUNTED, 15, 400),
-                            MotionRule(MotionType.SQUAT, MotionEventType.REP_COUNTED, 10, 500),
-                            MotionRule(MotionType.SQUAT, MotionEventType.BAD_FORM, -5, 250),
-                            MotionRule(MotionType.JUMPING_JACK, MotionEventType.BAD_FORM, -5, 250)
-                        ),
-                        rewards = listOf(RewardRule("STAR", 3, 420)),
-                        config = mapOf(
-                            "spawnRateMs" to 900,
-                            "comboMultiplier" to true,
-                            "penaltyObjects" to true,
-                            "penaltyPoints" to 10
-                        ),
-                        programSteps = listOf(
-                            ProgramStepDefinition(
-                                stepId = "fruit_step_play",
-                                type = ProgramStepType.PLAY_GAME,
-                                title = "Meyveleri kes",
-                                durationSec = 60,
-                                successMessage = "Meyve turu tamamlandı."
-                            )
-                        )
-                    )
-                ),
-                assets = AssetManifest(
-                    background = "local://fruit-slash/background",
-                    character = "local://fruit-slash/hero",
-                    soundtrack = "local://fruit-slash/theme"
-                )
-            ),
-            GameDefinition(
-                gameId = "dodge_run_demo",
-                version = 1,
-                template = GameTemplate.DODGE_RUN,
-                title = "Engelden Kaçış",
-                description = "Squat, jumping jack ve jump rope ile kaçış demosu.",
-                status = PublishStatus.PUBLISHED,
-                minAppVersion = "0.1.0",
-                category = GameCategory.FUN,
-                tags = listOf("runner", "reaction"),
-                supportedMotions = listOf(MotionType.SQUAT, MotionType.JUMPING_JACK, MotionType.JUMP_ROPE),
-                levels = listOf(
-                    GameLevelDefinition(
-                        levelId = "dodge_run_level_1",
-                        durationSec = 60,
-                        targetScore = 500,
-                        difficulty = "MEDIUM",
-                        motionRules = listOf(
-                            MotionRule(MotionType.SQUAT, MotionEventType.REP_COUNTED, 10, 500),
-                            MotionRule(MotionType.JUMPING_JACK, MotionEventType.REP_COUNTED, 15, 450),
-                            MotionRule(MotionType.JUMP_ROPE, MotionEventType.REP_COUNTED, 3, 250),
-                            MotionRule(MotionType.SQUAT, MotionEventType.BAD_FORM, -5, 250),
-                            MotionRule(MotionType.JUMPING_JACK, MotionEventType.BAD_FORM, -5, 250)
-                        ),
-                        rewards = listOf(RewardRule("ENERGY", 1, 350)),
-                        config = mapOf(
-                            "lives" to 3,
-                            "obstacleSpawnMs" to 1400,
-                            "pauseOnOutOfFrame" to true,
-                            "baseDistancePerTick" to 2,
-                            "damageOnMiss" to 1
-                        ),
-                        programSteps = listOf(
-                            ProgramStepDefinition(
-                                stepId = "dodge_step_play",
-                                type = ProgramStepType.PLAY_GAME,
-                                title = "Engelleri gec",
-                                durationSec = 60,
-                                successMessage = "Kaçış parkuru tamamlandı."
-                            )
-                        )
-                    )
-                ),
-                assets = AssetManifest(
-                    background = "local://dodge-run/background",
-                    character = "local://dodge-run/runner",
-                    soundtrack = "local://dodge-run/theme"
-                )
-            ),
-            GameDefinition(
-                gameId = "fit_challenge_demo",
-                version = 1,
-                template = GameTemplate.FIT_CHALLENGE,
-                title = "Spor Mücadelesi",
-                description = "Görev tabanlı egzersiz demosu.",
-                status = PublishStatus.PUBLISHED,
-                minAppVersion = "0.1.0",
-                category = GameCategory.SPORT,
-                tags = listOf("playlist", "fitness"),
-                supportedMotions = listOf(MotionType.SQUAT, MotionType.JUMPING_JACK, MotionType.JUMP_ROPE),
-                levels = listOf(
-                    GameLevelDefinition(
-                        levelId = "fit_challenge_level_1",
-                        durationSec = 120,
-                        targetScore = 620,
-                        difficulty = "CHALLENGE",
-                        motionRules = listOf(
-                            MotionRule(MotionType.SQUAT, MotionEventType.REP_COUNTED, 10, 500),
-                            MotionRule(MotionType.JUMPING_JACK, MotionEventType.REP_COUNTED, 12, 400),
-                            MotionRule(MotionType.JUMP_ROPE, MotionEventType.REP_COUNTED, 3, 220),
-                            MotionRule(MotionType.SQUAT, MotionEventType.BAD_FORM, -3, 250),
-                            MotionRule(MotionType.JUMPING_JACK, MotionEventType.BAD_FORM, -3, 250),
-                            MotionRule(MotionType.JUMP_ROPE, MotionEventType.BAD_FORM, -2, 200)
-                        ),
-                        rewards = listOf(RewardRule("BADGE", 1, 620)),
-                        config = mapOf(
-                            "showQualityScore" to true,
-                            "advanceAutomatically" to true
-                        ),
-                        tasks = listOf(
-                            GameTaskDefinition(MotionType.SQUAT, 10, 10),
-                            GameTaskDefinition(MotionType.JUMPING_JACK, 10, 12),
-                            GameTaskDefinition(MotionType.JUMP_ROPE, 20, 3)
-                        ),
-                        programSteps = listOf(
-                            ProgramStepDefinition(
-                                stepId = "fit_step_squat",
-                                type = ProgramStepType.MOTION_REPS,
-                                title = "Squat seti",
-                                motion = MotionType.SQUAT,
-                                targetCount = 10,
-                                successMessage = "Squat seti tamamlandı."
-                            ),
-                            ProgramStepDefinition(
-                                stepId = "fit_step_jumping_jack",
-                                type = ProgramStepType.MOTION_REPS,
-                                title = "Jumping jack seti",
-                                motion = MotionType.JUMPING_JACK,
-                                targetCount = 10,
-                                successMessage = "Ritim güzel."
-                            ),
-                            ProgramStepDefinition(
-                                stepId = "fit_step_jump_rope",
-                                type = ProgramStepType.MOTION_REPS,
-                                title = "Jump rope enerjisi",
-                                motion = MotionType.JUMP_ROPE,
-                                targetCount = 20,
-                                successMessage = "Enerji toplandı."
-                            ),
-                            ProgramStepDefinition(
-                                stepId = "fit_step_plank",
-                                type = ProgramStepType.HOLD_POSE,
-                                title = "Plank tutuşu",
-                                holdSec = 30,
-                                successMessage = "Tebrikler, program tamamlandı."
-                            )
-                        )
-                    )
-                ),
-                assets = AssetManifest(
-                    background = "local://fit-challenge/background",
-                    character = "local://fit-challenge/coach",
-                    soundtrack = "local://fit-challenge/theme"
-                )
-            )
-        )
+        return emptyList()
     }
 
     private companion object {
