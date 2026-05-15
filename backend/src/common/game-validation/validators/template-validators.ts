@@ -12,42 +12,74 @@ export function validatePoseContactTargets(config: JsonObject, assetKeys: Set<st
 
   const targets = config.targets as JsonObject[] | undefined;
   if (!targets || targets.length === 0) {
-    errors.push({ code: 'POSE_TARGETS_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE', path: `${path}.targets`, message: 'At least one contact target is required.' });
+    errors.push({
+      code: 'POSE_TARGETS_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE',
+      path: `${path}.targets`,
+      message: 'En az bir temas hedefi (contact target) tanimlanmalidir. targets dizisine en az bir hedef nesne ekleyin.'
+    });
   } else {
     const targetIds = new Set<string>();
     targets.forEach((target, index) => {
       const tp = `${path}.targets[${index}]`;
       const targetId = target.targetId as string | undefined;
       if (!targetId?.trim()) {
-        errors.push({ code: 'POSE_TARGET_ID_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE', path: `${tp}.targetId`, message: 'targetId is required.' });
+        errors.push({
+          code: 'POSE_TARGET_ID_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE',
+          path: `${tp}.targetId`,
+          message: `Hedef #${index + 1} icin targetId zorunludur.`
+        });
       } else if (targetIds.has(targetId)) {
-        errors.push({ code: 'POSE_TARGET_ID_DUPLICATE', severity: 'ERROR', scope: 'TEMPLATE', path: `${tp}.targetId`, message: `Duplicate targetId '${targetId}'.` });
+        errors.push({
+          code: 'POSE_TARGET_ID_DUPLICATE', severity: 'ERROR', scope: 'TEMPLATE',
+          path: `${tp}.targetId`,
+          message: `"${targetId}" targetId degeri birden fazla hedefte kullanilmis. Her hedefin targetId degeri benzersiz olmalidir.`
+        });
       }
       if (targetId) targetIds.add(targetId);
 
       const x = target.x as number | undefined;
       if (x === undefined || x < 0 || x > 1) {
-        errors.push({ code: 'POSE_TARGET_X_INVALID', severity: 'ERROR', scope: 'TEMPLATE', path: `${tp}.x`, message: 'Target x must be 0..1.' });
+        errors.push({
+          code: 'POSE_TARGET_X_INVALID', severity: 'ERROR', scope: 'TEMPLATE',
+          path: `${tp}.x`,
+          message: `Hedef #${index + 1} icin x konumu 0 ile 1 arasinda olmalidir (ekranin sol-sag orani).`
+        });
       }
       const y = target.y as number | undefined;
       if (y === undefined || y < 0 || y > 1) {
-        errors.push({ code: 'POSE_TARGET_Y_INVALID', severity: 'ERROR', scope: 'TEMPLATE', path: `${tp}.y`, message: 'Target y must be 0..1.' });
+        errors.push({
+          code: 'POSE_TARGET_Y_INVALID', severity: 'ERROR', scope: 'TEMPLATE',
+          path: `${tp}.y`,
+          message: `Hedef #${index + 1} icin y konumu 0 ile 1 arasinda olmalidir (ekranin ust-alt orani).`
+        });
       }
 
       const hitBy = target.hitBy as string[] | undefined;
       if (!hitBy || hitBy.length === 0) {
-        errors.push({ code: 'POSE_TARGET_HITBY_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE', path: `${tp}.hitBy`, message: 'hitBy keypoints required.' });
+        errors.push({
+          code: 'POSE_TARGET_HITBY_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE',
+          path: `${tp}.hitBy`,
+          message: `Hedef #${index + 1} icin hitBy alani zorunludur. Hedefe hangi vucut noktasiyla dokunulacagini belirtin (orn: "LEFT_WRIST", "RIGHT_WRIST").`
+        });
       } else {
         hitBy.forEach((kp, ki) => {
           if (!POSE_KEYPOINTS.has(kp)) {
-            errors.push({ code: 'POSE_TARGET_HITBY_INVALID', severity: 'ERROR', scope: 'TEMPLATE', path: `${tp}.hitBy[${ki}]`, message: `Invalid keypoint: ${kp}` });
+            errors.push({
+              code: 'POSE_TARGET_HITBY_INVALID', severity: 'ERROR', scope: 'TEMPLATE',
+              path: `${tp}.hitBy[${ki}]`,
+              message: `"${kp}" gecerli bir vucut noktasi degil. Gecerli noktalar: LEFT_WRIST, RIGHT_WRIST, LEFT_INDEX, RIGHT_INDEX, LEFT_ELBOW, RIGHT_ELBOW, NOSE vb.`
+            });
           }
         });
       }
 
       const assetKey = target.assetKey as string | undefined;
       if (assetKey && assetKeys.size > 0 && !assetKeys.has(assetKey)) {
-        errors.push({ code: 'POSE_TARGET_ASSET_MISSING', severity: 'ERROR', scope: 'ASSET', path: `${tp}.assetKey`, message: `Asset '${assetKey}' not found.` });
+        errors.push({
+          code: 'POSE_TARGET_ASSET_MISSING', severity: 'ERROR', scope: 'ASSET',
+          path: `${tp}.assetKey`,
+          message: `"${assetKey}" asset'i Asset Library'de bulunamadi. Once asset'i yukleyin veya mevcut bir asset key kullanin.`
+        });
       }
     });
   }
@@ -63,39 +95,63 @@ export function validatePoseHold(config: JsonObject, assetKeys: Set<string>): Ga
 
   const hold = config.hold as JsonObject | undefined;
   if (!hold) {
-    errors.push({ code: 'POSEHOLD_CONFIG_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE', path: '$.config.hold', message: 'hold configuration is required for POSE_HOLD.' });
+    errors.push({
+      code: 'POSEHOLD_CONFIG_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE',
+      path: '$.config.hold',
+      message: 'POSE_HOLD template\'i icin "hold" yapilandirmasi zorunludur. Tutus suresi ve poz bilgilerini girin.'
+    });
     return failResult(errors, warnings);
   }
 
   const targetHoldSec = hold.targetHoldSec as number | undefined;
   if (targetHoldSec === undefined || targetHoldSec < 3 || targetHoldSec > 300) {
-    errors.push({ code: 'POSEHOLD_DURATION_INVALID', severity: 'ERROR', scope: 'TEMPLATE', path: `${path}.targetHoldSec`, message: 'targetHoldSec must be between 3 and 300 seconds.' });
+    errors.push({
+      code: 'POSEHOLD_DURATION_INVALID', severity: 'ERROR', scope: 'TEMPLATE',
+      path: `${path}.targetHoldSec`,
+      message: 'Tutus suresi (targetHoldSec) 3-300 saniye arasinda olmalidir.'
+    });
   }
 
   const graceMs = hold.graceMs as number | undefined;
   if (graceMs !== undefined && (graceMs < 0 || graceMs > 5000)) {
-    errors.push({ code: 'POSEHOLD_GRACE_INVALID', severity: 'ERROR', scope: 'TEMPLATE', path: `${path}.graceMs`, message: 'graceMs must be between 0 and 5000.' });
+    errors.push({
+      code: 'POSEHOLD_GRACE_INVALID', severity: 'ERROR', scope: 'TEMPLATE',
+      path: `${path}.graceMs`,
+      message: 'Tolerans suresi (graceMs) 0-5000 milisaniye arasinda olmalidir.'
+    });
   }
 
   const minConfidence = hold.minConfidence as number | undefined;
   if (minConfidence !== undefined && (minConfidence < 0 || minConfidence > 1)) {
-    errors.push({ code: 'POSEHOLD_CONFIDENCE_INVALID', severity: 'ERROR', scope: 'TEMPLATE', path: `${path}.minConfidence`, message: 'minConfidence must be 0..1.' });
+    errors.push({
+      code: 'POSEHOLD_CONFIDENCE_INVALID', severity: 'ERROR', scope: 'TEMPLATE',
+      path: `${path}.minConfidence`,
+      message: 'Minimum guven orani (minConfidence) 0 ile 1 arasinda olmalidir.'
+    });
   }
 
   const pose = hold.pose as string | undefined;
   if (pose && !['PLANK', 'BALANCE', 'CUSTOM'].includes(pose)) {
-    errors.push({ code: 'POSEHOLD_POSE_INVALID', severity: 'ERROR', scope: 'TEMPLATE', path: `${path}.pose`, message: `pose must be PLANK, BALANCE, or CUSTOM. Got: ${pose}.` });
+    errors.push({
+      code: 'POSEHOLD_POSE_INVALID', severity: 'ERROR', scope: 'TEMPLATE',
+      path: `${path}.pose`,
+      message: `Poz "${pose}" gecersiz. PLANK, BALANCE veya CUSTOM degerlerinden birini kullanin.`
+    });
   }
 
   const cameraReq = (config.cameraRequirement as string) || 'FULL_BODY';
   if (cameraReq !== 'FULL_BODY') {
-    warnings.push({ code: 'POSEHOLD_CAMERA_WARNING', severity: 'WARNING', scope: 'TEMPLATE', path: '$.config.cameraRequirement', message: 'FULL_BODY recommended for POSE_HOLD.' });
+    warnings.push({
+      code: 'POSEHOLD_CAMERA_WARNING', severity: 'WARNING', scope: 'TEMPLATE',
+      path: '$.config.cameraRequirement',
+      message: 'POSE_HOLD icin Tum Vucut (FULL_BODY) kamera modu onerilir.'
+    });
   }
 
   return errors.length === 0 ? okResult(warnings) : failResult(errors, warnings);
 }
 
-// ---- RHYTHM_MOTION skeleton ----
+// ---- RHYTHM_MOTION ----
 export function validateRhythmMotion(config: JsonObject, assetKeys: Set<string>): GameValidationResult {
   const errors: GameValidationIssue[] = [];
   const warnings: GameValidationIssue[] = [];
@@ -108,20 +164,32 @@ export function validateRhythmMotion(config: JsonObject, assetKeys: Set<string>)
       const np = `${path}.notes[${index}]`;
       const noteId = note.noteId as string | undefined;
       if (noteId && noteIds.has(noteId)) {
-        errors.push({ code: 'RHYTHM_NOTE_ID_DUPLICATE', severity: 'ERROR', scope: 'TEMPLATE', path: `${np}.noteId`, message: `Duplicate noteId: ${noteId}` });
+        errors.push({
+          code: 'RHYTHM_NOTE_ID_DUPLICATE', severity: 'ERROR', scope: 'TEMPLATE',
+          path: `${np}.noteId`,
+          message: `"${noteId}" nota kimligi birden fazla notada kullanilmis. Her nota benzersiz bir noteId degerine sahip olmalidir.`
+        });
       }
       if (noteId) noteIds.add(noteId);
 
       const windowMs = note.windowMs as number | undefined;
       if (windowMs !== undefined && (windowMs < 50 || windowMs > 2000)) {
-        errors.push({ code: 'RHYTHM_WINDOW_INVALID', severity: 'ERROR', scope: 'TEMPLATE', path: `${np}.windowMs`, message: 'windowMs must be 50..2000.' });
+        errors.push({
+          code: 'RHYTHM_WINDOW_INVALID', severity: 'ERROR', scope: 'TEMPLATE',
+          path: `${np}.windowMs`,
+          message: 'Zaman penceresi (windowMs) 50-2000 milisaniye arasinda olmalidir.'
+        });
       }
     });
   }
 
   const bpm = config.bpm as number | undefined;
   if (bpm !== undefined && (bpm < 40 || bpm > 220)) {
-    errors.push({ code: 'RHYTHM_BPM_INVALID', severity: 'ERROR', scope: 'TEMPLATE', path: `${path}.bpm`, message: 'bpm must be 40..220.' });
+    errors.push({
+      code: 'RHYTHM_BPM_INVALID', severity: 'ERROR', scope: 'TEMPLATE',
+      path: `${path}.bpm`,
+      message: 'BPM degeri 40-220 arasinda olmalidir.'
+    });
   }
 
   return errors.length === 0 ? okResult(warnings) : failResult(errors, warnings);
@@ -134,22 +202,38 @@ export function validateQuiz(config: JsonObject, assetKeys: Set<string>): GameVa
 
   const questions = config.questions as JsonObject[] | undefined;
   if (!questions || questions.length === 0) {
-    errors.push({ code: 'QUIZ_QUESTIONS_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE', path: `${path}.questions`, message: 'At least one question is required for QUIZ.' });
+    errors.push({
+      code: 'QUIZ_QUESTIONS_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE',
+      path: `${path}.questions`,
+      message: 'QUIZ template\'i icin en az bir soru tanimlanmalidir.'
+    });
     return failResult(errors);
   }
 
   questions.forEach((q, qi) => {
     const qp = `${path}.questions[${qi}]`;
     if (!(q.prompt as string)?.trim()) {
-      errors.push({ code: 'QUIZ_PROMPT_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE', path: `${qp}.prompt`, message: 'Question prompt is required.' });
+      errors.push({
+        code: 'QUIZ_PROMPT_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE',
+        path: `${qp}.prompt`,
+        message: `Soru #${qi + 1} icin soru metni (prompt) zorunludur.`
+      });
     }
     const choices = q.choices as string[] | undefined;
     if (!choices || choices.length < 2 || choices.length > 6) {
-      errors.push({ code: 'QUIZ_CHOICES_INVALID', severity: 'ERROR', scope: 'TEMPLATE', path: `${qp}.choices`, message: 'Question must have 2-6 choices.' });
+      errors.push({
+        code: 'QUIZ_CHOICES_INVALID', severity: 'ERROR', scope: 'TEMPLATE',
+        path: `${qp}.choices`,
+        message: `Soru #${qi + 1} icin 2-6 arasi secenek tanimlanmalidir.`
+      });
     }
     const correctIndex = q.correctIndex as number | undefined;
     if (correctIndex !== undefined && choices && (correctIndex < 0 || correctIndex >= choices.length)) {
-      errors.push({ code: 'QUIZ_CORRECT_OUT_OF_RANGE', severity: 'ERROR', scope: 'TEMPLATE', path: `${qp}.correctIndex`, message: `correctIndex ${correctIndex} out of range (0-${choices.length - 1}).` });
+      errors.push({
+        code: 'QUIZ_CORRECT_OUT_OF_RANGE', severity: 'ERROR', scope: 'TEMPLATE',
+        path: `${qp}.correctIndex`,
+        message: `Soru #${qi + 1} icin dogru cevap indeksi (correctIndex) 0-${choices.length - 1} arasinda olmalidir.`
+      });
     }
   });
 
@@ -163,7 +247,11 @@ export function validateFlashcard(config: JsonObject, assetKeys: Set<string>): G
 
   const cards = config.cards as JsonObject[] | undefined;
   if (!cards || cards.length === 0) {
-    errors.push({ code: 'FLASHCARD_CARDS_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE', path: `${path}.cards`, message: 'At least one card is required for FLASHCARD.' });
+    errors.push({
+      code: 'FLASHCARD_CARDS_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE',
+      path: `${path}.cards`,
+      message: 'FLASHCARD template\'i icin en az bir kart tanimlanmalidir.'
+    });
     return failResult(errors);
   }
 
@@ -174,7 +262,11 @@ export function validateFlashcard(config: JsonObject, assetKeys: Set<string>): G
     const hasImage = !!(card.imageAssetKey as string);
     const hasAudio = !!(card.audioAssetKey as string);
     if (!hasFrontText && !hasBackText && !hasImage && !hasAudio) {
-      errors.push({ code: 'FLASHCARD_CONTENT_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE', path: `${cp}`, message: 'Card must have at least one of: frontText, backText, imageAssetKey, audioAssetKey.' });
+      errors.push({
+        code: 'FLASHCARD_CONTENT_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE',
+        path: `${cp}`,
+        message: `Kart #${ci + 1} icin en az bir icerik turu gereklidir: on yazi (frontText), arka yazi (backText), gorsel (imageAssetKey) veya ses (audioAssetKey).`
+      });
     }
   });
 
@@ -188,7 +280,11 @@ export function validateMemoryMatch(config: JsonObject, assetKeys: Set<string>):
 
   const pairs = config.pairs as JsonObject[] | undefined;
   if (!pairs || pairs.length < 2) {
-    errors.push({ code: 'MEMORY_PAIRS_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE', path: `${path}.pairs`, message: 'At least 2 pairs are required for MEMORY_MATCH.' });
+    errors.push({
+      code: 'MEMORY_PAIRS_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE',
+      path: `${path}.pairs`,
+      message: 'MEMORY_MATCH template\'i icin en az 2 eslestirme cifti tanimlanmalidir.'
+    });
     return failResult(errors);
   }
 
@@ -197,7 +293,11 @@ export function validateMemoryMatch(config: JsonObject, assetKeys: Set<string>):
     const left = pair.left as JsonObject | undefined;
     const right = pair.right as JsonObject | undefined;
     if (!left && !right) {
-      errors.push({ code: 'MEMORY_PAIR_INVALID', severity: 'ERROR', scope: 'TEMPLATE', path: pp, message: 'Each pair must have left and right objects.' });
+      errors.push({
+        code: 'MEMORY_PAIR_INVALID', severity: 'ERROR', scope: 'TEMPLATE',
+        path: pp,
+        message: `Eslestirme #${pi + 1} icin sol (left) ve sag (right) nesneleri tanimlanmalidir.`
+      });
     } else {
       [left, right].forEach((side, si) => {
         if (!side) return;
@@ -205,7 +305,11 @@ export function validateMemoryMatch(config: JsonObject, assetKeys: Set<string>):
         const hasImage = !!(side.imageAssetKey as string);
         const hasAudio = !!(side.audioAssetKey as string);
         if (!hasText && !hasImage && !hasAudio) {
-          errors.push({ code: 'MEMORY_SIDE_CONTENT_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE', path: `${pp}.${si === 0 ? 'left' : 'right'}`, message: 'Each side must have text, imageAssetKey, or audioAssetKey.' });
+          errors.push({
+            code: 'MEMORY_SIDE_CONTENT_REQUIRED', severity: 'ERROR', scope: 'TEMPLATE',
+            path: `${pp}.${si === 0 ? 'left' : 'right'}`,
+            message: `Eslestirme #${pi + 1} ${si === 0 ? 'sol' : 'sag'} tarafi icin en az bir icerik gereklidir: yazi (text), gorsel (imageAssetKey) veya ses (audioAssetKey).`
+          });
         }
       });
     }

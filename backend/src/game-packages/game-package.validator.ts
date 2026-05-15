@@ -4,11 +4,20 @@ import {
   PackageValidationIssue,
   RuntimeCompatibility
 } from './game-package.types';
+import { TEMPLATE_REGISTRY } from '../common/game-validation/game-template-registry';
+import { GameTemplateKey, CameraRequirement } from '../common/contracts';
 
-const SUPPORTED_TEMPLATES = ['FRUIT_SLASH'];
+const SUPPORTED_TEMPLATES: GameTemplateKey[] = ['FRUIT_SLASH', 'DODGE_RUN', 'FIT_CHALLENGE', 'SCENE_PLAY', 'WHACK_A_MOLE', 'POSE_CONTACT_TARGETS'];
 const SUPPORTED_CATEGORIES = ['FUN', 'SPORT', 'EDUCATION'];
 const SUPPORTED_ORIENTATIONS = ['PORTRAIT', 'LANDSCAPE', 'AUTO'];
-const SUPPORTED_CAMERA_REQUIREMENTS = ['FULL_BODY', 'UPPER_BODY', 'HAND_TARGET'];
+
+function cameraLabel(cr: CameraRequirement): string {
+  switch (cr) {
+    case 'FULL_BODY': return 'Tüm Vücut (FULL_BODY)';
+    case 'UPPER_BODY': return 'Üst Vücut (UPPER_BODY)';
+    case 'HAND_TARGET': return 'El Hedefi (HAND_TARGET)';
+  }
+}
 const SUPPORTED_MOTIONS = [
   'SQUAT', 'JUMPING_JACK', 'JUMP_ROPE', 'PLANK_HOLD',
   'LEFT_HAND_HIT', 'RIGHT_HAND_HIT'
@@ -72,7 +81,7 @@ export function validateGamePackage(pkg: unknown): PackageValidationResult {
   // template — also check runtimeTarget.template (AI agent format)
   const rt = p.runtimeTarget as Record<string, unknown> | undefined;
   const template = String(game.template || rt?.template || '');
-  if (!SUPPORTED_TEMPLATES.includes(template)) {
+  if (!(SUPPORTED_TEMPLATES as readonly string[]).includes(template)) {
     errors.push({
       code: 'unsupported_template', field: '$.game.template',
       message: `"${template}" mobil runtime tarafından desteklenmiyor. Destekli template: ${SUPPORTED_TEMPLATES.join(', ')}.`
@@ -97,13 +106,19 @@ export function validateGamePackage(pkg: unknown): PackageValidationResult {
     });
   }
 
-  // cameraRequirement
-  const cameraRequirement = String(game.cameraRequirement ?? '');
-  if (!SUPPORTED_CAMERA_REQUIREMENTS.includes(cameraRequirement)) {
-    errors.push({
-      code: 'invalid_camera_requirement', field: '$.game.cameraRequirement',
-      message: `Kamera gereksinimi "${cameraRequirement}" geçersiz. Destekli: ${SUPPORTED_CAMERA_REQUIREMENTS.join(', ')}.`
-    });
+  // cameraRequirement — validate against template's allowed camera requirements
+  const templateKey = template as GameTemplateKey;
+  const templateMeta = TEMPLATE_REGISTRY[templateKey];
+  if (templateMeta && templateMeta.requiresCamera) {
+    const cameraRequirement = String(game.cameraRequirement ?? '');
+    if (!templateMeta.allowedCameraRequirements.includes(cameraRequirement as CameraRequirement)) {
+      const allowedLabels = templateMeta.allowedCameraRequirements.map(cameraLabel);
+      const usedLabel = cameraLabel(cameraRequirement as CameraRequirement);
+      errors.push({
+        code: 'invalid_camera_requirement', field: '$.game.cameraRequirement',
+        message: `"${templateMeta.label}" template'i ${usedLabel} kamera modunu desteklemiyor. Bu template için yalnızca ${allowedLabels.join(' veya ')} kullanabilirsiniz.`
+      });
+    }
   }
 
   // duration
@@ -185,7 +200,7 @@ export function validateGamePackage(pkg: unknown): PackageValidationResult {
 
   // runtime compatibility
   const runtimeCompatibility: RuntimeCompatibility = {
-    templateSupported: SUPPORTED_TEMPLATES.includes(template),
+    templateSupported: (SUPPORTED_TEMPLATES as readonly string[]).includes(template),
     motionsSupported: !errors.some(e => e.code === 'unsupported_motion'),
     rulesSupported: !errors.some(e => e.code === 'unsupported_event'),
     unsupportedItems: errors.filter(e =>

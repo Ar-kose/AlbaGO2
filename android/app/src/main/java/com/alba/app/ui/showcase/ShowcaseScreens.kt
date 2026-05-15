@@ -488,8 +488,36 @@ fun EducationModeShowcaseScreen(
     uiState: MotionUiState? = null,
     onGameSelected: (String) -> Unit = {}
 ) {
+    var selectedSubcategory by rememberSaveable { mutableStateOf<String?>(null) }
+
     val educationGames = remember(uiState?.availableGames) {
         uiState?.availableGames?.filter { it.category.name == "EDUCATION" } ?: emptyList()
+    }
+
+    val subcategories = remember(educationGames) {
+        val tags = educationGames.flatMap { it.tags }.map { it.lowercase().trim() }.distinct().sorted()
+        if (tags.isNotEmpty()) tags else emptyList()
+    }
+
+    val subcategoryLabels = mapOf(
+        "letters" to "Harfler", "alphabet" to "Alfabe", "numbers" to "Sayılar",
+        "math" to "Matematik", "colors" to "Renkler", "shapes" to "Şekiller",
+        "memory" to "Hafıza", "sound-recognition" to "Ses Tanıma",
+        "language" to "Dil Bilgisi", "science" to "Fen Bilimleri",
+        "logic" to "Mantık", "quiz" to "Quiz"
+    )
+
+    val segmentItems = if (subcategories.isNotEmpty()) {
+        listOf("Tümü") + subcategories.map { subcategoryLabels[it] ?: it.replaceFirstChar { c -> c.uppercase() } }
+    } else {
+        listOf("Tümü")
+    }
+
+    val selectedIndex = if (selectedSubcategory == null) 0 else subcategories.indexOf(selectedSubcategory) + 1
+
+    val filteredGames = remember(selectedSubcategory, educationGames) {
+        if (selectedSubcategory == null) educationGames
+        else educationGames.filter { it.tags.any { tag -> tag.lowercase().trim() == selectedSubcategory } }
     }
 
     NeonScreen(
@@ -505,10 +533,16 @@ fun EducationModeShowcaseScreen(
             title = "Öğrenirken\nHareket Et!",
             subtitle = "Eğlenerek öğren, bilgini hareketle pekiştir."
         )
-        SegmentRow(items = listOf("Tümü", "Matematik", "Dil Bilgisi", "Mantık", "Fen Bilimleri"))
+        SegmentRow(
+            items = segmentItems,
+            selectedIndex = selectedIndex,
+            onSelect = { index ->
+                selectedSubcategory = if (index == 0) null else subcategories.getOrNull(index - 1)
+            }
+        )
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (educationGames.isNotEmpty()) {
-                educationGames.forEach { game ->
+            if (filteredGames.isNotEmpty()) {
+                filteredGames.forEach { game ->
                     val level = game.levels.firstOrNull()
                     val mins = (level?.durationSec ?: 60) / 60
                     LearningListCard(

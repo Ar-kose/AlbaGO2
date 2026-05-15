@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "1.0",
+  "packageType": "ALBAGO_GAME_PACKAGE",
+  "game": {
+    "title": "Harf Bulmaca — A sesini bul",
+    "template": "SCENE_PLAY",
+    "category": "EDUCATION",
+    "orientation": "PORTRAIT",
+    "cameraRequirement": "FULL_BODY",
+    "durationSec": 45,
+    "description": "Sesli soylenen harfi ekranda bul ve dogru harfin uzerinde squat yap! Yanlis harfte ceza alirsin.",
+    "difficulty": "EASY",
+    "tags": ["letters", "alphabet", "sound-recognition", "education"]
+  },
+  "assets": {
+    "cover": "https://albago.tr/assets/covers/letter-game-cover.png",
+    "background": "https://albago.tr/assets/backgrounds/classroom-bg.png",
+    "items": [
+      { "key": "letter_a", "uri": "https://albago.tr/assets/letters/A.png", "kind": "IMAGE", "format": "PNG" },
+      { "key": "letter_b", "uri": "https://albago.tr/assets/letters/B.png", "kind": "IMAGE", "format": "PNG" },
+      { "key": "letter_c", "uri": "https://albago.tr/assets/letters/C.png", "kind": "IMAGE", "format": "PNG" },
+      { "key": "letter_d", "uri": "https://albago.tr/assets/letters/D.png", "kind": "IMAGE", "format": "PNG" },
+      { "key": "letter_e", "uri": "https://albago.tr/assets/letters/E.png", "kind": "IMAGE", "format": "PNG" }
+    ]
+  },
+  "rules": {
+    "motionBindings": [
+      { "motion": "SQUAT", "action": "SLASH_TARGET", "points": 20, "cooldownMs": 600, "targetKey": "correct_letter" },
+      { "motion": "SQUAT", "action": "PENALTY", "points": -10, "cooldownMs": 300, "targetKey": "wrong_letter" },
+      { "motion": "BAD_FORM", "action": "PENALTY" }
+    ]
+  },
+  "scoring": {
+    "targetScore": 200,
+    "baseCorrect": 20,
+    "comboBonus": 10,
+    "wrongPenalty": 10,
+    "badFormPenalty": 5,
+    "rewardType": "STAR",
+    "rewardAmount": 3
+  },
+  "startGate": {
+    "requireCameraPermission": true,
+    "requireBodyInFrame": true,
+    "countdownSec": 3,
+    "stableBodyMs": 2000,
+    "resetCountdownOnBodyLost": true
+  }
+}

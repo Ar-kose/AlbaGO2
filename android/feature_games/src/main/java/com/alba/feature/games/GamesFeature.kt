@@ -132,14 +132,20 @@ fun GamesHomeScreen(
             GameFlowStage.SESSION -> {
                 val activeDefinition = uiState.activeGameDefinition ?: selectedDefinition
                 if (activeDefinition != null) {
+                    val nextGame = games
+                        .filter { it.category == activeDefinition.category && it.gameId != activeDefinition.gameId }
+                        .firstOrNull()
                     ActiveGameScreen(
                         uiState = uiState,
                         gameDefinition = activeDefinition,
+                        nextGameId = nextGame?.gameId,
+                        sameCategoryGames = games.filter { it.category == activeDefinition.category },
                         onFinishGame = onFinishGame,
                         onReplay = { onStartGame(activeDefinition.gameId) },
                         onBrowseGames = { stage = GameFlowStage.LIST },
                         onRefreshGames = onRefreshGames,
-                        onNavigateBack = onNavigateHome
+                        onNavigateBack = onNavigateHome,
+                        onStartGame = onStartGame
                     )
                 } else {
                     EmptyCatalogCard(
@@ -269,18 +275,25 @@ private fun GameDetailScreen(
 private fun ActiveGameScreen(
     uiState: MotionUiState,
     gameDefinition: GameDefinition,
+    nextGameId: String?,
+    sameCategoryGames: List<GameDefinition>,
     onFinishGame: () -> Unit,
     onReplay: () -> Unit,
     onBrowseGames: () -> Unit,
     onRefreshGames: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onStartGame: (String) -> Unit
 ) {
     if (uiState.game.status == GameSessionStatus.FINISHED) {
         GameResultScreen(
             game = uiState.game,
             template = gameDefinition.template,
             gameTitle = gameDefinition.title,
+            category = gameDefinition.category,
+            nextGameId = nextGameId,
+            nextGameTitle = sameCategoryGames.firstOrNull { it.gameId == nextGameId }?.title,
             onReplay = onReplay,
+            onNextGame = if (nextGameId != null) {{ onStartGame(nextGameId) }} else null,
             onBackToGames = onBrowseGames,
             onHome = onNavigateBack
         )
@@ -924,7 +937,11 @@ private fun GameResultScreen(
     game: GameUiState,
     template: GameTemplate,
     gameTitle: String,
+    category: GameCategory,
+    nextGameId: String?,
+    nextGameTitle: String?,
     onReplay: () -> Unit,
+    onNextGame: (() -> Unit)?,
     onBackToGames: () -> Unit,
     onHome: () -> Unit
 ) {
@@ -939,7 +956,11 @@ private fun GameResultScreen(
             ) {
                 StatusPill(label = "Oyun tamamlandı", color = Color(0xFFFF1593))
                 Text(gameTitle, style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold)
-                Text(templateLabel(template), color = Color.White.copy(alpha = 0.72f))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(templateLabel(template), color = Color.White.copy(alpha = 0.72f))
+                    Text("·", color = Color.White.copy(alpha = 0.4f))
+                    Text(when(category) { GameCategory.SPORT -> "Spor"; GameCategory.EDUCATION -> "Egitim"; GameCategory.FUN -> "Eglence" }, color = Color.White.copy(alpha = 0.72f))
+                }
 
                 ResultScoreBlock(score = game.score)
 
@@ -981,6 +1002,15 @@ private fun GameResultScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF1593))
             ) {
                 Text("Tekrar oyna")
+            }
+            if (onNextGame != null && nextGameTitle != null) {
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onNextGame,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED))
+                ) {
+                    Text("Sonraki: $nextGameTitle")
+                }
             }
             OutlinedButton(modifier = Modifier.fillMaxWidth(), onClick = onBackToGames) {
                 Text("Kataloğa dön")

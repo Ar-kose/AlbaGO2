@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0",
+  "packageType": "ALBAGO_GAME_PACKAGE",
+  "game": {
+    "title": "Meyve Kesme Refleks",
+    "template": "FRUIT_SLASH",
+    "category": "FUN",
+    "orientation": "LANDSCAPE",
+    "cameraRequirement": "HAND_TARGET",
+    "durationSec": 60,
+    "description": "El hareketlerinle ekrana dusen meyveleri kes! Bombalara dokunma, bonuslari yakala.",
+    "difficulty": "EASY"
+  },
+  "assets": {
+    "cover": "https://albago.tr/assets/covers/fruit-slash-cover.png",
+    "background": "https://albago.tr/assets/backgrounds/fruit-bg.png",
+    "items": [
+      { "key": "fruit", "uri": "https://albago.tr/assets/items/apple.png", "kind": "IMAGE", "format": "PNG" },
+      { "key": "bonus", "uri": "https://albago.tr/assets/items/star.png", "kind": "IMAGE", "format": "PNG" },
+      { "key": "bomb", "uri": "https://albago.tr/assets/items/bomb.png", "kind": "IMAGE", "format": "PNG" }
+    ]
+  },
+  "rules": {
+    "motionBindings": [
+      { "motion": "JUMPING_JACK", "action": "SLASH_TARGET", "points": 15, "cooldownMs": 400 },
+      { "motion": "SQUAT", "action": "SLASH_TARGET", "points": 10, "cooldownMs": 500 },
+      { "motion": "JUMP_ROPE", "action": "HIT_BONUS", "points": 25, "cooldownMs": 800 },
+      { "motion": "BAD_FORM", "action": "PENALTY" }
+    ]
+  },
+  "scoring": {
+    "targetScore": 420,
+    "baseCorrect": 10,
+    "comboBonus": 5,
+    "wrongPenalty": 10,
+    "badFormPenalty": 5,
+    "rewardType": "STAR",
+    "rewardAmount": 3
+  },
+  "startGate": {
+    "requireCameraPermission": true,
+    "requireBodyInFrame": false,
+    "countdownSec": 3,
+    "stableBodyMs": 2000,
+    "resetCountdownOnBodyLost": true
+  }
+}
