@@ -38,8 +38,11 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const text = await response.text();
   const payload = text ? JSON.parse(text) : {};
   if (!response.ok || payload.error) {
-    const details = Array.isArray(payload.errors) ? `: ${payload.errors.join(', ')}` : '';
-    throw new Error(`${payload.error ?? response.statusText}${details}`);
+    const messages = Array.isArray(payload.message) ? payload.message
+      : Array.isArray(payload.errors) ? payload.errors
+      : [];
+    const details = messages.length > 0 ? `: ${messages.join(', ')}` : '';
+    throw new Error(`${payload.error ?? payload.message ?? response.statusText}${details}`);
   }
   return payload as T;
 }

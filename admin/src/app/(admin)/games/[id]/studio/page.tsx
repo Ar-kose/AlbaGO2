@@ -189,11 +189,20 @@ export default function StudioPage() {
     }
   }, [gameId]);
 
-  // Publish
+  // Publish — once draft kaydeder, sonra publish eder
   const handlePublish = useCallback(async () => {
     setPublishState('publishing');
     setPublishMessage('');
     try {
+      // 1. Save current draft first
+      if (draft) {
+        setSaveState('saving');
+        await updateGameDefinition(gameId, draft);
+        setSaveState('saved');
+        addLog('SAVE', 'Taslak kaydedildi', 'Publish oncesi otomatik kayit', 'success');
+      }
+
+      // 2. Publish
       const result = await publishGameDefinition(gameId, 'admin@local');
       if (result.published) {
         setPublishState('published');
@@ -213,7 +222,7 @@ export default function StudioPage() {
       setPublishMessage(`Hata: ${err.message}`);
       addLog('PUBLISH', 'Yayın hatası', err.message, 'error');
     }
-  }, [gameId, game]);
+  }, [gameId, game, draft]);
 
   // Rollback
   const handleRollback = useCallback(async () => {

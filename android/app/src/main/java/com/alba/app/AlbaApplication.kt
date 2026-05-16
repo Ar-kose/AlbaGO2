@@ -8,6 +8,7 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import androidx.activity.ComponentActivity
@@ -55,6 +56,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -228,7 +230,7 @@ private fun AlbaRoot(
         ) {
             navigate(AlbaDestination.GAMES)
             controller.selectGameDefinition(autoStartGameId)
-            controller.startGame()
+            controller.startGame(autoStartGameId)
             runCatching { autoMockMotionName?.let(MotionType::valueOf) }
                 .getOrNull()
                 ?.let(controller::injectMockRep)
@@ -342,7 +344,11 @@ private fun AlbaRoot(
             AlbaDestination.GAME_PREP -> NeonGamePrepScreen(
                 uiState = uiState,
                 onStartGame = {
-                    controller.startGame()
+                    val gameId = uiState.activeGameDefinition?.gameId
+                    if (gameId != null) {
+                        controller.selectGameDefinition(gameId)
+                    }
+                    controller.startGame(gameId)
                     navigate(AlbaDestination.GAMES)
                 },
                 onBackToCatalog = {
@@ -409,7 +415,7 @@ private fun AlbaRoot(
                     onNavigateHome = { navigate(AlbaDestination.HOME) },
                     onStartGame = { gameId ->
                         controller.selectGameDefinition(gameId)
-                        controller.startGame()
+                        controller.startGame(gameId)
                     },
                     onFinishGame = controller::finishGame,
                     onRefreshGames = controller::refreshActiveGameDefinition,
@@ -529,30 +535,32 @@ private fun GameExperienceShell(
     val gameRunning = uiState.game.status == GameSessionStatus.ACTIVE || uiState.game.status == GameSessionStatus.PAUSED
     val waitingForBody = uiState.game.status == GameSessionStatus.WAITING_FOR_BODY
     val showCamera = gameRunning || waitingForBody
+    Log.d("AlbaGo", "[GameExperienceShell] status=${uiState.game.status} gameRunning=$gameRunning waitingForBody=$waitingForBody showCamera=$showCamera activeDef=${uiState.activeGameDefinition?.gameId}")
 
     // P32: Countdown state for body gate
     var countdownValue by remember { mutableStateOf(0) }
-    var bodyStableMs by remember { mutableStateOf(0L) }
 
-    LaunchedEffect(waitingForBody, uiState.isUserInFrame) {
+    // P32: Body gate — monitor isUserInFrame via snapshotFlow for continuous sampling
+    LaunchedEffect(waitingForBody) {
         if (!waitingForBody) {
             countdownValue = 0
-            bodyStableMs = 0L
             return@LaunchedEffect
         }
-        if (!uiState.isUserInFrame) {
-            countdownValue = 0
-            bodyStableMs = 0L
-            return@LaunchedEffect
-        }
-        // Body visible — accumulate stable time
-        val now = System.currentTimeMillis()
-        if (bodyStableMs == 0L) {
-            bodyStableMs = now
-        }
-        val stableDuration = now - bodyStableMs
-        if (stableDuration >= 1200L && countdownValue == 0) {
-            countdownValue = 3
+        var stableStartMs = 0L
+        snapshotFlow { uiState.isUserInFrame }.collect { inFrame ->
+            if (!inFrame) {
+                stableStartMs = 0L
+                countdownValue = 0
+                return@collect
+            }
+            if (countdownValue > 0) return@collect // already counting down
+            val now = System.currentTimeMillis()
+            if (stableStartMs == 0L) {
+                stableStartMs = now
+            }
+            if (now - stableStartMs >= 1200L) {
+                countdownValue = 3
+            }
         }
     }
 
@@ -563,7 +571,6 @@ private fun GameExperienceShell(
         if (countdownValue > 1) {
             countdownValue = countdownValue - 1
         } else {
-            // Countdown complete
             countdownValue = 0
             controller.finalizeGameStart()
         }
@@ -1417,7 +1424,11 @@ private fun resolveAssetUri(uiState: MotionUiState, assetKey: String): String? {
         ?.firstOrNull { it.key == assetKey }
         ?.uri
         ?: return null
-    if (uri.startsWith("local://")) return null
+    if (uri.startsWith("local://")) {
+        // Fallback: construct a CDN URL from template name and asset key
+        val template = uiState.activeGameDefinition?.template?.name?.lowercase() ?: return null
+        return "https://albago.tr/assets/fallback/$template/$assetKey.png"
+    }
     if (uri.startsWith("http://") || uri.startsWith("https://")) return uri
     val baseUrl = uiState.effectiveBackendBaseUrl.trimEnd('/')
     return if (uri.startsWith("/")) "$baseUrl$uri" else "$baseUrl/$uri"

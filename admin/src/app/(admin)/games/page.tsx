@@ -145,11 +145,13 @@ export default function GamesPage() {
             </div>
           ) : (
             filtered.map((game) => (
-              <button
+              <div
                 key={game.id}
-                type="button"
+                role="button"
+                tabIndex={0}
                 className="game-library-card"
                 onClick={() => router.push(`/games/${game.id}/studio`)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(`/games/${game.id}/studio`); } }}
               >
                 <div className="game-library-card-header">
                   <span className="game-library-card-icon">
@@ -195,7 +197,7 @@ export default function GamesPage() {
                     Studio&apos;da Aç
                   </button>
                 </div>
-              </button>
+              </div>
             ))
           )}
         </div>

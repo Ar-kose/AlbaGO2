@@ -1,0 +1,76 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - complementary [ref=e4]:
+        - generic [ref=e5]:
+          - img "AlbaGO" [ref=e6]
+          - generic [ref=e7]: Content Console
+        - navigation "Admin navigasyonu" [ref=e8]:
+          - link "1 Genel Bakis" [ref=e9] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e10]: "1"
+            - text: Genel Bakis
+          - link "2 Oyunlar" [ref=e11] [cursor=pointer]:
+            - /url: /games
+            - generic [ref=e12]: "2"
+            - text: Oyunlar
+          - link "3 Sablonlar" [ref=e13] [cursor=pointer]:
+            - /url: /templates
+            - generic [ref=e14]: "3"
+            - text: Sablonlar
+          - link "4 Kategoriler" [ref=e15] [cursor=pointer]:
+            - /url: /categories
+            - generic [ref=e16]: "4"
+            - text: Kategoriler
+          - link "5 Medya" [ref=e17] [cursor=pointer]:
+            - /url: /media
+            - generic [ref=e18]: "5"
+            - text: Medya
+          - link "6 Yayinlar" [ref=e19] [cursor=pointer]:
+            - /url: /publications
+            - generic [ref=e20]: "6"
+            - text: Yayinlar
+          - link "7 Analitik" [ref=e21] [cursor=pointer]:
+            - /url: /analytics
+            - generic [ref=e22]: "7"
+            - text: Analitik
+          - link "8 Audit Log" [ref=e23] [cursor=pointer]:
+            - /url: /audit
+            - generic [ref=e24]: "8"
+            - text: Audit Log
+        - paragraph [ref=e25]: AlbaGO Admin v2
+      - generic [ref=e26]:
+        - generic [ref=e243]:
+          - generic [ref=e244]:
+            - heading "Yayinlar" [level=1] [ref=e245]
+            - paragraph [ref=e246]: Oyunlarin yayin durumuna gore Kanban gorunumu.
+          - generic [ref=e249]:
+            - strong [ref=e250]: Yonetici
+            - paragraph [ref=e251]: Admin
+        - generic [ref=e252]:
+          - article [ref=e253]:
+            - generic [ref=e254]:
+              - heading "Yayinda" [level=3] [ref=e255]
+              - generic [ref=e256]: "0"
+            - paragraph [ref=e257]: Bos
+          - article [ref=e258]:
+            - generic [ref=e259]:
+              - heading "Taslak" [level=3] [ref=e260]
+              - generic [ref=e261]: "0"
+            - paragraph [ref=e262]: Bos
+          - article [ref=e263]:
+            - generic [ref=e264]:
+              - heading "Incelemede" [level=3] [ref=e265]
+              - generic [ref=e266]: "0"
+            - paragraph [ref=e267]: Bos
+          - article [ref=e268]:
+            - generic [ref=e269]:
+              - heading "Arsiv" [level=3] [ref=e270]
+              - generic [ref=e271]: "0"
+            - paragraph [ref=e272]: Bos
+          - article [ref=e273]:
+            - generic [ref=e274]:
+              - heading "Planlandi" [level=3] [ref=e275]
+              - generic [ref=e276]: "0"
+            - paragraph [ref=e277]: Bos
+  - alert [ref=e242]

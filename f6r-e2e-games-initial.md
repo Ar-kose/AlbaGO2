@@ -1,0 +1,278 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - complementary [ref=e4]:
+        - generic [ref=e5]:
+          - img "AlbaGO" [ref=e6]
+          - generic [ref=e7]: Content Console
+        - navigation "Admin navigasyonu" [ref=e8]:
+          - link "1 Genel Bakis" [ref=e9] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e10]: "1"
+            - text: Genel Bakis
+          - link "2 Oyunlar" [ref=e11] [cursor=pointer]:
+            - /url: /games
+            - generic [ref=e12]: "2"
+            - text: Oyunlar
+          - link "3 Sablonlar" [ref=e13] [cursor=pointer]:
+            - /url: /templates
+            - generic [ref=e14]: "3"
+            - text: Sablonlar
+          - link "4 Kategoriler" [ref=e15] [cursor=pointer]:
+            - /url: /categories
+            - generic [ref=e16]: "4"
+            - text: Kategoriler
+          - link "5 Medya" [ref=e17] [cursor=pointer]:
+            - /url: /media
+            - generic [ref=e18]: "5"
+            - text: Medya
+          - link "6 Yayinlar" [ref=e19] [cursor=pointer]:
+            - /url: /publications
+            - generic [ref=e20]: "6"
+            - text: Yayinlar
+          - link "7 Analitik" [ref=e21] [cursor=pointer]:
+            - /url: /analytics
+            - generic [ref=e22]: "7"
+            - text: Analitik
+          - link "8 Audit Log" [ref=e23] [cursor=pointer]:
+            - /url: /audit
+            - generic [ref=e24]: "8"
+            - text: Audit Log
+        - paragraph [ref=e25]: AlbaGO Admin v2
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - heading "Oyun Yonetimi" [level=1] [ref=e29]
+            - paragraph [ref=e30]: CRUD, validation, publish ve rollback akislarini gercek API uzerinden calistirir.
+          - generic [ref=e33]:
+            - strong [ref=e34]: Yonetici
+            - paragraph [ref=e35]: Admin
+        - generic [ref=e36]:
+          - article [ref=e37]:
+            - generic [ref=e39]:
+              - paragraph [ref=e40]: Demo Game Definitions
+              - heading "AlbaGo no-code oyun ve program konsolu" [level=2] [ref=e41]
+              - paragraph [ref=e42]: Scene Play ile Deve Cuce, komut oyunu, nesne toplama ve basit spor akislari app guncellemeden ayni runtime icinde uretilir.
+            - generic [ref=e43]:
+              - button "New Scene Play / No-code" [ref=e44] [cursor=pointer]
+              - button "New Meyve Kesme" [ref=e45] [cursor=pointer]
+              - button "New Engelden Kacis" [ref=e46] [cursor=pointer]
+              - button "New Spor Mucadelesi" [ref=e47] [cursor=pointer]
+              - button "New Whack-a-Mole" [ref=e48] [cursor=pointer]
+              - button "New Pose Contact" [ref=e49] [cursor=pointer]
+            - tablist "Oyun kategorileri" [ref=e50]:
+              - button "Tum kategoriler" [ref=e51] [cursor=pointer]
+              - button "Egitim" [ref=e243] [cursor=pointer]
+              - button "Eglence" [ref=e244] [cursor=pointer]
+              - button "Spor" [ref=e245] [cursor=pointer]
+            - generic [ref=e246]:
+              - button "Meyve Kesme Eglence | Meyve Kesme | PUBLISHED | v1 SQUAT, JUMPING_JACK, JUMP_ROPE" [ref=e247] [cursor=pointer]:
+                - strong [ref=e248]: Meyve Kesme
+                - generic [ref=e249]: Eglence | Meyve Kesme | PUBLISHED | v1
+                - generic [ref=e250]: SQUAT, JUMPING_JACK, JUMP_ROPE
+              - button "Engelden Kacis Eglence | Engelden Kacis | PUBLISHED | v1 SQUAT, JUMPING_JACK, JUMP_ROPE" [ref=e251] [cursor=pointer]:
+                - strong [ref=e252]: Engelden Kacis
+                - generic [ref=e253]: Eglence | Engelden Kacis | PUBLISHED | v1
+                - generic [ref=e254]: SQUAT, JUMPING_JACK, JUMP_ROPE
+              - button "Spor Mucadelesi Spor | Spor Mucadelesi | PUBLISHED | v1 SQUAT, JUMPING_JACK, JUMP_ROPE" [ref=e255] [cursor=pointer]:
+                - strong [ref=e256]: Spor Mucadelesi
+                - generic [ref=e257]: Spor | Spor Mucadelesi | PUBLISHED | v1
+                - generic [ref=e258]: SQUAT, JUMPING_JACK, JUMP_ROPE
+              - button "Deve Cuce Egitim | Scene Play / No-code | PUBLISHED | v1 SQUAT, JUMPING_JACK" [ref=e259] [cursor=pointer]:
+                - strong [ref=e260]: Deve Cuce
+                - generic [ref=e261]: Egitim | Scene Play / No-code | PUBLISHED | v1
+                - generic [ref=e262]: SQUAT, JUMPING_JACK
+          - article [ref=e52]:
+            - generic [ref=e53]:
+              - generic [ref=e54]:
+                - paragraph [ref=e55]: Template Editor
+                - heading "Meyve Kesme" [level=2] [ref=e56]
+              - generic [ref=e57]: PUBLISHED
+            - paragraph [ref=e58]: "Meyve Kesme secildi. Template: Meyve Kesme."
+            - generic [ref=e59]:
+              - generic [ref=e60]: Template
+              - combobox "Template" [ref=e61]:
+                - option "Scene Play / No-code"
+                - option "Meyve Kesme" [selected]
+                - option "Engelden Kacis"
+                - option "Spor Mucadelesi"
+                - option "Whack-a-Mole"
+                - option "Pose Contact"
+            - generic [ref=e62]:
+              - generic [ref=e63]: Game key
+              - textbox "Game key" [ref=e64]: fruit_slash_demo
+            - generic [ref=e65]:
+              - generic [ref=e66]: Title
+              - textbox "Title" [ref=e67]: Meyve Kesme
+            - generic [ref=e68]:
+              - generic [ref=e69]: Description
+              - textbox "Description" [ref=e70]: Jumping jack ve squat ile ritimli meyve kesme demo oyunu.
+            - generic [ref=e71]:
+              - generic [ref=e72]:
+                - generic [ref=e73]: Kategori
+                - combobox "Kategori" [ref=e74]:
+                  - option "Spor"
+                  - option "Eglence" [selected]
+                  - option "Egitim"
+              - generic [ref=e75]:
+                - generic [ref=e76]: Etiketler
+                - textbox "Etiketler" [ref=e77]:
+                  - /placeholder: playlist, cocuk, refleks
+                  - text: reflex, arcade, hand-target
+            - generic [ref=e78]:
+              - generic [ref=e79]:
+                - generic [ref=e80]: Min app version
+                - textbox "Min app version" [ref=e81]: 0.1.0
+              - generic [ref=e82]:
+                - generic [ref=e83]: Duration (sec)
+                - spinbutton "Duration (sec)" [ref=e84]: "60"
+              - generic [ref=e85]:
+                - generic [ref=e86]: Target score
+                - spinbutton "Target score" [ref=e87]: "420"
+            - generic [ref=e88]:
+              - generic [ref=e89]:
+                - generic [ref=e90]: Orientation
+                - combobox "Orientation" [ref=e91]:
+                  - option "Dikey"
+                  - option "Yatay" [selected]
+              - generic [ref=e92]:
+                - generic [ref=e93]: Camera requirement
+                - combobox "Camera requirement" [ref=e94]:
+                  - option "Tam vücut"
+                  - option "Üst vücut"
+                  - option "El / hedef teması" [selected]
+              - generic [ref=e95]:
+                - generic [ref=e96]: Default hit radius
+                - spinbutton "Default hit radius" [ref=e97]: "0.18"
+            - generic [ref=e98]:
+              - generic [ref=e99]:
+                - generic [ref=e100]: Spawn rate (ms)
+                - spinbutton "Spawn rate (ms)" [ref=e101]: "900"
+              - generic [ref=e102]:
+                - generic [ref=e103]: Object life (ms)
+                - spinbutton "Object life (ms)" [ref=e104]: "2600"
+              - generic [ref=e105]:
+                - generic [ref=e106]: Penalty points
+                - spinbutton "Penalty points" [ref=e107]: "10"
+            - generic [ref=e108]:
+              - generic [ref=e110]:
+                - paragraph [ref=e111]: Program / Playlist Flow
+                - heading "Spor, egitim veya eglence akisini sirala" [level=3] [ref=e112]
+                - paragraph [ref=e113]: Bir oyun tek sahneden ibaret olmak zorunda degil. Squat seti, plank tutusu, dinlenme ve sonraki aktivite gibi adimlari burada baglayabilirsin.
+              - generic [ref=e114]:
+                - button "Tekrar hedefi ekle" [ref=e115] [cursor=pointer]
+                - button "Plank / pozisyon ekle" [ref=e116] [cursor=pointer]
+                - button "Dinlenme ekle" [ref=e117] [cursor=pointer]
+                - button "Yonlendirme ekle" [ref=e118] [cursor=pointer]
+              - paragraph [ref=e263]: Program akisi yok. Tek sahneli oyun gibi calisir.
+            - generic [ref=e145]:
+              - paragraph [ref=e146]: Template Config
+              - paragraph [ref=e147]: Bu template icin ozel form henuz yok. Config'i manuel girebilir veya JSON editor kullanabilirsiniz.
+            - generic [ref=e148]:
+              - paragraph [ref=e149]: Preview
+              - paragraph [ref=e150]: Preview henuz bu template icin desteklenmiyor.
+            - generic [ref=e151]:
+              - generic [ref=e152]:
+                - paragraph [ref=e153]: JUMPING_JACK / REP_COUNTED
+                - generic [ref=e154]:
+                  - generic [ref=e155]: Points
+                  - spinbutton "Points" [ref=e156]: "15"
+                - generic [ref=e157]:
+                  - generic [ref=e158]: Cooldown
+                  - spinbutton "Cooldown" [ref=e159]: "400"
+              - generic [ref=e160]:
+                - paragraph [ref=e161]: SQUAT / REP_COUNTED
+                - generic [ref=e162]:
+                  - generic [ref=e163]: Points
+                  - spinbutton "Points" [ref=e164]: "10"
+                - generic [ref=e165]:
+                  - generic [ref=e166]: Cooldown
+                  - spinbutton "Cooldown" [ref=e167]: "500"
+              - generic [ref=e168]:
+                - paragraph [ref=e169]: JUMP_ROPE / REP_COUNTED
+                - generic [ref=e170]:
+                  - generic [ref=e171]: Points
+                  - spinbutton "Points" [ref=e172]: "3"
+                - generic [ref=e173]:
+                  - generic [ref=e174]: Cooldown
+                  - spinbutton "Cooldown" [ref=e175]: "250"
+              - generic [ref=e176]:
+                - paragraph [ref=e177]: SQUAT / BAD_FORM
+                - generic [ref=e178]:
+                  - generic [ref=e179]: Points
+                  - spinbutton "Points" [ref=e180]: "-5"
+                - generic [ref=e181]:
+                  - generic [ref=e182]: Cooldown
+                  - spinbutton "Cooldown" [ref=e183]: "250"
+              - generic [ref=e264]:
+                - paragraph [ref=e265]: JUMPING_JACK / BAD_FORM
+                - generic [ref=e266]:
+                  - generic [ref=e267]: Points
+                  - spinbutton "Points" [ref=e268]: "-5"
+                - generic [ref=e269]:
+                  - generic [ref=e270]: Cooldown
+                  - spinbutton "Cooldown" [ref=e271]: "250"
+              - generic [ref=e272]:
+                - paragraph [ref=e273]: JUMP_ROPE / BAD_FORM
+                - generic [ref=e274]:
+                  - generic [ref=e275]: Points
+                  - spinbutton "Points" [ref=e276]: "-2"
+                - generic [ref=e277]:
+                  - generic [ref=e278]: Cooldown
+                  - spinbutton "Cooldown" [ref=e279]: "200"
+            - generic [ref=e184]:
+              - generic [ref=e185]:
+                - generic [ref=e186]: Background asset
+                - textbox "Background asset" [ref=e187]: local://fruit-slash/background
+              - generic [ref=e188]:
+                - generic [ref=e189]: Character asset
+                - textbox "Character asset" [ref=e190]: local://fruit-slash/hero
+              - generic [ref=e191]:
+                - generic [ref=e192]: Soundtrack asset
+                - textbox "Soundtrack asset" [ref=e193]: local://fruit-slash/theme
+            - generic [ref=e194]:
+              - generic [ref=e196]:
+                - paragraph [ref=e197]: Asset Manifest
+                - heading "PNG, WebP veya SVG yukle" [level=3] [ref=e198]
+              - generic [ref=e199]:
+                - generic [ref=e200]:
+                  - generic [ref=e201]: Asset key
+                  - textbox "Asset key" [ref=e202]: fruit
+                - generic [ref=e203]:
+                  - generic [ref=e204]: Upload
+                  - button "Upload" [ref=e205]
+              - generic [ref=e206]:
+                - generic [ref=e207]:
+                  - strong [ref=e208]: background
+                  - generic [ref=e209]: PNG | local
+                  - generic [ref=e210]: local://fruit-slash/background
+                - generic [ref=e211]:
+                  - strong [ref=e212]: fruit
+                  - generic [ref=e213]: PNG | local
+                  - generic [ref=e214]: local://fruit-slash/fruit
+                - generic [ref=e215]:
+                  - strong [ref=e216]: bonus
+                  - generic [ref=e217]: PNG | local
+                  - generic [ref=e218]: local://fruit-slash/bonus
+                - generic [ref=e219]:
+                  - strong [ref=e220]: bomb
+                  - generic [ref=e221]: PNG | local
+                  - generic [ref=e222]: local://fruit-slash/bomb
+            - generic [ref=e223]:
+              - button "Save draft" [ref=e224] [cursor=pointer]
+              - button "Validate" [ref=e225] [cursor=pointer]
+              - button "Publish" [ref=e226] [cursor=pointer]
+              - button "Rollback" [ref=e227] [cursor=pointer]
+              - button "Refresh" [ref=e228] [cursor=pointer]
+            - generic [ref=e229]:
+              - paragraph [ref=e230]: Publish Validation
+              - paragraph [ref=e231]: Hazir. Publish validation temiz.
+            - generic [ref=e232]:
+              - paragraph [ref=e233]: GameDefinition v3 Preview Payload
+              - generic [ref=e234]: "{ \"schemaVersion\": \"3.0\", \"gameKey\": \"fruit_slash_demo\", \"version\": 1, \"title\": \"Meyve Kesme\", \"description\": \"Jumping jack ve squat ile ritimli meyve kesme demo oyunu.\", \"category\": \"fun\", \"tags\": [ \"reflex\", \"arcade\", \"hand-target\" ], \"minAppVersion\": \"0.1.0\", \"minRuntimeVersion\": \"2.0.0\", \"orientation\": \"landscape\", \"cameraRequirement\": \"hand_target\", \"capabilities\": [ \"MOTION_EVENT\", \"SCENE_OBJECTS\", \"PROGRAM_STEPS\", \"TIMER\", \"POSE_CONTACT\", \"AUDIO\" ], \"supportedMotions\": [ \"SQUAT\", \"JUMPING_JACK\", \"JUMP_ROPE\" ], \"assetManifest\": { \"items\": [ { \"key\": \"background\", \"uri\": \"local://fruit-slash/background\", \"kind\": \"IMAGE\", \"format\": \"PNG\", \"sha256\": \"local-fruit-slash-background\", \"mimeType\": \"image/png\" }, { \"key\": \"fruit\", \"uri\": \"local://fruit-slash/fruit\", \"kind\": \"IMAGE\", \"format\": \"PNG\", \"sha256\": \"local-fruit-slash-fruit\", \"mimeType\": \"image/png\" }, { \"key\": \"bonus\", \"uri\": \"local://fruit-slash/bonus\", \"kind\": \"IMAGE\", \"format\": \"PNG\", \"sha256\": \"local-fruit-slash-bonus\", \"mimeType\": \"image/png\" }, { \"key\": \"bomb\", \"uri\": \"local://fruit-slash/bomb\", \"kind\": \"IMAGE\", \"format\": \"PNG\", \"sha256\": \"local-fruit-slash-bomb\", \"mimeType\": \"image/png\" } ] }, \"levels\": [ { \"levelId\": \"fruit_slash_level_1\", \"durationSec\": 60, \"targetScore\": 420, \"difficulty\": \"easy\", \"scene\": { \"type\": \"OBJECT_SPAWN\", \"maxObjects\": 5, \"spawnRateMs\": 900, \"objects\": [ { \"objectId\": \"fruit_target\", \"label\": \"Fruit\", \"assetKey\": \"fruit\", \"requiredMotion\": \"JUMPING_JACK\", \"lifeMs\": 2600, \"points\": 15 }, { \"objectId\": \"bonus_target\", \"label\": \"Bonus\", \"assetKey\": \"bonus\", \"requiredMotion\": \"SQUAT\", \"lifeMs\": 2600, \"points\": 10 } ] }, \"rules\": [ { \"ruleId\": \"fruit_slash_level_1_rule_1\", \"priority\": 100, \"when\": { \"type\": \"POSE_CONTACT\", \"targetObjectId\": \"fruit\" }, \"then\": [ { \"type\": \"ADD_SCORE\", \"amount\": 15 }, { \"type\": \"REMOVE_OBJECT\", \"target\": \"fruit\" } ], \"cooldownMs\": 120 }, { \"ruleId\": \"fruit_slash_level_1_rule_2\", \"priority\": 99, \"when\": { \"type\": \"MOTION_EVENT\", \"event\": \"REP_COUNTED\", \"motion\": \"JUMP_ROPE\", \"targetObjectId\": \"fruit\" }, \"then\": [ { \"type\": \"ADD_SCORE\", \"amount\": 3, \"target\": \"fruit\" } ], \"cooldownMs\": 250 }, { \"ruleId\": \"fruit_slash_level_1_rule_3\", \"priority\": 98, \"when\": { \"type\": \"MOTION_EVENT\", \"event\": \"REP_COUNTED\", \"motion\": \"SQUAT\", \"targetObjectId\": \"bonus\" }, \"then\": [ { \"type\": \"ADD_SCORE\", \"amount\": 10, \"target\": \"bonus\" } ], \"cooldownMs\": 500 }, { \"ruleId\": \"fruit_slash_level_1_rule_4\", \"priority\": 97, \"when\": { \"type\": \"MOTION_EVENT\", \"event\": \"BAD_FORM\" }, \"then\": [ { \"type\": \"RESET_COMBO\" }, { \"type\": \"ADD_SCORE\", \"amount\": -5 } ], \"cooldownMs\": 250 } ], \"programSteps\": [], \"rewards\": [ { \"rewardId\": \"fruit_slash_level_1_star\", \"type\": \"STAR\", \"amount\": 3, \"condition\": { \"minimumScore\": 420 } } ] } ] }"
+          - article [ref=e235]:
+            - generic [ref=e237]:
+              - paragraph [ref=e238]: Audit Log
+              - heading "Son icerik hareketleri" [level=2] [ref=e239]
+            - paragraph [ref=e241]: Audit log henuz uretilmedi.
+  - alert [ref=e242]

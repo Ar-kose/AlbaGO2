@@ -10,8 +10,16 @@ const CATEGORIES: { value: string; label: string }[] = [
   { value: 'targets', label: 'Hedef' },
   { value: 'characters', label: 'Karakter' },
   { value: 'icons', label: 'İkon' },
+  { value: 'music', label: 'Müzik' },
+  { value: 'sfx', label: 'Ses Efekti' },
   { value: 'onboarding', label: 'Onboarding' },
   { value: 'runtime-ui', label: 'Runtime UI' }
+];
+
+const KIND_FILTERS: { value: string; label: string }[] = [
+  { value: '', label: 'Tümü' },
+  { value: 'IMAGE', label: 'Görsel' },
+  { value: 'AUDIO', label: 'Ses' },
 ];
 
 function formatBytes(bytes: number): string {
@@ -27,6 +35,7 @@ export default function AssetsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [kindFilter, setKindFilter] = useState('');
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadCategory, setUploadCategory] = useState('covers');
   const [uploading, setUploading] = useState(false);
@@ -42,6 +51,7 @@ export default function AssetsPage() {
     try {
       const result = await listAssets({
         category: categoryFilter || undefined,
+        kind: kindFilter || undefined,
         page,
         perPage: 24
       });
@@ -52,7 +62,7 @@ export default function AssetsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [categoryFilter, page]);
+  }, [categoryFilter, kindFilter, page]);
 
   useEffect(() => {
     fetchAssets();
@@ -60,7 +70,7 @@ export default function AssetsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [categoryFilter]);
+  }, [categoryFilter, kindFilter]);
 
   const handleUpload = async (file: File) => {
     setUploading(true);
@@ -68,7 +78,7 @@ export default function AssetsPage() {
     setUploadSuccess(null);
     try {
       const a = await uploadAsset(file, uploadCategory);
-      setUploadSuccess(`${a.filename} yüklendi`);
+      setUploadSuccess(`${a.key} yüklendi`);
       setUploadOpen(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
       fetchAssets();
@@ -143,7 +153,7 @@ export default function AssetsPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/png,image/webp,image/jpeg"
+                accept="image/png,image/webp,image/svg+xml,audio/mpeg,audio/wav,audio/ogg"
                 style={{ display: 'none' }}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -160,7 +170,7 @@ export default function AssetsPage() {
             </div>
           </div>
           <p className="muted" style={{ fontSize: '0.72rem', margin: 0 }}>
-            PNG, WebP veya JPEG — maks 10 MB. Kategori seçimi zorunludur.
+            PNG, WebP, SVG, MP3, WAV, OGG — maks 5 MB. Kategori seçimi zorunludur.
           </p>
           {uploadError && (
             <div className="validation-fail" style={{ marginTop: 12, padding: '8px 14px', borderRadius: 10, fontSize: '0.82rem' }}>
@@ -177,16 +187,29 @@ export default function AssetsPage() {
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', justifyContent: 'space-between' }}>
-        <div className="category-tabs">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.value}
-              className={`category-tab ${categoryFilter === cat.value ? 'category-tab-active' : ''}`}
-              onClick={() => setCategoryFilter(cat.value)}
-            >
-              {cat.label}
-            </button>
-          ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="category-tabs">
+            {KIND_FILTERS.map((k) => (
+              <button
+                key={k.value}
+                className={`category-tab ${kindFilter === k.value ? 'category-tab-active' : ''}`}
+                onClick={() => setKindFilter(k.value)}
+              >
+                {k.label}
+              </button>
+            ))}
+          </div>
+          <div className="category-tabs">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.value}
+                className={`category-tab ${categoryFilter === cat.value ? 'category-tab-active' : ''}`}
+                onClick={() => setCategoryFilter(cat.value)}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Pagination */}
@@ -242,39 +265,48 @@ export default function AssetsPage() {
             <div key={asset.id} className={`asset-card${asset.archived ? ' asset-archived' : ''}`}>
               {/* Thumbnail */}
               <div className="asset-thumb-wrapper">
-                <img
-                  src={asset.url}
-                  alt={asset.filename}
-                  className="asset-thumb"
-                  loading="lazy"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                  }}
-                />
-                <div className="asset-thumb-fallback hidden">
-                  <span>🖼</span>
-                  <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{asset.mimeType}</span>
-                </div>
+                {asset.kind === 'AUDIO' ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '2rem', background: 'rgba(255,255,255,0.03)' }}>
+                    🔊
+                  </div>
+                ) : (
+                  <>
+                    <img
+                      src={asset.uri || asset.url}
+                      alt={asset.key}
+                      className="asset-thumb"
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="asset-thumb-fallback hidden">
+                      <span>🖼</span>
+                      <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{asset.mimeType}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Info */}
               <div className="asset-card-body">
                 <div style={{ fontWeight: 700, fontSize: '0.78rem', wordBreak: 'break-all', lineHeight: 1.3 }}>
-                  {asset.filename}
+                  {asset.key}
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
                   <span className="badge badge-info" style={{ fontSize: '0.6rem', padding: '2px 8px' }}>
-                    {CATEGORIES.find((c) => c.value === asset.category)?.label ?? asset.category}
+                    {asset.kind === 'AUDIO' ? 'SES' : asset.format}
                   </span>
-                  {asset.width > 0 && asset.height > 0 && (
-                    <span className="muted" style={{ fontSize: '0.62rem' }}>
-                      {asset.width}×{asset.height}
-                    </span>
-                  )}
-                  <span className="muted" style={{ fontSize: '0.62rem' }}>
-                    {formatBytes(asset.bytes)}
+                  <span className="badge" style={{ fontSize: '0.6rem', padding: '2px 8px' }}>
+                    {CATEGORIES.find((c) => c.value === asset.category)?.label ?? asset.category ?? '—'}
                   </span>
+                  {(asset.width && asset.height) ? (
+                    <span className="muted" style={{ fontSize: '0.62rem' }}>{asset.width}×{asset.height}</span>
+                  ) : asset.durationSec ? (
+                    <span className="muted" style={{ fontSize: '0.62rem' }}>{asset.durationSec}s</span>
+                  ) : null}
+                  <span className="muted" style={{ fontSize: '0.62rem' }}>{formatBytes(asset.bytes)}</span>
                   {asset.archived && (
                     <span className="badge-draft" style={{ fontSize: '0.6rem', padding: '2px 8px' }}>Arşivli</span>
                   )}
@@ -286,7 +318,7 @@ export default function AssetsPage() {
                 <button
                   className="ghost-button"
                   style={{ minWidth: 'auto', padding: '5px 10px', fontSize: '0.65rem' }}
-                  onClick={() => copyUrl(asset.url, asset.id)}
+                  onClick={() => copyUrl(asset.uri || asset.url, asset.id)}
                 >
                   {copiedId === asset.id ? 'Kopyalandi ✓' : 'URL Kopyala'}
                 </button>
@@ -296,10 +328,10 @@ export default function AssetsPage() {
                     style={{ minWidth: 'auto', padding: '5px 10px', fontSize: '0.65rem' }}
                     disabled={archiving === asset.id}
                     onClick={() => {
-                      if (confirm(`${asset.filename} arşivlensin mi?`)) handleArchive(asset.id);
+                      if (confirm(`"${asset.key}" silinsin mi?\n\nBu işlem geri alınamaz. Asset kalıcı olarak arşivlenir.`)) handleArchive(asset.id);
                     }}
                   >
-                    {archiving === asset.id ? '...' : 'Arşivle'}
+                    {archiving === asset.id ? '...' : '🗑 Sil'}
                   </button>
                 )}
               </div>

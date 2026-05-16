@@ -1,0 +1,93 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - complementary [ref=e4]:
+        - generic [ref=e5]:
+          - img "AlbaGO" [ref=e6]
+          - generic [ref=e7]: Content Console
+        - navigation "Admin navigasyonu" [ref=e8]:
+          - link "1 Genel Bakis" [ref=e9] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e10]: "1"
+            - text: Genel Bakis
+          - link "2 Oyunlar" [ref=e11] [cursor=pointer]:
+            - /url: /games
+            - generic [ref=e12]: "2"
+            - text: Oyunlar
+          - link "3 Sablonlar" [ref=e13] [cursor=pointer]:
+            - /url: /templates
+            - generic [ref=e14]: "3"
+            - text: Sablonlar
+          - link "4 Kategoriler" [ref=e15] [cursor=pointer]:
+            - /url: /categories
+            - generic [ref=e16]: "4"
+            - text: Kategoriler
+          - link "5 Medya" [ref=e17] [cursor=pointer]:
+            - /url: /media
+            - generic [ref=e18]: "5"
+            - text: Medya
+          - link "6 Yayinlar" [ref=e19] [cursor=pointer]:
+            - /url: /publications
+            - generic [ref=e20]: "6"
+            - text: Yayinlar
+          - link "7 Analitik" [ref=e21] [cursor=pointer]:
+            - /url: /analytics
+            - generic [ref=e22]: "7"
+            - text: Analitik
+          - link "8 Audit Log" [ref=e23] [cursor=pointer]:
+            - /url: /audit
+            - generic [ref=e24]: "8"
+            - text: Audit Log
+        - paragraph [ref=e25]: AlbaGO Admin v2
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - heading "Sablonlar" [level=1] [ref=e29]
+            - paragraph [ref=e30]: Hazir oyun sablonlarini incele ve yeni oyun olustur.
+          - generic [ref=e33]:
+            - strong [ref=e34]: Yonetici
+            - paragraph [ref=e35]: Admin
+        - generic [ref=e36]:
+          - article [ref=e37]:
+            - generic [ref=e38]: 🎭
+            - heading "Scene Play / No-code" [level=2] [ref=e39]
+            - paragraph [ref=e40]: Panelden gelen komutlari hareketle cevapla. Deve Cuce gibi oyunlar icin.
+            - generic [ref=e41]: SCENE_PLAY
+            - link "Bu sablondan olustur" [ref=e42] [cursor=pointer]:
+              - /url: /games?template=SCENE_PLAY
+          - article [ref=e43]:
+            - generic [ref=e44]: 🍉
+            - heading "Meyve Kesme" [level=2] [ref=e45]
+            - paragraph [ref=e46]: Jumping jack ile meyveleri kes, squat ile bonus hedefi patlat. En populer demo.
+            - generic [ref=e47]: FRUIT_SLASH
+            - link "Bu sablondan olustur" [ref=e48] [cursor=pointer]:
+              - /url: /games?template=FRUIT_SLASH
+          - article [ref=e49]:
+            - generic [ref=e50]: 🏃
+            - heading "Engelden Kacis" [level=2] [ref=e51]
+            - paragraph [ref=e52]: Squat ile alttan gec, jumping jack ile zipla, jump rope ile enerji topla.
+            - generic [ref=e53]: DODGE_RUN
+            - link "Bu sablondan olustur" [ref=e54] [cursor=pointer]:
+              - /url: /games?template=DODGE_RUN
+          - article [ref=e55]:
+            - generic [ref=e56]: 💪
+            - heading "Spor Mucadelesi" [level=2] [ref=e57]
+            - paragraph [ref=e58]: Squat, jumping jack, jump rope ve plank — 4 asamali spor programi.
+            - generic [ref=e59]: FIT_CHALLENGE
+            - link "Bu sablondan olustur" [ref=e60] [cursor=pointer]:
+              - /url: /games?template=FIT_CHALLENGE
+          - article [ref=e61]:
+            - generic [ref=e62]: 🎮
+            - heading "Whack-a-Mole" [level=2] [ref=e63]
+            - paragraph [ref=e64]
+            - generic [ref=e65]: WHACK_A_MOLE
+            - link "Bu sablondan olustur" [ref=e66] [cursor=pointer]:
+              - /url: /games?template=WHACK_A_MOLE
+          - article [ref=e67]:
+            - generic [ref=e68]: 🎮
+            - heading "Pose Contact" [level=2] [ref=e69]
+            - paragraph [ref=e70]
+            - generic [ref=e71]: POSE_CONTACT_TARGETS
+            - link "Bu sablondan olustur" [ref=e72] [cursor=pointer]:
+              - /url: /games?template=POSE_CONTACT_TARGETS
+  - alert [ref=e73]

@@ -152,3 +152,27 @@ model AuditLog {
   @@index([createdAt])
 
 }
+
+model Asset {
+  id          String   @id
+  key         String
+  kind        String   @default("IMAGE") // IMAGE | AUDIO
+  format      String   // PNG | WEBP | SVG | MP3 | WAV | OGG
+  category    String?  // cover | background | character | target | sfx | music | icon | ui
+  uri         String
+  filename    String
+  mimeType    String
+  bytes       Int
+  width       Int?
+  height      Int?
+  durationSec Float?   // ses dosyalari icin
+  sha256      String?
+  archived    Boolean  @default(false)
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([kind])
+  @@index([archived])
+}

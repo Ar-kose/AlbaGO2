@@ -1,6 +1,7 @@
 package com.alba.core.data
 
 import android.content.Context
+import android.util.Log
 import androidx.camera.view.PreviewView
 import androidx.lifecycle.LifecycleOwner
 import com.alba.core.camera.CameraFrame
@@ -172,8 +173,13 @@ class AlbaMotionController(
     }
 
     fun selectGameDefinition(gameId: String) {
+        Log.d("AlbaGo", "[selectGameDefinition] gameId=$gameId")
         val definition = _uiState.value.availableGames.firstOrNull { it.gameId == gameId && it.isPlayablePublicGame() }
-        if (definition == null) return
+        if (definition == null) {
+            Log.w("AlbaGo", "[selectGameDefinition] NOT FOUND for $gameId in ${_uiState.value.availableGames.map { it.gameId }}")
+            return
+        }
+        Log.d("AlbaGo", "[selectGameDefinition] found ${definition.title}, status=${definition.status}, motions=${definition.supportedMotions}")
         _uiState.value = _uiState.value.copy(
             activeGameDefinition = definition,
             activeGameId = definition.gameId,
@@ -255,17 +261,22 @@ class AlbaMotionController(
         }
     }
 
-    fun startGame() {
-        val definition = _uiState.value.activeGameDefinition
+    fun startGame(gameId: String? = null) {
+        Log.d("AlbaGo", "[startGame] ENTER gameId=$gameId activeGameDef=${_uiState.value.activeGameDefinition?.gameId} gameStatus=${_uiState.value.game.status}")
+        val definition = gameId?.let { id ->
+            _uiState.value.availableGames.firstOrNull { it.gameId == id && it.isPlayablePublicGame() }
+        } ?: _uiState.value.activeGameDefinition
             ?.takeIf { it.isPlayablePublicGame() }
             ?: _uiState.value.availableGames.firstOrNull { it.isPlayablePublicGame() }
             ?: run {
+                Log.e("AlbaGo", "[startGame] FAILED - no playable game found")
                 _uiState.value = _uiState.value.copy(
                     backendStatus = "Oyun kataloğu yüklenemedi",
                     lastError = "Başlatılabilir oyun bulunamadı"
                 )
                 return
             }
+        Log.d("AlbaGo", "[startGame] definition=${definition.title} gameId=${definition.gameId} cameraReq=${definition.cameraRequirement} motions=${definition.supportedMotions}")
         definition.supportedMotions.forEach { motionType ->
             detectors[motionType]?.reset()
         }
@@ -281,6 +292,7 @@ class AlbaMotionController(
         val requiresCamera = definition.cameraRequirement != CameraRequirement.HAND_TARGET
         val initialStatus = if (requiresCamera) GameSessionStatus.WAITING_FOR_BODY else GameSessionStatus.ACTIVE
         val initialState = if (requiresCamera) null else runtime.start(System.currentTimeMillis())
+        Log.d("AlbaGo", "[startGame] requiresCamera=$requiresCamera initialStatus=$initialStatus")
         _uiState.value = _uiState.value.copy(
             activeGameDefinition = definition,
             activeGameId = definition.gameId,
@@ -453,6 +465,7 @@ class AlbaMotionController(
     }
 
     private suspend fun processFrame(frame: CameraFrame) {
+        val gameStatusBefore = _uiState.value.game.status
         val poseResult = runCatching { poseEstimator.estimate(frame) ?: emptyPoseResult(frame) }.getOrElse {
             _uiState.value = _uiState.value.copy(lastError = it.message ?: "Pose estimation failed")
             return
@@ -532,8 +545,10 @@ class AlbaMotionController(
                     }
                 }
                 gameRuntime?.let { runtime ->
-                    val runtimeState = runtime.onMotionEvent(motionEvent)
-                    gameState = gameStateFromRuntime(runtimeState, gameState.clientSessionKey, gameRemoteId)
+                    if (gameState.status == GameSessionStatus.ACTIVE || gameState.status == GameSessionStatus.PAUSED) {
+                        val runtimeState = runtime.onMotionEvent(motionEvent)
+                        gameState = gameStateFromRuntime(runtimeState, gameState.clientSessionKey, gameRemoteId)
+                    }
                 }
             }
 
@@ -556,6 +571,9 @@ class AlbaMotionController(
             activeGameTemplate = _uiState.value.activeGameDefinition?.template,
             activeGameVersion = _uiState.value.activeGameDefinition?.version
         )
+        if (gameStatusBefore != _uiState.value.game.status) {
+            Log.w("AlbaGo", "[processFrame] GAME STATUS CHANGED: $gameStatusBefore -> ${_uiState.value.game.status}")
+        }
     }
 
     private fun injectMockMotionEvent(event: MotionEvent) {
@@ -581,8 +599,10 @@ class AlbaMotionController(
         }
 
         gameRuntime?.let { runtime ->
-            val runtimeState = runtime.onMotionEvent(event)
-            gameState = gameStateFromRuntime(runtimeState, gameState.clientSessionKey, gameRemoteId)
+            if (gameState.status == GameSessionStatus.ACTIVE || gameState.status == GameSessionStatus.PAUSED) {
+                val runtimeState = runtime.onMotionEvent(event)
+                gameState = gameStateFromRuntime(runtimeState, gameState.clientSessionKey, gameRemoteId)
+            }
         }
 
         _uiState.value = _uiState.value.copy(
@@ -710,6 +730,7 @@ class AlbaMotionController(
 
 
     private suspend fun refreshActiveGames() {
+        Log.d("AlbaGo", "[refreshActiveGames] ENTER gameInProgress=${_uiState.value.game.status}")
         // Phase 1: Show cached games immediately for fast launch
         val cachedDefinitions = debugStore.readCachedAvailableGames()
             .filter { it.isPlayablePublicGame() }
@@ -721,6 +742,7 @@ class AlbaMotionController(
                 it.gameId == currentSelectionId && it.isPlayablePublicGame()
             } ?: cachedDefinitions.firstOrNull()
 
+            Log.d("AlbaGo", "[refreshActiveGames] Phase1: currentSel=$currentSelectionId cachedSel=${cachedSelection?.gameId} game.status=${_uiState.value.game.status}")
             _uiState.value = _uiState.value.copy(
                 availableGames = cachedDefinitions,
                 activeGameDefinition = cachedSelection,
@@ -756,20 +778,34 @@ class AlbaMotionController(
                 debugStore.cacheGamesVersionMap(newVersions)
             }
 
-            val currentSelectionId = _uiState.value.activeGameId
-            val selectedDefinition = definitions.firstOrNull {
-                it.gameId == currentSelectionId && it.isPlayablePublicGame()
-            } ?: definitions.firstOrNull()
+            val gameInProgress = _uiState.value.game.status == GameSessionStatus.WAITING_FOR_BODY ||
+                _uiState.value.game.status == GameSessionStatus.ACTIVE ||
+                _uiState.value.game.status == GameSessionStatus.PAUSED
 
-            _uiState.value = _uiState.value.copy(
-                availableGames = definitions,
-                activeGameDefinition = selectedDefinition,
-                activeGameId = selectedDefinition?.gameId,
-                activeGameTemplate = selectedDefinition?.template,
-                activeGameVersion = selectedDefinition?.version,
-                backendStatus = if (hasError) "Bağlı (güncellenemedi)" else "Bağlı",
-                lastError = null
-            )
+            Log.d("AlbaGo", "[refreshActiveGames] Phase3: gameInProgress=$gameInProgress status=${_uiState.value.game.status} activeGameId=${_uiState.value.activeGameId} definitions=${definitions.map { it.gameId }}")
+
+            if (!gameInProgress) {
+                val currentSelectionId = _uiState.value.activeGameId
+                val selectedDefinition = definitions.firstOrNull {
+                    it.gameId == currentSelectionId && it.isPlayablePublicGame()
+                } ?: definitions.firstOrNull()
+
+                _uiState.value = _uiState.value.copy(
+                    availableGames = definitions,
+                    activeGameDefinition = selectedDefinition,
+                    activeGameId = selectedDefinition?.gameId,
+                    activeGameTemplate = selectedDefinition?.template,
+                    activeGameVersion = selectedDefinition?.version,
+                    backendStatus = if (hasError) "Bağlı (güncellenemedi)" else "Bağlı",
+                    lastError = null
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    availableGames = definitions,
+                    backendStatus = if (hasError) "Bağlı (güncellenemedi)" else "Bağlı",
+                    lastError = null
+                )
+            }
         } else if (cachedDefinitions.isNotEmpty()) {
             // Network failed or empty — keep showing cache
             _uiState.value = _uiState.value.copy(
@@ -965,7 +1001,11 @@ class AlbaMotionController(
     }
 
     private suspend fun createGameSessionRemote(sessionKey: String, gameId: String) {
-        val profileId = currentProfileId ?: return
+        val profileId = currentProfileId ?: run {
+            Log.d("AlbaGo", "[createGameSessionRemote] SKIP: profileId is null, gameStatus=${_uiState.value.game.status}")
+            return
+        }
+        Log.d("AlbaGo", "[createGameSessionRemote] START gameStatus=${_uiState.value.game.status}")
         val version = _uiState.value.activeGameVersion ?: 1
         runCatching {
             SupabaseData.createGameSession(
@@ -981,18 +1021,24 @@ class AlbaMotionController(
         }.onSuccess {
             if (it != null) {
                 gameRemoteId = it.id
+                Log.d("AlbaGo", "[createGameSessionRemote] SUCCESS status before copy=${_uiState.value.game.status}")
                 _uiState.value = _uiState.value.copy(
                     game = _uiState.value.game.copy(remoteSessionId = it.id, syncMessage = "Game session created"),
                     backendStatus = "Game session created",
                     lastError = null
                 )
+                Log.d("AlbaGo", "[createGameSessionRemote] SUCCESS status after copy=${_uiState.value.game.status}")
+            } else {
+                Log.d("AlbaGo", "[createGameSessionRemote] SUCCESS but response was null")
             }
         }.onFailure {
+            Log.d("AlbaGo", "[createGameSessionRemote] FAIL status before copy=${_uiState.value.game.status}")
             _uiState.value = _uiState.value.copy(
                 game = _uiState.value.game.copy(syncMessage = "Game offline mode"),
                 backendStatus = "Game running in offline mode",
                 lastError = it.message
             )
+            Log.d("AlbaGo", "[createGameSessionRemote] FAIL status after copy=${_uiState.value.game.status}")
         }
     }
 

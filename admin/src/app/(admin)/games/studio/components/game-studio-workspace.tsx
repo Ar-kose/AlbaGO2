@@ -89,63 +89,104 @@ export function GameStudioWorkspace({
         </div>
       </div>
 
-      {/* Three-column workspace */}
-      <div className="studio-workspace-layout">
-        {/* Left: Editor */}
-        <div className="studio-left-panel">
-          <StudioLeftEditor
-            draft={draft}
-            game={game}
-            activeTab={editorTab}
-            onTabChange={setEditorTab}
-            onDraftChange={onDraftChange}
-          />
-        </div>
-
-        {/* Center: Preview + Motion Console */}
-        <div className="studio-center-panel">
-          <MobileGamePreview recipe={null as any} previewState={previewState} gameMode />
-          <div style={{ marginTop: 12 }}>
-            <MockMotionConsole onSendEvent={onMotionEvent} recipe={null as any} gameMode />
+      {/* Workspace layout — geniş mod (Assets/Ekran) veya 3 kolon (diğer) */}
+      {editorTab === 'assets' ? (
+        /* ─── Geniş Layout: Assets sekmesi için 2/3 + 1/3 ─── */
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 'var(--space-lg)', alignItems: 'start' }}>
+          <div>
+            <StudioLeftEditor
+              draft={draft}
+              game={game}
+              activeTab={editorTab}
+              onTabChange={setEditorTab}
+              onDraftChange={onDraftChange}
+            />
           </div>
-
-          {/* Event Log */}
-          <div style={{ marginTop: 12 }}>
-            <StudioEventLog events={eventLog} onClear={onClearLog} />
+          <div style={{ display: 'grid', gap: 12 }}>
+            <StudioPublishCenter
+              validationIssues={validationIssues}
+              compatibilityIssues={compatibilityIssues}
+              backendValidation={backendValidation}
+              saveState={saveState}
+              publishState={publishState}
+              publishMessage={publishMessage}
+              gameStatus={game.status}
+              onSave={onSave}
+              onValidate={onValidate}
+              onPublish={onPublish}
+              onRollback={onRollback}
+            />
+            <div style={{ marginTop: 0 }}>
+              <StudioMobileTestPanel
+                gameId={game.id}
+                isPublished={game.status === 'PUBLISHED'}
+              />
+            </div>
+            <div style={{ marginTop: 0 }}>
+              <StudioSessionResultsPanel
+                gameDefinitionId={game.id}
+                isPublished={game.status === 'PUBLISHED'}
+              />
+            </div>
           </div>
         </div>
-
-        {/* Right: Publish Center + Mobile Test */}
-        <div className="studio-right-panel">
-          <StudioPublishCenter
-            validationIssues={validationIssues}
-            compatibilityIssues={compatibilityIssues}
-            backendValidation={backendValidation}
-            saveState={saveState}
-            publishState={publishState}
-            publishMessage={publishMessage}
-            gameStatus={game.status}
-            onSave={onSave}
-            onValidate={onValidate}
-            onPublish={onPublish}
-            onRollback={onRollback}
-          />
-
-          <div style={{ marginTop: 12 }}>
-            <StudioMobileTestPanel
-              gameId={game.id}
-              isPublished={game.status === 'PUBLISHED'}
+      ) : (
+        /* ─── Standart 3-kolon Layout ─── */
+        <div className="studio-workspace-layout">
+          {/* Left: Editor */}
+          <div className="studio-left-panel">
+            <StudioLeftEditor
+              draft={draft}
+              game={game}
+              activeTab={editorTab}
+              onTabChange={setEditorTab}
+              onDraftChange={onDraftChange}
             />
           </div>
 
-          <div style={{ marginTop: 12 }}>
-            <StudioSessionResultsPanel
-              gameDefinitionId={game.id}
-              isPublished={game.status === 'PUBLISHED'}
+          {/* Center: Preview + Motion Console */}
+          <div className="studio-center-panel">
+            <MobileGamePreview recipe={null as any} previewState={previewState} gameMode />
+            <div style={{ marginTop: 12 }}>
+              <MockMotionConsole onSendEvent={onMotionEvent} recipe={null as any} gameMode />
+            </div>
+
+            {/* Event Log */}
+            <div style={{ marginTop: 12 }}>
+              <StudioEventLog events={eventLog} onClear={onClearLog} />
+            </div>
+          </div>
+
+          {/* Right: Publish Center + Mobile Test */}
+          <div className="studio-right-panel">
+            <StudioPublishCenter
+              validationIssues={validationIssues}
+              compatibilityIssues={compatibilityIssues}
+              backendValidation={backendValidation}
+              saveState={saveState}
+              publishState={publishState}
+              publishMessage={publishMessage}
+              gameStatus={game.status}
+              onSave={onSave}
+              onValidate={onValidate}
+              onPublish={onPublish}
+              onRollback={onRollback}
             />
+            <div style={{ marginTop: 12 }}>
+              <StudioMobileTestPanel
+                gameId={game.id}
+                isPublished={game.status === 'PUBLISHED'}
+              />
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <StudioSessionResultsPanel
+                gameDefinitionId={game.id}
+                isPublished={game.status === 'PUBLISHED'}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -389,6 +389,10 @@ class CreateGameDefinitionDto {
 class UpdateGameDefinitionDto {
   @IsOptional()
   @IsString()
+  gameKey?: string;
+
+  @IsOptional()
+  @IsString()
   @IsIn(supportedTemplates)
   template?: GameTemplateKey;
 
@@ -498,7 +502,11 @@ class GamesService {
       segmentRuleJson: withCatalogMeta(dto.segmentRuleJson, dto.category, dto.tags),
       supportedMotions: dto.supportedMotions,
       levels: dto.levels.map(mapLevelDto),
-      assets: dto.assets
+      assets: dto.assets ?? {
+        background: 'local://default/background',
+        character: 'local://default/character',
+        items: []
+      }
     };
     await this.gameDefinitionsRepository.save(entity);
     await this.auditLogsRepository.record(
