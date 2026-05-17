@@ -255,6 +255,12 @@ export async function updateGameDefinition(
   );
 }
 
+export async function deleteGameDefinition(id: string): Promise<{ deleted: boolean }> {
+  return await request(`/internal/game-definitions/${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
+}
+
 export type PublishResult = {
   published: boolean;
   game?: GameDefinitionDto;

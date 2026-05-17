@@ -6,6 +6,7 @@ import {
   MotionType,
   CameraRequirement
 } from '../contracts';
+import { TEMPLATE_FAMILY, MechanicKind } from '../game-settings';
 
 export interface GameTemplateMetadata {
   template: GameTemplateKey;
@@ -23,6 +24,10 @@ export interface GameTemplateMetadata {
   requiredAudioEvents: string[];
   optionalAudioEvents: string[];
   minRuntimeVersion: string;
+}
+
+export function getMechanicKindForTemplate(template: GameTemplateKey): MechanicKind {
+  return TEMPLATE_FAMILY[template];
 }
 
 export const TEMPLATE_REGISTRY: Record<GameTemplateKey, GameTemplateMetadata> = {

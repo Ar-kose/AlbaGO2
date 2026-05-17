@@ -75,7 +75,9 @@ import com.alba.core.data.AlbaMotionController
 import com.alba.core.data.MotionDebugConfig
 import com.alba.core.data.MotionUiState
 import com.alba.core.motion.MotionType
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.alba.core.runtime.DodgeObstacle
 import com.alba.core.runtime.DodgeObstacleType
 import com.alba.core.runtime.DodgeRunSceneState
@@ -540,26 +542,35 @@ private fun GameExperienceShell(
     // P32: Countdown state for body gate
     var countdownValue by remember { mutableStateOf(0) }
 
-    // P32: Body gate — monitor isUserInFrame via snapshotFlow for continuous sampling
+    // P32: Body gate — collect from controller's StateFlow directly (snapshotFlow
+    // can't track plain parameter changes). Hysteresis: require 5 consecutive
+    // out-of-frame frames (~150ms) before resetting stability, to filter out
+    // single-frame MediaPipe flicker.
     LaunchedEffect(waitingForBody) {
         if (!waitingForBody) {
             countdownValue = 0
             return@LaunchedEffect
         }
-        var stableStartMs = 0L
-        snapshotFlow { uiState.isUserInFrame }.collect { inFrame ->
+        var stabilityJob: Job? = null
+        var outOfFrameCount = 0
+        controller.uiState.collect { fresh ->
+            val inFrame = fresh.isUserInFrame
             if (!inFrame) {
-                stableStartMs = 0L
+                outOfFrameCount++
+                if (countdownValue > 0) return@collect // countdown active, ignore dropouts
+                if (outOfFrameCount < 5) return@collect // require sustained out-of-frame
+                stabilityJob?.cancel()
+                stabilityJob = null
                 countdownValue = 0
                 return@collect
             }
+            outOfFrameCount = 0
             if (countdownValue > 0) return@collect // already counting down
-            val now = System.currentTimeMillis()
-            if (stableStartMs == 0L) {
-                stableStartMs = now
-            }
-            if (now - stableStartMs >= 1200L) {
-                countdownValue = 3
+            if (stabilityJob == null) {
+                stabilityJob = launch {
+                    delay(800L)
+                    countdownValue = 3
+                }
             }
         }
     }
@@ -817,7 +828,7 @@ private fun BodyGateOverlay(
             Text(
                 if (!isUserInFrame) "Kamera bedenini algilayana kadar bekleniyor..."
                 else if (countdownValue > 0) "Sayim sirasinda kadrajdan cikma"
-                else "Beden algilandi, geri sayim basliyor...",
+                else "Beden algilandi, sabit dur...",
                 color = Color.White.copy(alpha = 0.78f),
                 fontSize = 13.sp,
                 modifier = Modifier.weight(1f)

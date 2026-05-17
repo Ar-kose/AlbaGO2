@@ -43,7 +43,7 @@ interface WorkspaceProps {
   onClearLog: () => void;
 }
 
-type EditorTab = 'basic' | 'rules' | 'assets' | 'program' | 'advanced';
+type EditorTab = 'basic' | 'settings' | 'rules' | 'assets' | 'program' | 'advanced';
 
 export function GameStudioWorkspace({
   game,

@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   listGameDefinitions,
+  deleteGameDefinition,
   GameDefinitionDto,
   GameCategory,
   templateLabel,
@@ -26,6 +27,21 @@ export default function GamesPage() {
       .finally(() => { if (!cancelled) setIsLoading(false); });
     return () => { cancelled = true; };
   }, []);
+
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+
+  const handleDelete = async (game: GameDefinitionDto) => {
+    if (!window.confirm(`"${game.title}" oyununu silmek istediğine emin misin? Bu işlem geri alınamaz.`)) return;
+    setDeletingIds((prev) => new Set(prev).add(game.id));
+    try {
+      await deleteGameDefinition(game.id);
+      setGames((prev) => prev.filter((g) => g.id !== game.id));
+    } catch {
+      alert('Silme başarısız oldu.');
+    } finally {
+      setDeletingIds((prev) => { const next = new Set(prev); next.delete(game.id); return next; });
+    }
+  };
 
   const filtered = useMemo(() => {
     return games.filter((game) => {
@@ -195,6 +211,15 @@ export default function GamesPage() {
                     onClick={() => router.push(`/games/${game.id}/studio`)}
                   >
                     Studio&apos;da Aç
+                  </button>
+                  <button
+                    type="button"
+                    className="danger-button"
+                    style={{ fontSize: '0.65rem', padding: '5px 12px', minWidth: 'auto' }}
+                    disabled={deletingIds.has(game.id)}
+                    onClick={() => handleDelete(game)}
+                  >
+                    {deletingIds.has(game.id) ? 'Siliniyor...' : '🗑 Sil'}
                   </button>
                 </div>
               </div>

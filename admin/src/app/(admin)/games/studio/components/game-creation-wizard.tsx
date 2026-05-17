@@ -206,6 +206,19 @@ export function GameCreationWizard({ presetId }: WizardProps) {
                     </>
                   )}
 
+                  {'lives' in recipe && (
+                    <label className="field">
+                      <span>Can Hakkı</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={(recipe as any).lives ?? 3}
+                        onChange={(e) => updateRecipe({ lives: parseInt(e.target.value) || 3 } as any)}
+                      />
+                    </label>
+                  )}
+
                   {'cameraRequirement' in recipe && (
                     <label className="field">
                       <span>Kamera Gereksinimi</span>

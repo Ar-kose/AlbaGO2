@@ -89,7 +89,12 @@ function getDuration(recipe: GameRecipe): number {
     case 'COMMAND_REACTION': return recipe.durationSec;
     case 'HOLD_CHALLENGE': return recipe.totalDurationSec;
     case 'TARGET_HIT': return recipe.durationSec;
-    case 'REP_PROGRAM': return recipe.steps.reduce((sum, s) => sum + (s.durationSec ?? s.targetCount ?? 0), 0);
+    case 'REP_PROGRAM':
+      return recipe.steps.reduce((sum, s) => {
+        if (s.type === 'MOTION_REPS' && s.targetCount) return sum + s.targetCount * 2;
+        if (s.type === 'HOLD_POSE' && s.holdSec) return sum + s.holdSec;
+        return sum + (s.durationSec ?? 20);
+      }, 0);
     case 'RUNNER_DODGE': return recipe.durationSec;
     case 'FRUIT_SLASH': return recipe.durationSec;
   }

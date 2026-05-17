@@ -41,6 +41,20 @@ export class GameDefinitionsRepository {
     return definition ? mapPersistedGameDefinition(definition) : undefined;
   }
 
+  async delete(id: string): Promise<boolean> {
+    if (!this.prisma.client) {
+      const idx = this.store.gameDefinitions.findIndex((item) => item.id === id);
+      if (idx >= 0) {
+        this.store.gameDefinitions.splice(idx, 1);
+        return true;
+      }
+      return false;
+    }
+    await this.ensureSeeded();
+    await this.prisma.client.gameDefinition.delete({ where: { id } });
+    return true;
+  }
+
   async save(entity: GameDefinitionEntity): Promise<GameDefinitionEntity> {
     if (!this.prisma.client) {
       const index = this.store.gameDefinitions.findIndex((item) => item.id === entity.id);

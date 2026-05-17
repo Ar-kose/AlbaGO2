@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Injectable, Module, Param, Patch, Post, Query, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Injectable, Module, Param, Patch, Post, Query, Res, UseGuards } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { AdminTokenGuard } from '../common/admin-token.guard';
 import { ApiTags } from '@nestjs/swagger';
@@ -522,6 +522,23 @@ class GamesService {
     return mapGameDefinitionToResponse(entity);
   }
 
+  async delete(id: string) {
+    const game = await this.gameDefinitionsRepository.getById(id);
+    if (!game) return { error: 'game_not_found' };
+    await this.gameDefinitionsRepository.delete(id);
+    await this.auditLogsRepository.record(
+      createAuditEntry(
+        'admin@local',
+        'delete',
+        'GameDefinition',
+        id,
+        mapGameDefinitionToResponse(game),
+        undefined
+      )
+    );
+    return { deleted: true };
+  }
+
   async update(id: string, dto: UpdateGameDefinitionDto) {
     const game = await this.gameDefinitionsRepository.getById(id);
     if (!game) return { error: 'game_not_found' };
@@ -657,6 +674,11 @@ class InternalGamesController {
   @Patch(':id')
   async update(@Param('id') id: string, @Body() dto: UpdateGameDefinitionDto) {
     return this.service.update(id, dto);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    return this.service.delete(id);
   }
 }
 

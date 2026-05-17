@@ -41,6 +41,7 @@ export const GAME_PRESETS: GamePreset[] = [
       kind: 'HOLD_CHALLENGE',
       title: '',
       description: '',
+      lives: 3,
       holdMotion: 'PLANK_HOLD',
       targetHoldSec: 30,
       totalDurationSec: 45,
@@ -64,6 +65,7 @@ export const GAME_PRESETS: GamePreset[] = [
       kind: 'TARGET_HIT',
       title: '',
       description: '',
+      lives: 3,
       durationSec: 60,
       targets: [
         { label: 'Sol Hedef', x: 0.20, y: 0.78, radius: 0.10, hitBy: ['LEFT_WRIST', 'RIGHT_WRIST'], points: 10, assetKey: 'target_left' },
@@ -89,6 +91,7 @@ export const GAME_PRESETS: GamePreset[] = [
       kind: 'FRUIT_SLASH',
       title: '',
       description: '',
+      lives: 3,
       durationSec: 60,
       targetScore: 420,
       spawnRateMs: 900,
@@ -141,6 +144,7 @@ export const GAME_PRESETS: GamePreset[] = [
       kind: 'REP_PROGRAM',
       title: '',
       description: '',
+      lives: 3,
       steps: [
         { type: 'MOTION_REPS', title: 'Squat Seti', motion: 'SQUAT', targetCount: 10, successMessage: 'Squat tamam!' },
         { type: 'REST', title: 'Dinlenme', durationSec: 20, successMessage: 'Dinlenme bitti.' },

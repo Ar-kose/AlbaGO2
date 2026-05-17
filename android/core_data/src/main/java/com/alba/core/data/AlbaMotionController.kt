@@ -125,6 +125,7 @@ class AlbaMotionController(
     private var gameSyncInFlight = false
     private var pendingGameResult: GameSessionResult? = null
     private val gameMotionCounts = mutableMapOf<MotionType, Int>()
+    private var consecutiveOutOfFrame = 0
 
     private val _uiState = MutableStateFlow(
         MotionUiState(
@@ -513,10 +514,17 @@ class AlbaMotionController(
             workoutState = _uiState.value.workout
         }
 
-        if (!isGameVisible && gameRuntime != null && gameState.status == GameSessionStatus.ACTIVE) {
+        if (!isGameVisible) {
+            consecutiveOutOfFrame++
+        } else {
+            consecutiveOutOfFrame = 0
+        }
+        // Hysteresis: require 8 consecutive out-of-frame frames before pausing,
+        // to filter out momentary MediaPipe dropouts.
+        if (consecutiveOutOfFrame > 8 && gameRuntime != null && gameState.status == GameSessionStatus.ACTIVE) {
             val pausedState = gameRuntime?.pause(frame.timestampMs, "Kadraja geri dön") ?: gameRuntime!!.snapshot()
             gameState = gameStateFromRuntime(pausedState, gameState.clientSessionKey, gameRemoteId)
-        } else if (isGameVisible && gameRuntime != null && gameState.status == GameSessionStatus.PAUSED) {
+        } else if (consecutiveOutOfFrame == 0 && gameRuntime != null && gameState.status == GameSessionStatus.PAUSED) {
             val resumedState = gameRuntime?.resume(frame.timestampMs, "Devam") ?: gameRuntime!!.snapshot()
             gameState = gameStateFromRuntime(resumedState, gameState.clientSessionKey, gameRemoteId)
         }
@@ -637,7 +645,11 @@ class AlbaMotionController(
         gameRuntime?.let { runtime ->
             val status = _uiState.value.game.status
             if (status != GameSessionStatus.ACTIVE && status != GameSessionStatus.PAUSED) return@let
+            val stateBefore = runtime.snapshot()
             val state = runtime.tick(nowMs)
+            if (stateBefore.status != state.status) {
+                Log.w("AlbaGo", "[tick] STATUS CHANGE: ${stateBefore.status} -> ${state.status} completed=${state.completed} remainingMs=${state.remainingMs} lives=${(state.sceneState as? ScenePlaySceneState)?.lives} elapsedMs=${state.elapsedMs}")
+            }
             _uiState.value = _uiState.value.copy(
                 game = gameStateFromRuntime(state, _uiState.value.game.clientSessionKey, gameRemoteId)
             )
@@ -941,7 +953,7 @@ class AlbaMotionController(
             difficulty = level.difficulty,
             motionRules = motionRules,
             rewards = rewards,
-            config = emptyMap(),
+            config = level.runtimeConfig?.let { jsonObjectToMap(it) } ?: emptyMap(),
             sceneConfig = sceneConfigMap,
             interactionRules = interactionRules,
             programSteps = programSteps
@@ -1335,9 +1347,9 @@ class AlbaMotionController(
             GameTemplate.INTERVAL_WORKOUT
         )
 
-        const val MIN_VISIBLE_KEYPOINT_CONFIDENCE = 0.45f
-        const val MIN_VISIBILITY_SCORE = 0.45f
-        const val MIN_VISIBLE_KEYPOINT_COUNT = 8
+        const val MIN_VISIBLE_KEYPOINT_CONFIDENCE = 0.25f
+        const val MIN_VISIBILITY_SCORE = 0.25f
+        const val MIN_VISIBLE_KEYPOINT_COUNT = 4
         const val MIN_FRUIT_CONTACT_KEYPOINT_CONFIDENCE = 0.15f
         const val FRUIT_CONTACT_RADIUS_SQUARED = 0.0729f
         val FRUIT_CONTACT_KEYPOINTS = setOf(

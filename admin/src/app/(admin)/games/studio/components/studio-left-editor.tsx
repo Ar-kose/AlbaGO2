@@ -3,8 +3,9 @@
 import { useState, useMemo, useCallback } from 'react';
 import type { GameDefinitionDto, GameDefinitionDraft, GameCategory } from '../../../../../lib/alba-api';
 import { AssetPickerModal } from './asset-picker-modal';
+import { StudioGameSettingsPanel } from './studio-game-settings-panel';
 
-type EditorTab = 'basic' | 'rules' | 'assets' | 'program' | 'advanced';
+type EditorTab = 'basic' | 'settings' | 'rules' | 'assets' | 'program' | 'advanced';
 
 interface LeftEditorProps {
   draft: GameDefinitionDraft;
@@ -16,6 +17,7 @@ interface LeftEditorProps {
 
 const TABS: Array<{ id: EditorTab; label: string }> = [
   { id: 'basic', label: 'Temel Bilgiler' },
+  { id: 'settings', label: 'Oyun Ayarları' },
   { id: 'rules', label: 'Kurallar' },
   { id: 'assets', label: 'Assetler' },
   { id: 'program', label: 'Program Akışı' },
@@ -225,6 +227,11 @@ export function StudioLeftEditor({ draft, game, activeTab, onTabChange, onDraftC
               </label>
             </div>
           </div>
+        )}
+
+        {/* SETTINGS Tab — Birlesik Oyun Ayarları */}
+        {activeTab === 'settings' && (
+          <StudioGameSettingsPanel draft={draft} level={level} onDraftChange={onDraftChange} />
         )}
 
         {/* RULES Tab */}

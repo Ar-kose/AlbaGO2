@@ -33,6 +33,7 @@ export interface HoldChallengeRecipe {
   kind: 'HOLD_CHALLENGE';
   title: string;
   description: string;
+  lives: number;
   holdMotion: 'PLANK_HOLD' | 'BALANCE' | 'POSE_STABLE';
   targetHoldSec: number;
   totalDurationSec: number;
@@ -46,6 +47,7 @@ export interface TargetHitRecipe {
   kind: 'TARGET_HIT';
   title: string;
   description: string;
+  lives: number;
   durationSec: number;
   targets: Array<{
     label: string;
@@ -65,6 +67,7 @@ export interface RepProgramRecipe {
   kind: 'REP_PROGRAM';
   title: string;
   description: string;
+  lives: number;
   steps: Array<{
     type: 'MOTION_REPS' | 'HOLD_POSE' | 'REST' | 'INSTRUCTION';
     title: string;
@@ -99,6 +102,7 @@ export interface FruitSlashRecipe {
   kind: 'FRUIT_SLASH';
   title: string;
   description: string;
+  lives: number;
   durationSec: number;
   targetScore: number;
   spawnRateMs: number;

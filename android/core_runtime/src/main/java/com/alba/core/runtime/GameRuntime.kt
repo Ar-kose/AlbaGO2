@@ -1,5 +1,6 @@
 package com.alba.core.runtime
 
+import android.util.Log
 import com.alba.core.motion.MotionEvent
 import com.alba.core.motion.MotionEventType
 import com.alba.core.motion.MotionType
@@ -258,7 +259,8 @@ data class FruitSlashSceneState(
     val slicedCount: Int = 0,
     val missedCount: Int = 0,
     val penaltyCount: Int = 0,
-    val nextSpawnAtMs: Long = 0L
+    val nextSpawnAtMs: Long = 0L,
+    val lives: Int = 3
 ) : GameSceneState
 
 enum class DodgeObstacleType {
@@ -367,7 +369,8 @@ data class GameRuntimeState(
     val validMotionCount: Int = 0,
     val invalidMotionCount: Int = 0,
     val sceneState: GameSceneState = IdleSceneState,
-    val program: ProgramRuntimeState = ProgramRuntimeState()
+    val program: ProgramRuntimeState = ProgramRuntimeState(),
+    val lastBadFormMs: Long = 0L
 )
 
 data class GameSessionResult(
@@ -459,6 +462,8 @@ class GameDefinitionValidator {
     }
 }
 
+private const val BAD_FORM_COOLDOWN_MS = 500L
+
 class GameRuntime(
     private val definition: GameDefinition,
     private val level: GameLevelDefinition = definition.levels.firstOrNull() ?: definition.safeFallbackLevel()
@@ -474,20 +479,60 @@ class GameRuntime(
     private var pausedAtMs: Long? = null
     private var accumulatedPausedMs: Long = 0L
 
+    // Birlesik oyun sistemi
+    private val gameSettings: GameSettings? by lazy {
+        try {
+            val jsonObj = org.json.JSONObject(level.config)
+            val gs = GameSettingsParser.parseOrNull(jsonObj)
+            android.util.Log.d("AlbaGo", "[GameSettings] Parsed: ${gs != null}, template=${definition.template}, mechanic=${gs?.mechanic?.kind}")
+            gs
+        } catch (e: Exception) {
+            android.util.Log.w("AlbaRuntime", "[GameSettings] Parse failed: ${e.message}")
+            null
+        }
+    }
+    private val mechanicHandler: GameMechanicHandler by lazy {
+        val kind = gameSettings?.mechanic?.kind ?: TemplateFamily.getKind(definition.template.name)
+        android.util.Log.d("AlbaGo", "[Handler] Creating handler for kind=$kind template=${definition.template}")
+        HandlerFactory.create(kind)
+    }
+    private var useGenericHandler: Boolean = false
+    private var genericSceneState: GenericSceneState = GenericSceneState()
+    private var lastGenericTickGameMs: Long = 0L
+
     fun start(nowMs: Long): GameRuntimeState {
         startedAtMs = nowMs
         pausedAtMs = null
         accumulatedPausedMs = 0L
         val program = initProgram(nowMs)
-        state = GameRuntimeState(
-            template = definition.template,
-            title = definition.title,
-            description = definition.description,
-            remainingMs = level.durationSec * 1000L,
-            status = GameSessionStatus.ACTIVE,
-            sceneState = initialSceneState(nowMs),
-            program = program
-        )
+
+        if (gameSettings != null) {
+            useGenericHandler = true
+            genericSceneState = mechanicHandler.createInitialState(gameSettings!!)
+            lastGenericTickGameMs = nowMs
+            android.util.Log.d("AlbaGo", "[START] Using generic handler, mechanic=${gameSettings!!.mechanic.kind}, lives=${genericSceneState.lives}")
+            state = GameRuntimeState(
+                template = definition.template,
+                title = definition.title,
+                description = definition.description,
+                remainingMs = level.durationSec * 1000L,
+                status = GameSessionStatus.ACTIVE,
+                sceneState = IdleSceneState,
+                program = program
+            )
+        } else {
+            useGenericHandler = false
+            android.util.Log.d("AlbaGo", "[START] Using legacy handlers for template=${definition.template}")
+            state = GameRuntimeState(
+                template = definition.template,
+                title = definition.title,
+                description = definition.description,
+                remainingMs = level.durationSec * 1000L,
+                status = GameSessionStatus.ACTIVE,
+                sceneState = initialSceneState(nowMs),
+                program = program
+            )
+        }
         return state
     }
 
@@ -542,25 +587,39 @@ class GameRuntime(
     fun tick(nowMs: Long): GameRuntimeState {
         val elapsed = effectiveElapsed(nowMs)
         val remaining = (level.durationSec * 1000L - elapsed).coerceAtLeast(0L)
+        // gameNow freezes during pause: object spawn/expiry uses this
+        // so objects don't age while the player is out of frame
+        val gameNow = startedAtMs + elapsed
         var nextState = state.copy(
             elapsedMs = elapsed,
             remainingMs = remaining
         )
 
         if (state.status == GameSessionStatus.ACTIVE) {
-            nextState = tickProgram(nextState, nowMs)
-            val activeStep = getActiveProgramStep(nextState.program)
-            val shouldTickTemplate = activeStep == null || activeStep.type == ProgramStepType.PLAY_GAME
-            if (shouldTickTemplate) {
-                nextState = when (definition.template) {
-                    GameTemplate.FRUIT_SLASH -> tickFruitSlash(nextState, nowMs)
-                    GameTemplate.DODGE_RUN -> tickDodgeRun(nextState, nowMs)
-                    GameTemplate.FIT_CHALLENGE -> nextState
-                    GameTemplate.SCENE_PLAY -> tickScenePlay(nextState, nowMs)
-                    GameTemplate.WHACK_A_MOLE,
-                    GameTemplate.POSE_CONTACT_TARGETS,
-                    GameTemplate.CAMERA_ARCADE_OVERLAY -> tickWhackAMole(nextState, nowMs)
-                    else -> nextState
+            if (useGenericHandler && gameSettings != null) {
+                // Birlesik handler yolu
+                val deltaMs = if (lastGenericTickGameMs == 0L) 250L
+                              else (gameNow - lastGenericTickGameMs).coerceAtLeast(0L)
+                lastGenericTickGameMs = gameNow
+                genericSceneState = mechanicHandler.tick(
+                    genericSceneState, gameSettings!!, gameNow, deltaMs
+                )
+                nextState = applyGenericState(nextState, genericSceneState, gameNow)
+            } else {
+                nextState = tickProgram(nextState, gameNow)
+                val activeStep = getActiveProgramStep(nextState.program)
+                val shouldTickTemplate = activeStep == null || activeStep.type == ProgramStepType.PLAY_GAME
+                if (shouldTickTemplate) {
+                    nextState = when (definition.template) {
+                        GameTemplate.FRUIT_SLASH -> tickFruitSlash(nextState, gameNow)
+                        GameTemplate.DODGE_RUN -> tickDodgeRun(nextState, gameNow)
+                        GameTemplate.FIT_CHALLENGE -> nextState
+                        GameTemplate.SCENE_PLAY -> tickScenePlay(nextState, gameNow)
+                        GameTemplate.WHACK_A_MOLE,
+                        GameTemplate.POSE_CONTACT_TARGETS,
+                        GameTemplate.CAMERA_ARCADE_OVERLAY -> tickWhackAMole(nextState, gameNow)
+                        else -> nextState
+                    }
                 }
             }
         }
@@ -701,6 +760,15 @@ class GameRuntime(
             return state
         }
 
+        // Birlesik handler yolu
+        if (useGenericHandler && gameSettings != null) {
+            genericSceneState = mechanicHandler.onMotionEvent(
+                genericSceneState, event, gameSettings!!, event.timestampMs
+            )
+            state = applyGenericState(state, genericSceneState, event.timestampMs)
+            return state
+        }
+
         // Program runner gets first chance for MOTION_REPS
         val activeStep = getActiveProgramStep(state.program)
         if (activeStep != null && activeStep.type == ProgramStepType.MOTION_REPS) {
@@ -807,11 +875,17 @@ class GameRuntime(
     private fun handleFruitSlashEvent(event: MotionEvent): GameRuntimeState {
         val currentScene = state.sceneState as? FruitSlashSceneState ?: FruitSlashSceneState()
         return when (event.type) {
-            MotionEventType.BAD_FORM -> invalidate(
-                effect = "Combo reset",
-                penalty = pointsFor(event.motionType, MotionEventType.BAD_FORM),
-                currentState = state.copy(sceneState = currentScene)
-            )
+            MotionEventType.BAD_FORM -> {
+                if (event.timestampMs - state.lastBadFormMs < BAD_FORM_COOLDOWN_MS) return state
+                invalidate(
+                    effect = "Combo reset",
+                    penalty = pointsFor(event.motionType, MotionEventType.BAD_FORM),
+                    currentState = state.copy(
+                        sceneState = currentScene,
+                        lastBadFormMs = event.timestampMs
+                    )
+                )
+            }
 
             MotionEventType.REP_COUNTED -> {
                 val explicitTargetId = event.metadata["targetId"]
@@ -822,16 +896,19 @@ class GameRuntime(
 
                 if (selectedTarget?.penaltyObject == true) {
                     val nextTargets = currentScene.targets.filterNot { it.id == selectedTarget.id }
-                    invalidate(
+                    val nextLives = max(0, currentScene.lives - 1)
+                    val nextState = invalidate(
                         effect = "Oops! Penalty object",
                         penalty = -level.config.intValue("penaltyPoints", 10),
                         currentState = state.copy(
                             sceneState = currentScene.copy(
                                 targets = nextTargets,
-                                penaltyCount = currentScene.penaltyCount + 1
+                                penaltyCount = currentScene.penaltyCount + 1,
+                                lives = nextLives
                             )
                         )
                     )
+                    nextState.copy(completed = state.elapsedMs >= 20_000L && nextLives == 0)
                 } else {
                     if (selectedTarget == null) {
                         scoreRep(
@@ -867,6 +944,7 @@ class GameRuntime(
         val currentScene = state.sceneState as? DodgeRunSceneState ?: initialDodgeScene()
         return when (event.type) {
             MotionEventType.BAD_FORM -> {
+                if (event.timestampMs - state.lastBadFormMs < BAD_FORM_COOLDOWN_MS) return state
                 val penalty = pointsFor(event.motionType, MotionEventType.BAD_FORM)
                 val nextLives = max(0, currentScene.lives - 1)
                 val nextState = invalidate(
@@ -876,10 +954,11 @@ class GameRuntime(
                         sceneState = currentScene.copy(
                             lives = nextLives,
                             prompt = "Tekrar dene"
-                        )
+                        ),
+                        lastBadFormMs = event.timestampMs
                     )
                 )
-                nextState.copy(completed = nextLives == 0)
+                nextState.copy(completed = state.elapsedMs >= 20_000L && nextLives == 0)
             }
 
             MotionEventType.REP_COUNTED -> {
@@ -925,12 +1004,14 @@ class GameRuntime(
         val currentScene = state.sceneState as? FitChallengeSceneState ?: initialFitScene()
         return when (event.type) {
             MotionEventType.BAD_FORM -> {
+                if (event.timestampMs - state.lastBadFormMs < BAD_FORM_COOLDOWN_MS) return state
                 val nextQuality = max(0, currentScene.qualityScore - 6)
                 invalidate(
                     effect = "Form quality down",
                     penalty = pointsFor(event.motionType, MotionEventType.BAD_FORM),
                     currentState = state.copy(
-                        sceneState = currentScene.copy(qualityScore = nextQuality)
+                        sceneState = currentScene.copy(qualityScore = nextQuality),
+                        lastBadFormMs = event.timestampMs
                     )
                 )
             }
@@ -967,18 +1048,17 @@ class GameRuntime(
         val currentScene = state.sceneState as? ScenePlaySceneState ?: initialScenePlay(event.timestampMs)
         return when (event.type) {
             MotionEventType.BAD_FORM -> {
-                val nextLives = max(0, currentScene.lives - level.config.intValue("damageOnMiss", 1))
-                val nextState = invalidate(
+                if (event.timestampMs - state.lastBadFormMs < BAD_FORM_COOLDOWN_MS) return state
+                invalidate(
                     effect = "Formu duzelt",
                     penalty = pointsFor(event.motionType, MotionEventType.BAD_FORM),
                     currentState = state.copy(
                         sceneState = currentScene.copy(
-                            lives = nextLives,
                             prompt = "Tekrar dene"
-                        )
+                        ),
+                        lastBadFormMs = event.timestampMs
                     )
                 )
-                nextState.copy(completed = nextLives == 0)
             }
 
             MotionEventType.REP_COUNTED -> {
@@ -1074,7 +1154,7 @@ class GameRuntime(
 
     private fun initialScenePlay(nowMs: Long = startedAtMs): ScenePlaySceneState {
         return ScenePlaySceneState(
-            lives = level.config.intValue("lives", 3),
+            lives = level.config.intValue("lives", 5),
             nextSpawnAtMs = nowMs,
             prompt = "Hazir"
         )
@@ -1144,15 +1224,29 @@ class GameRuntime(
         }
 
         return currentState.copy(
-            sceneState = nextScene
+            sceneState = nextScene,
+            completed = currentState.elapsedMs >= 20_000L && nextScene.lives == 0
         )
     }
 
     private fun handleWhackAMoleEvent(event: MotionEvent): GameRuntimeState {
         val scene = state.sceneState as? WhackAMoleSceneState ?: return state
-        if (event.type == MotionEventType.BAD_FORM || event.type == MotionEventType.USER_OUT_OF_FRAME) {
+        if (event.type == MotionEventType.USER_OUT_OF_FRAME) {
             val nextScene = scene.copy(lives = (scene.lives - 1).coerceAtLeast(0))
-            return state.copy(sceneState = nextScene)
+            return state.copy(sceneState = nextScene, completed = state.elapsedMs >= 20_000L && nextScene.lives == 0)
+        }
+        if (event.type == MotionEventType.BAD_FORM) {
+            if (event.timestampMs - state.lastBadFormMs < BAD_FORM_COOLDOWN_MS) return state
+            val nextScene = scene.copy(lives = (scene.lives - 1).coerceAtLeast(0))
+            val nextState = invalidate(
+                effect = "Form bozuk",
+                penalty = pointsFor(event.motionType, MotionEventType.BAD_FORM),
+                currentState = state.copy(
+                    sceneState = nextScene,
+                    lastBadFormMs = event.timestampMs
+                )
+            )
+            return nextState.copy(completed = state.elapsedMs >= 20_000L && nextScene.lives == 0)
         }
         return state
     }
@@ -1233,7 +1327,7 @@ class GameRuntime(
             sceneState = nextScene,
             lastEffect = effect
         )
-        return nextState.copy(completed = nextLives == 0)
+        return nextState.copy(completed = currentState.elapsedMs >= 20_000L && nextLives == 0)
     }
 
     private fun tickScenePlay(currentState: GameRuntimeState, nowMs: Long): GameRuntimeState {
@@ -1249,20 +1343,27 @@ class GameRuntime(
         )
 
         val maxObjects = level.sceneConfig.intValue("maxObjects", 1).coerceAtLeast(1)
+        val spawnRateMs = level.config.longValue("spawnRateMs", 1800L)
+        if (expired.isNotEmpty() || nowMs >= scene.nextSpawnAtMs) {
+            Log.d("AlbaGo", "[tickScenePlay] nowMs=$nowMs lives=${scene.lives}->$nextLives objects=${scene.objects.size} expired=${expired.size} nextSpawn=${scene.nextSpawnAtMs} spawnRateMs=$spawnRateMs maxObjects=$maxObjects damageOnMiss=${level.config.intValue("damageOnMiss", 1)}")
+        }
         if (nowMs >= scene.nextSpawnAtMs && nextObjects.size < maxObjects) {
             val spawned = createScenePlayObject(nowMs)
             nextObjects = nextObjects + spawned
             nextScene = nextScene.copy(
                 objects = nextObjects,
-                nextSpawnAtMs = nowMs + level.config.longValue("spawnRateMs", 1800L),
+                nextSpawnAtMs = nowMs + spawnRateMs,
                 prompt = promptForSceneObject(spawned)
             )
         }
 
+        // Grace period: during first 20s, lives can drop to 0 but game continues.
+        // This gives players time to demonstrate correct motions before game-over.
+        val graceActive = currentState.elapsedMs < 20_000L
         return currentState.copy(
             sceneState = nextScene,
             lastEffect = if (expired.isNotEmpty()) "Komut kacirildi" else currentState.lastEffect,
-            completed = nextLives == 0
+            completed = !graceActive && nextLives == 0
         )
     }
 
@@ -1301,6 +1402,26 @@ class GameRuntime(
             lastEffect = effect,
             invalidMotionCount = invalidCount
         )
+    }
+
+    // Birlesik handler state'ini GameRuntimeState'e yansit
+    private fun applyGenericState(currentState: GameRuntimeState, sceneState: GenericSceneState, gameNow: Long): GameRuntimeState {
+        val elapsedFromStart = gameNow - startedAtMs
+        var next = currentState.copy(
+            score = sceneState.score,
+            combo = sceneState.combo,
+            comboMax = max(currentState.comboMax, sceneState.combo),
+            elapsedMs = elapsedFromStart,
+            remainingMs = if (gameSettings?.common?.duration?.mode == "TIMED")
+                max(0, (gameSettings!!.common.duration.sec * 1000L) - elapsedFromStart)
+            else currentState.remainingMs,
+            completed = sceneState.completed,
+            lastEffect = sceneState.feedback?.text ?: currentState.lastEffect
+        )
+        if (sceneState.completed || sceneState.failed) {
+            next = next.copy(status = GameSessionStatus.FINISHED)
+        }
+        return next
     }
 
     private fun canApplyRule(rule: MotionRule, nowMs: Long): Boolean {
@@ -1371,7 +1492,7 @@ class GameRuntime(
             requiredMotion = requiredMotion,
             points = selected.intValue("points", pointsFor(requiredMotion, MotionEventType.REP_COUNTED).takeIf { it > 0 } ?: 10),
             spawnedAtMs = nowMs,
-            lifeMs = selected.longValue("lifeMs", level.sceneConfig.longValue("defaultObjectLifeMs", 2400L)),
+            lifeMs = selected.longValue("lifeMs", level.sceneConfig.longValue("defaultObjectLifeMs", 5000L)),
             hitRadius = selected.floatValue("hitRadius", level.sceneConfig.floatValue("defaultHitRadius", 0.2f)),
             penaltyObject = selected.booleanValue("isPenalty", false)
         )

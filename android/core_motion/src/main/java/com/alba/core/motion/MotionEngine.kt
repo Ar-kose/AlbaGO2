@@ -67,16 +67,32 @@ private data class SideKneeAngles(
 }
 
 class KeypointNormalizer(
-    private val minimumVisibility: Float = 0.45f
+    private val minimumVisibility: Float = 0.35f
 ) {
     fun normalize(frame: PoseFrame): NormalizedPoseFrame? {
-        if (frame.visibilityScore < minimumVisibility) return null
         val map = frame.keypoints.associateBy { it.name }
-        val shoulders = listOfNotNull(map["left_shoulder"], map["right_shoulder"])
-        val ankles = listOfNotNull(map["left_ankle"], map["right_ankle"])
-        if (shoulders.isEmpty() || ankles.isEmpty()) return null
-        val top = shoulders.minOf { it.y }
-        val bottom = ankles.maxOf { it.y }
+        // Use confidence of visible keypoints only, not global visibilityScore
+        val visibleKeypoints = frame.keypoints.filter { it.confidence >= 0.10f }
+        if (visibleKeypoints.size < 4) return null
+        val visibleMap = visibleKeypoints.associateBy { it.name }
+
+        // Top: shoulders > hips > nose
+        val shoulders = listOfNotNull(visibleMap["left_shoulder"], visibleMap["right_shoulder"])
+        val hips = listOfNotNull(visibleMap["left_hip"], visibleMap["right_hip"])
+        val topCandidates = shoulders.ifEmpty { hips }
+        val top = when {
+            topCandidates.isNotEmpty() -> topCandidates.minOf { it.y }
+            visibleMap["nose"] != null -> visibleMap["nose"]!!.y
+            else -> return null
+        }
+
+        // Bottom: ankles > knees > hips
+        val ankles = listOfNotNull(visibleMap["left_ankle"], visibleMap["right_ankle"])
+        val knees = listOfNotNull(visibleMap["left_knee"], visibleMap["right_knee"])
+        val bottomCandidates = ankles.ifEmpty { knees.ifEmpty { hips } }
+        if (bottomCandidates.isEmpty()) return null
+        val bottom = bottomCandidates.maxOf { it.y }
+
         val bodyHeight = (bottom - top).coerceAtLeast(0.001f)
         return NormalizedPoseFrame(
             timestampMs = frame.timestampMs,
@@ -225,8 +241,14 @@ class SquatDetectorV1 : BaseDetector(MotionType.SQUAT, "squat_detector_v1") {
     }
 
     override fun onPoseFrame(frame: PoseFrame): MotionEvent? {
-        val normalized = normalizer.normalize(frame) ?: return userOutOfFrame(frame)
-        val kneeAngles = normalized.extractKneeAngles() ?: return userOutOfFrame(frame)
+        val normalized = normalizer.normalize(frame) ?: run {
+            if (phase != "OUT_OF_FRAME") android.util.Log.d("AlbaGoMotion", "[Squat] normalizer FAIL vs=${"%.2f".format(frame.visibilityScore)} kps=${frame.keypoints.size}")
+            return userOutOfFrame(frame)
+        }
+        val kneeAngles = normalized.extractKneeAngles() ?: run {
+            android.util.Log.d("AlbaGoMotion", "[Squat] kneeAngles FAIL hips=(${normalized.points["left_hip"]?.confidence},${normalized.points["right_hip"]?.confidence}) knees=(${normalized.points["left_knee"]?.confidence},${normalized.points["right_knee"]?.confidence}) ankles=(${normalized.points["left_ankle"]?.confidence},${normalized.points["right_ankle"]?.confidence})")
+            return userOutOfFrame(frame)
+        }
         val kneeAngle = kneeAngles.averaged() ?: return userOutOfFrame(frame)
         userVisible = true
         lastConfidence = normalized.visibilityScore
@@ -234,12 +256,16 @@ class SquatDetectorV1 : BaseDetector(MotionType.SQUAT, "squat_detector_v1") {
 
         val nowMs = frame.timestampMs
         val repDurationMs = repDuration(nowMs)
+        if (phase != "STANDING" || kneeAngle < 160.0) {
+            android.util.Log.d("AlbaGoMotion", "[Squat] phase=$phase kneeAngle=${"%.0f".format(kneeAngle)} bottom=$bottomReached lowest=${"%.0f".format(lowestAngleInCycle)} elapsed=${repDurationMs}ms")
+        }
 
         when {
             kneeAngle >= 160.0 -> {
                 if (phase == "GOING_UP" && bottomReached) {
                     if (repDurationMs in MIN_REP_DURATION_MS..MAX_REP_DURATION_MS && cooledDown(nowMs, REP_COOLDOWN_MS)) {
                         val quality = depthQuality(lowestAngleInCycle)
+                        android.util.Log.d("AlbaGoMotion", "[Squat] REP! quality=$quality lowest=${"%.0f".format(lowestAngleInCycle)} duration=${repDurationMs}ms")
                         bottomReached = false
                         lowestAngleInCycle = 180.0
                         return repEvent(frame, quality = quality, repDurationMs = repDurationMs)
@@ -298,17 +324,41 @@ class SquatDetectorV1 : BaseDetector(MotionType.SQUAT, "squat_detector_v1") {
     }
 
     private fun NormalizedPoseFrame.extractKneeAngles(): SideKneeAngles? {
-        val left = calculateAngleIfVisible(
-            points["left_hip"],
-            points["left_knee"],
-            points["left_ankle"]
-        )
-        val right = calculateAngleIfVisible(
-            points["right_hip"],
-            points["right_knee"],
-            points["right_ankle"]
-        )
+        // Use raw keypoint positions regardless of confidence — MediaPipe
+        // confidence is unreliable on some devices.
+        val leftHip = points["left_hip"]
+        val leftKnee = points["left_knee"]
+        val leftAnkle = points["left_ankle"]
+        val rightHip = points["right_hip"]
+        val rightKnee = points["right_knee"]
+        val rightAnkle = points["right_ankle"]
+
+        val left = if (leftHip != null && leftKnee != null && leftAnkle != null) {
+            rawKneeAngle(leftHip, leftKnee, leftAnkle)
+        } else if (leftHip != null && leftKnee != null) {
+            estimateKneeAngleFromThigh(leftHip, leftKnee)
+        } else null
+        val right = if (rightHip != null && rightKnee != null && rightAnkle != null) {
+            rawKneeAngle(rightHip, rightKnee, rightAnkle)
+        } else if (rightHip != null && rightKnee != null) {
+            estimateKneeAngleFromThigh(rightHip, rightKnee)
+        } else null
         return if (left == null && right == null) null else SideKneeAngles(left, right)
+    }
+
+    private fun rawKneeAngle(hip: PoseKeypoint, knee: PoseKeypoint, ankle: PoseKeypoint): Double {
+        val radians = atan2(ankle.y - knee.y, ankle.x - knee.x) - atan2(hip.y - knee.y, hip.x - knee.x)
+        val angle = Math.toDegrees(radians.toDouble())
+        val absAngle = kotlin.math.abs(angle)
+        return if (absAngle > 180.0) 360.0 - absAngle else absAngle
+    }
+
+    private fun estimateKneeAngleFromThigh(hip: PoseKeypoint, knee: PoseKeypoint): Double? {
+        val dx = knee.x - hip.x
+        val dy = hip.y - knee.y
+        val thighAngleFromVertical = Math.toDegrees(kotlin.math.atan2(dx.toDouble(), dy.toDouble()).toDouble())
+        val absAngle = kotlin.math.abs(thighAngleFromVertical)
+        return (170.0 - absAngle * 1.5).coerceIn(75.0, 175.0)
     }
 
     private fun depthQuality(lowestAngle: Double): Float {
@@ -483,7 +533,7 @@ private fun calculateAngleIfVisible(
     a: PoseKeypoint?,
     b: PoseKeypoint?,
     c: PoseKeypoint?,
-    minimumConfidence: Float = 0.5f
+    minimumConfidence: Float = 0.10f
 ): Double? {
     if (a == null || b == null || c == null) return null
     if (a.confidence < minimumConfidence || b.confidence < minimumConfidence || c.confidence < minimumConfidence) {

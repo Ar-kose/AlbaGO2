@@ -1,5 +1,6 @@
 import type { GameDefinitionDraft, GameLevelDto, MotionRuleDto, InteractionRuleDto, ProgramStepDto, MotionType, GameAssetDto } from '../alba-api';
 import type { GameRecipe, CommandReactionRecipe, HoldChallengeRecipe, TargetHitRecipe, RepProgramRecipe, RunnerDodgeRecipe, FruitSlashRecipe } from './types';
+import type { GameSettings, CommonGameSettings, GameMechanic, MotionArcadeMechanic, PoseContactMechanic, QuizMechanic, StudyMechanic, HoldMechanic, RhythmMechanic, ProgramMechanic } from './game-settings';
 
 function slugify(text: string): string {
   return text
@@ -152,7 +153,7 @@ function convertHoldChallenge(recipe: HoldChallengeRecipe): GameDefinitionDraft 
       { motion: 'PLANK_HOLD', event: 'REP_COUNTED', points: Math.ceil(recipe.successPoints / recipe.targetHoldSec), cooldownMs: 1000 }
     ],
     rewardRules: [{ rewardType: 'BADGE', amount: 1, minimumScore: recipe.successPoints }],
-    config: { showQualityScore: true, advanceAutomatically: true, minConfidence: 0.6 },
+    config: { showQualityScore: true, advanceAutomatically: true, minConfidence: 0.6, lives: recipe.lives },
     sceneConfig: { showQualityScore: true, taskCardStyle: 'stacked', completionEffect: 'pulse', maxObjects: 1 },
     interactionRules: [
       { input: 'MOTION_EVENT', event: 'BAD_FORM', action: 'RESET_COMBO', points: -3, cooldownMs: 250 },
@@ -242,7 +243,7 @@ function convertTargetHit(recipe: TargetHitRecipe): GameDefinitionDraft {
       { motion: 'RIGHT_HAND_HIT', event: 'REP_COUNTED', points: 10, cooldownMs: 300 }
     ],
     rewardRules: [{ rewardType: 'STAR', amount: 1, minimumScore: 100 }],
-    config: { spawnIntervalMs: 900, visibleMs: 2000, lives: 3, maxActiveTargets: objects.length, loseLifeOnTimeout: true },
+    config: { spawnIntervalMs: 900, visibleMs: 2000, lives: recipe.lives, maxActiveTargets: objects.length, loseLifeOnTimeout: true },
     sceneConfig: {
       type: 'OBJECT_SPAWN',
       maxObjects: objects.length,
@@ -337,7 +338,7 @@ function convertRepProgram(recipe: RepProgramRecipe): GameDefinitionDraft {
     difficulty: 'CHALLENGE',
     motionRules: makeDefaultMotionRules(allMotions, allMotions[0]),
     rewardRules: [{ rewardType: 'BADGE', amount: 1, minimumScore: Math.ceil(tasks.reduce((sum, t) => sum + t.targetCount * t.pointsPerRep, 0) * 0.7) }],
-    config: { showQualityScore: true, advanceAutomatically: true },
+    config: { showQualityScore: true, advanceAutomatically: true, lives: recipe.lives },
     sceneConfig: { showQualityScore: true, taskCardStyle: 'stacked', completionEffect: 'pulse', maxObjects: tasks.length },
     interactionRules: [
       ...tasks.map(t => ({
@@ -482,7 +483,7 @@ function convertFruitSlash(recipe: FruitSlashRecipe): GameDefinitionDraft {
     difficulty: 'EASY',
     motionRules: makeDefaultMotionRules(motions, motions[0]),
     rewardRules: [{ rewardType: 'STAR', amount: 3, minimumScore: recipe.targetScore }],
-    config: { spawnRateMs: recipe.spawnRateMs, comboMultiplier: true, penaltyObjects: recipe.penaltyObjects, penaltyPoints: recipe.penaltyPoints },
+    config: { spawnRateMs: recipe.spawnRateMs, comboMultiplier: true, penaltyObjects: recipe.penaltyObjects, penaltyPoints: recipe.penaltyPoints, lives: recipe.lives },
     sceneConfig: {
       laneCount: 3,
       maxObjects: 5,
@@ -545,6 +546,303 @@ function convertFruitSlash(recipe: FruitSlashRecipe): GameDefinitionDraft {
     status: 'DRAFT',
     actorId: 'admin@local'
   };
+}
+
+// ─── Unified GameSettings Converter ─────────────────────────────────────────
+
+export function convertFromGameSettings(gs: GameSettings): GameDefinitionDraft {
+  const { common, mechanic } = gs;
+  const gameKey = slugify(common.title) || common.templateId.toLowerCase();
+  const motionRules = buildMotionRules(common, mechanic);
+  const interactionRules = buildInteractionRules(common, mechanic);
+  const sceneConfig = buildSceneConfig(mechanic);
+  const configJson = buildConfigJson(common, mechanic);
+  const programSteps = buildProgramSteps(mechanic);
+  const tags = buildTags(common.templateId, common.category);
+
+  const durationSec = common.duration.mode === 'TIMED' ? common.duration.sec : 0;
+  const targetScore = common.scoring.targetScore;
+
+  const template = mapTemplateId(common.templateId);
+
+  return {
+    gameKey,
+    template: template as any,
+    title: common.title,
+    description: common.description,
+    category: common.category as any,
+    orientation: common.presentation.orientation as any,
+    cameraRequirement: common.presentation.cameraRequirement as any,
+    supportedMotions: motionRules.map(r => r.motion).filter((v, i, a) => a.indexOf(v) === i),
+    minAppVersion: '0.2.0',
+    tags,
+    levels: [{
+      levelId: `${gameKey}_level_1`,
+      durationSec,
+      targetScore,
+      difficulty: 'MEDIUM',
+      motionRules,
+      rewardRules: [],
+      config: configJson,
+      sceneConfig,
+      interactionRules: interactionRules,
+      tasks: [],
+      programSteps: programSteps,
+    }],
+    assets: {
+      cover: '',
+      background: 'local://default/bg',
+      character: 'local://default/char',
+      items: [],
+    },
+    status: 'DRAFT',
+    actorId: 'admin@local',
+  };
+}
+
+function mapTemplateId(templateId: string): string {
+  // GameSettings.templateId → GameDefinitionDraft.template mapping
+  const map: Record<string, string> = {
+    SCENE_PLAY: 'SCENE_PLAY',
+    FRUIT_SLASH: 'FRUIT_SLASH',
+    DODGE_RUN: 'DODGE_RUN',
+    FIT_CHALLENGE: 'FIT_CHALLENGE',
+    WHACK_A_MOLE: 'WHACK_A_MOLE',
+    POSE_CONTACT_TARGETS: 'POSE_CONTACT_TARGETS',
+    POSE_HOLD: 'POSE_HOLD',
+    RHYTHM_MOTION: 'RHYTHM_MOTION',
+    REP_COUNTER: 'REP_COUNTER',
+    MOTION_SEQUENCE: 'MOTION_SEQUENCE',
+    INTERVAL_WORKOUT: 'INTERVAL_WORKOUT',
+    QUIZ: 'QUIZ',
+    FLASHCARD: 'FLASHCARD',
+    MEMORY_MATCH: 'MEMORY_MATCH',
+    TRUE_FALSE: 'TRUE_FALSE',
+    MATCH_PAIRS: 'MATCH_PAIRS',
+    REACTION: 'REACTION',
+    CATCH_FALLING: 'CATCH_FALLING',
+    AVOID_OBSTACLE: 'AVOID_OBSTACLE',
+    COLLECT_ITEMS: 'COLLECT_ITEMS',
+    PROGRAM_FLOW: 'PROGRAM_FLOW',
+    HYBRID_SCENE: 'HYBRID_SCENE',
+    TARGET_HIT: 'TARGET_HIT',
+    ENDLESS_RUNNER: 'ENDLESS_RUNNER',
+    CAMERA_ARCADE_OVERLAY: 'CAMERA_ARCADE_OVERLAY',
+  };
+  return map[templateId] ?? templateId;
+}
+
+function buildMotionRules(common: CommonGameSettings, mechanic: GameMechanic): MotionRuleDto[] {
+  const rules: MotionRuleDto[] = [];
+  const motionSet = new Set<string>();
+
+  if (mechanic.kind === 'MOTION_ARCADE') {
+    for (const obj of mechanic.objects) {
+      if (obj.requiredMotion && !motionSet.has(obj.requiredMotion)) {
+        motionSet.add(obj.requiredMotion);
+        rules.push({
+          motion: obj.requiredMotion as MotionType,
+          event: 'REP_COUNTED',
+          points: obj.points,
+          cooldownMs: 400,
+        });
+      }
+    }
+  } else if (mechanic.kind === 'POSE_CONTACT') {
+    for (const t of mechanic.targets) {
+      for (const kp of t.hitBy) {
+        const motion = keypointToMotion(kp);
+        if (motion && !motionSet.has(motion)) {
+          motionSet.add(motion);
+          rules.push({ motion: motion as MotionType, event: 'REP_COUNTED', points: t.points, cooldownMs: 400 });
+        }
+      }
+    }
+  } else if (mechanic.kind === 'PROGRAM') {
+    for (const step of mechanic.steps) {
+      if (step.motion && !motionSet.has(step.motion)) {
+        motionSet.add(step.motion);
+        rules.push({ motion: step.motion as MotionType, event: 'REP_COUNTED', points: step.pointsPerRep ?? 10, cooldownMs: 400 });
+      }
+    }
+  } else if (mechanic.kind === 'RHYTHM') {
+    for (const note of mechanic.notes) {
+      if (note.motion && !motionSet.has(note.motion)) {
+        motionSet.add(note.motion);
+        rules.push({ motion: note.motion as MotionType, event: 'REP_COUNTED', points: note.points, cooldownMs: 200 });
+      }
+    }
+  }
+
+  // Penalty rule for bad form
+  if (common.scoring.penaltyPerWrong > 0 && motionSet.size > 0) {
+    const firstMotion = [...motionSet][0] as MotionType;
+    rules.push({ motion: firstMotion, event: 'BAD_FORM', points: -common.scoring.penaltyPerWrong, cooldownMs: 500 });
+  }
+
+  return rules;
+}
+
+function keypointToMotion(kp: string): string | null {
+  if (kp.includes('LEFT_WRIST') || kp.includes('LEFT_HAND')) return 'LEFT_HAND_HIT';
+  if (kp.includes('RIGHT_WRIST') || kp.includes('RIGHT_HAND')) return 'RIGHT_HAND_HIT';
+  return null;
+}
+
+function buildInteractionRules(common: CommonGameSettings, mechanic: GameMechanic): InteractionRuleDto[] {
+  const rules: InteractionRuleDto[] = [];
+
+  if (mechanic.kind === 'MOTION_ARCADE') {
+    // Motion match rules
+    for (const obj of mechanic.objects) {
+      rules.push({
+        input: 'MOTION_EVENT',
+        event: 'REP_COUNTED',
+        motion: obj.requiredMotion as MotionType,
+        targetObjectType: obj.id,
+        action: 'REMOVE_OBJECT',
+        points: obj.points,
+        cooldownMs: 200,
+      });
+    }
+    // Bad form rule
+    if (common.lives.mode === 'LIMITED' && common.lives.loseOnBadForm) {
+      rules.push({
+        input: 'MOTION_EVENT',
+        event: 'BAD_FORM',
+        action: 'DECREASE_LIFE',
+        cooldownMs: 500,
+      });
+    } else if (common.scoring.penaltyPerWrong > 0) {
+      rules.push({
+        input: 'MOTION_EVENT',
+        event: 'BAD_FORM',
+        action: 'RESET_COMBO',
+        points: -common.scoring.penaltyPerWrong,
+        cooldownMs: 500,
+      });
+    }
+    // Out of frame rule
+    if (common.lives.loseOnOutOfFrame) {
+      rules.push({
+        input: 'MOTION_EVENT',
+        event: 'USER_OUT_OF_FRAME',
+        action: 'DECREASE_LIFE',
+        cooldownMs: 2000,
+      });
+    } else {
+      rules.push({
+        input: 'MOTION_EVENT',
+        event: 'USER_OUT_OF_FRAME',
+        action: 'PAUSE_GAME',
+        cooldownMs: 2000,
+      });
+    }
+  } else if (mechanic.kind === 'POSE_CONTACT') {
+    for (const t of mechanic.targets) {
+      rules.push({
+        input: 'POSE_CONTACT',
+        keypoints: t.hitBy,
+        targetObjectType: t.targetId,
+        action: 'REMOVE_OBJECT',
+        points: t.points,
+        cooldownMs: mechanic.hitDetection.hitCooldownMs,
+      });
+    }
+    if (common.lives.loseOnOutOfFrame || mechanic.hitDetection.loseLifeOnTimeout) {
+      rules.push({ input: 'MOTION_EVENT', event: 'USER_OUT_OF_FRAME', action: 'DECREASE_LIFE', cooldownMs: 2000 });
+    }
+  }
+
+  return rules;
+}
+
+function buildSceneConfig(mechanic: GameMechanic): Record<string, unknown> {
+  if (mechanic.kind === 'MOTION_ARCADE') {
+    const objects = mechanic.objects.map(obj => ({
+      objectId: obj.id,
+      objectType: obj.id,
+      label: obj.label,
+      assetKey: obj.assetKey,
+      requiredMotion: obj.requiredMotion,
+      points: obj.points,
+      lifeMs: obj.lifeMs ?? mechanic.objectDefaults.lifeMs,
+      hitRadius: mechanic.objectDefaults.hitRadius,
+    }));
+    return {
+      type: 'OBJECT_SPAWN',
+      mode: mechanic.spawn.strategy === 'SEQUENCE' ? 'SEQUENCE' : 'RANDOM',
+      spawnRateMs: mechanic.spawn.intervalMs,
+      maxObjects: mechanic.spawn.maxActive,
+      objects,
+    };
+  }
+  if (mechanic.kind === 'POSE_CONTACT') {
+    return {
+      type: 'OBJECT_SPAWN',
+      mode: mechanic.spawn.activateMode,
+      spawnRateMs: mechanic.spawn.intervalMs,
+      maxActiveTargets: mechanic.spawn.maxActiveTargets,
+      visibleMs: mechanic.spawn.visibleMs,
+      targets: mechanic.targets,
+    };
+  }
+  return { type: 'NONE' };
+}
+
+function buildConfigJson(common: CommonGameSettings, mechanic: GameMechanic): Record<string, unknown> {
+  return {
+    // Yeni format
+    gameSettings: {
+      schemaVersion: '1.0',
+      common,
+      mechanic,
+    },
+    // Legacy alanlar (geriye uyumluluk)
+    durationSec: common.duration.mode === 'TIMED' ? common.duration.sec : 0,
+    targetScore: common.scoring.targetScore,
+    lives: common.lives.mode === 'LIMITED' ? common.lives.count : (common.lives.mode === 'UNLIMITED' ? 999 : 0),
+    orientation: common.presentation.orientation,
+    cameraRequirement: common.presentation.cameraRequirement,
+    category: common.category,
+  };
+}
+
+function buildProgramSteps(mechanic: GameMechanic): ProgramStepDto[] {
+  if (mechanic.kind === 'PROGRAM') {
+    return mechanic.steps.map(s => ({
+      stepId: s.stepId,
+      type: s.type,
+      title: s.title,
+      description: s.description,
+      motion: s.motion as MotionType | undefined,
+      targetCount: s.targetCount,
+      holdSec: s.holdSec,
+      durationSec: s.durationSec,
+      nextOnComplete: s.nextOnComplete,
+    }));
+  }
+  // MotionArcade / PoseContact için varsayılan PLAY_GAME adımı
+  if (mechanic.kind === 'MOTION_ARCADE' || mechanic.kind === 'POSE_CONTACT' || mechanic.kind === 'RHYTHM') {
+    return [{
+      stepId: 'play',
+      type: 'PLAY_GAME' as const,
+      title: 'Oyun',
+      durationSec: 0,
+      nextOnComplete: false,
+    }];
+  }
+  return [];
+}
+
+function buildTags(templateId: string, category: string): string[] {
+  const tags: string[] = [templateId.toLowerCase(), category.toLowerCase()];
+  if (templateId === 'SCENE_PLAY') tags.push('command', 'reaction');
+  if (templateId === 'FRUIT_SLASH') tags.push('arcade', 'fruit');
+  if (templateId === 'DODGE_RUN') tags.push('runner', 'dodge');
+  if (templateId === 'QUIZ' || templateId === 'TRUE_FALSE') tags.push('education', 'quiz');
+  if (templateId === 'FLASHCARD' || templateId === 'MEMORY_MATCH') tags.push('education', 'study');
+  return tags;
 }
 
 // ─── Public API ─────────────────────────────────────────────────────────────

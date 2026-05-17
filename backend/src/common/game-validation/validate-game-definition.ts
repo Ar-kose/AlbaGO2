@@ -4,6 +4,7 @@ import { GameValidationResult, mergeResults, okResult } from './validation-resul
 import { validateCommon } from './validators/common-validator';
 import { validateWhackAMole } from './validators/whack-a-mole-validator';
 import { validatePoseContactTargets, validatePoseHold, validateRhythmMotion, validateQuiz, validateFlashcard, validateMemoryMatch } from './validators/template-validators';
+import { validateGameSettings } from './validators/unified-game-validator';
 import { collectAssetKeys, validateAssets, validateAudioConfig, validateCoverAsset } from './validators/asset-validator';
 
 type JsonObject = Record<string, unknown>;
@@ -60,6 +61,12 @@ function validateTemplateConfig(
   config: JsonObject,
   assetKeys: Set<string>
 ): GameValidationResult {
+  // Unified game settings validation (yeni format — tum template'leri kapsar)
+  if (config.gameSettings) {
+    return validateGameSettings(config);
+  }
+
+  // Eski per-template validators (geriye uyumluluk)
   switch (template) {
     case 'WHACK_A_MOLE':
       return validateWhackAMole(config, assetKeys);
